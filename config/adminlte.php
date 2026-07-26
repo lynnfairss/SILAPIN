@@ -110,7 +110,7 @@ return [
     */
 
     'preloader' => [
-        'enabled' => true,
+        'enabled' => false,
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
@@ -282,7 +282,7 @@ return [
     |
     */
 
-    'laravel_asset_bundling' => false,
+    'laravel_asset_bundling' => 'false',
     'laravel_css_path' => 'css/app.css',
     'laravel_js_path' => 'js/app.js',
 
@@ -516,4 +516,10 @@ return [
     */
 
     'livewire' => false,
+    'custom_css' => [
+    'enabled' => true,
+    'files' => [
+        'css/custom.css',
+    ],
+],
 ];

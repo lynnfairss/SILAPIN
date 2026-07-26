@@ -19,21 +19,13 @@ class KategoriController extends Controller
     }
 
     /**
-     * Menampilkan form tambah kategori
-     */
-    public function create()
-    {
-        return view('admin.kategori.create');
-    }
-
-    /**
-     * Menyimpan data kategori
+     * Menyimpan kategori baru
      */
     public function store(Request $request)
     {
         $request->validate([
             'nama_kategori' => 'required|max:100',
-            'keterangan'    => 'nullable',
+            'keterangan'    => 'nullable|max:255',
         ]);
 
         Kategori::create([
@@ -46,21 +38,13 @@ class KategoriController extends Controller
     }
 
     /**
-     * Menampilkan form edit
-     */
-    public function edit(Kategori $kategori)
-    {
-        return view('admin.kategori.edit', compact('kategori'));
-    }
-
-    /**
-     * Mengupdate data kategori
+     * Update kategori
      */
     public function update(Request $request, Kategori $kategori)
     {
         $request->validate([
             'nama_kategori' => 'required|max:100',
-            'keterangan'    => 'nullable',
+            'keterangan'    => 'nullable|max:255',
         ]);
 
         $kategori->update([
@@ -73,7 +57,7 @@ class KategoriController extends Controller
     }
 
     /**
-     * Menghapus data kategori
+     * Hapus kategori
      */
     public function destroy(Kategori $kategori)
     {

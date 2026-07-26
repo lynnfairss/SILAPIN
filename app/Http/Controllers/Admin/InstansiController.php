@@ -19,28 +19,20 @@ class InstansiController extends Controller
     }
 
     /**
-     * Menampilkan form tambah instansi
-     */
-    public function create()
-    {
-        return view('admin.instansi.create');
-    }
-
-    /**
      * Menyimpan data instansi
      */
     public function store(Request $request)
     {
         $request->validate([
             'nama_instansi' => 'required|max:100',
-            'alamat' => 'nullable',
-            'telepon' => 'nullable|max:20',
+            'alamat'        => 'nullable',
+            'telepon'       => 'nullable|max:20',
         ]);
 
         Instansi::create([
             'nama_instansi' => $request->nama_instansi,
-            'alamat' => $request->alamat,
-            'telepon' => $request->telepon,
+            'alamat'        => $request->alamat,
+            'telepon'       => $request->telepon,
         ]);
 
         return redirect()->route('instansi.index')
@@ -48,28 +40,20 @@ class InstansiController extends Controller
     }
 
     /**
-     * Menampilkan form edit
-     */
-    public function edit(Instansi $instansi)
-    {
-        return view('admin.instansi.edit', compact('instansi'));
-    }
-
-    /**
-     * Update data
+     * Mengupdate data instansi
      */
     public function update(Request $request, Instansi $instansi)
     {
         $request->validate([
             'nama_instansi' => 'required|max:100',
-            'alamat' => 'nullable',
-            'telepon' => 'nullable|max:20',
+            'alamat'        => 'nullable',
+            'telepon'       => 'nullable|max:20',
         ]);
 
         $instansi->update([
             'nama_instansi' => $request->nama_instansi,
-            'alamat' => $request->alamat,
-            'telepon' => $request->telepon,
+            'alamat'        => $request->alamat,
+            'telepon'       => $request->telepon,
         ]);
 
         return redirect()->route('instansi.index')
@@ -77,7 +61,7 @@ class InstansiController extends Controller
     }
 
     /**
-     * Menghapus data
+     * Menghapus data instansi
      */
     public function destroy(Instansi $instansi)
     {

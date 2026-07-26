@@ -10,20 +10,26 @@ use Illuminate\Support\Facades\Storage;
 
 class InventarisController extends Controller
 {
+    /**
+     * Menampilkan daftar inventaris
+     */
     public function index()
     {
-        $inventaris = Inventaris::with('kategori')->get();
+        $inventaris = Inventaris::with('kategori')
+            ->latest()
+            ->paginate(10);
 
-        return view('admin.inventaris.index', compact('inventaris'));
-    }
-
-    public function create()
-    {
         $kategori = Kategori::all();
 
-        return view('admin.inventaris.create', compact('kategori'));
+        return view('admin.inventaris.index', compact(
+            'inventaris',
+            'kategori'
+        ));
     }
 
+    /**
+     * Menyimpan data inventaris
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -57,13 +63,9 @@ class InventarisController extends Controller
             ->with('success', 'Data inventaris berhasil ditambahkan.');
     }
 
-    public function edit(Inventaris $inventari)
-    {
-        $kategori = Kategori::all();
-
-        return view('admin.inventaris.edit', compact('inventari', 'kategori'));
-    }
-
+    /**
+     * Mengupdate data inventaris
+     */
     public function update(Request $request, Inventaris $inventari)
     {
         $request->validate([
@@ -87,12 +89,10 @@ class InventarisController extends Controller
 
         if ($request->hasFile('foto')) {
 
-            // Hapus foto lama
             if ($inventari->foto && Storage::disk('public')->exists($inventari->foto)) {
                 Storage::disk('public')->delete($inventari->foto);
             }
 
-            // Upload foto baru
             $data['foto'] = $request->file('foto')->store('inventaris', 'public');
         }
 
@@ -100,9 +100,12 @@ class InventarisController extends Controller
 
         return redirect()
             ->route('inventaris.index')
-            ->with('success', 'Data inventaris berhasil diubah.');
+            ->with('success', 'Data inventaris berhasil diperbarui.');
     }
 
+    /**
+     * Menghapus data inventaris
+     */
     public function destroy(Inventaris $inventari)
     {
         if ($inventari->foto && Storage::disk('public')->exists($inventari->foto)) {

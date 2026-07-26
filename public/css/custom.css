@@ -1,0 +1,9 @@
+#pjax-container {
+    opacity: 1;
+    transition: opacity .3s ease;
+}
+
+#pjax-container.pjax-loading {
+    opacity: 0;
+    transition: none;
+}

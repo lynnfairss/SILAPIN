@@ -39,7 +39,7 @@
 
                 <img src="{{ asset('storage/'.$item->foto) }}"
                 class="card-img-top img-fluid"
-                style="height:250px;width:100%;object-fit:cover;">
+                style="height:300px;width:100%;object-fit:cover;">
 
                 @endif
 
