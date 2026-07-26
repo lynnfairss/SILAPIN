@@ -154,7 +154,7 @@
                                 <div class="col-md-4 col-sm-6">
                                     <div class="inventaris-card p-3" onclick="toggleBarang(this, {{ $item->id }})">
                                         <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})">
+                                            <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})" onclick="event.stopPropagation()">
                                             <label class="form-check-label fw-semibold" for="barang_{{ $item->id }}">{{ $item->nama_barang }}</label>
                                         </div>
                                         <div class="ms-1 small text-muted">

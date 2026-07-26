@@ -8,9 +8,6 @@ use Illuminate\Http\Request;
 
 class InstansiController extends Controller
 {
-    /**
-     * Menampilkan daftar instansi
-     */
     public function index()
     {
         $instansi = Instansi::latest()->paginate(10);
@@ -18,9 +15,6 @@ class InstansiController extends Controller
         return view('admin.instansi.index', compact('instansi'));
     }
 
-    /**
-     * Menyimpan data instansi
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -39,9 +33,6 @@ class InstansiController extends Controller
             ->with('success', 'Data instansi berhasil ditambahkan.');
     }
 
-    /**
-     * Mengupdate data instansi
-     */
     public function update(Request $request, Instansi $instansi)
     {
         $request->validate([
@@ -60,9 +51,6 @@ class InstansiController extends Controller
             ->with('success', 'Data instansi berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus data instansi
-     */
     public function destroy(Instansi $instansi)
     {
         $instansi->delete();

@@ -8,9 +8,6 @@ use Illuminate\Http\Request;
 
 class KategoriController extends Controller
 {
-    /**
-     * Menampilkan daftar kategori
-     */
     public function index()
     {
         $kategori = Kategori::latest()->paginate(10);
@@ -18,9 +15,6 @@ class KategoriController extends Controller
         return view('admin.kategori.index', compact('kategori'));
     }
 
-    /**
-     * Menyimpan kategori baru
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -37,9 +31,6 @@ class KategoriController extends Controller
             ->with('success', 'Data kategori berhasil ditambahkan.');
     }
 
-    /**
-     * Update kategori
-     */
     public function update(Request $request, Kategori $kategori)
     {
         $request->validate([
@@ -56,9 +47,6 @@ class KategoriController extends Controller
             ->with('success', 'Data kategori berhasil diperbarui.');
     }
 
-    /**
-     * Hapus kategori
-     */
     public function destroy(Kategori $kategori)
     {
         $kategori->delete();

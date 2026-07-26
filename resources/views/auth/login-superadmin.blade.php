@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Register - SILAPIN</title>
+    <title>Login Super Admin - SILAPIN</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -18,18 +18,18 @@
             justify-content: center;
         }
 
-        .register-container {
+        .login-container {
             width: 100%;
             max-width: 420px;
             padding: 20px;
         }
 
-        .register-brand {
+        .login-brand {
             text-align: center;
             color: #fff;
             margin-bottom: 30px;
         }
-        .register-brand .brand-icon {
+        .login-brand .brand-icon {
             width: 70px; height: 70px;
             background: linear-gradient(135deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
             border-radius: 20px;
@@ -42,10 +42,10 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,.1);
         }
-        .register-brand h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
-        .register-brand p { opacity: .5; font-size: .85rem; }
+        .login-brand h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
+        .login-brand p { opacity: .5; font-size: .85rem; }
 
-        .register-card {
+        .login-card {
             background: #fff;
             border-radius: 16px;
             overflow: hidden;
@@ -99,7 +99,19 @@
             border-color: #0d6efd;
         }
 
-        .btn-register {
+        .toggle-pw {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: .85rem;
+        }
+
+        .btn-login {
             border-radius: 10px;
             padding: 11px;
             font-weight: 600;
@@ -109,7 +121,7 @@
             color: #fff;
             transition: all .2s;
         }
-        .btn-register:hover {
+        .btn-login:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 15px rgba(13,110,253,.35);
             background: linear-gradient(135deg, #0b5ed7, #0a58ca);
@@ -149,78 +161,81 @@
 </head>
 <body>
 
-<div class="register-container">
+<div class="login-container">
 
-    <div class="register-brand">
+    <div class="login-brand">
         <div class="brand-icon">
-            <i class="fas fa-user-plus"></i>
+            <i class="fas fa-user-lock"></i>
         </div>
         <h1>SILAPIN</h1>
-        <p>Daftar Akun Admin Baru</p>
+        <p>Login Super Admin</p>
     </div>
 
-    <div class="register-card">
+    <div class="login-card">
         <div class="card-top"></div>
         <div class="card-body-custom">
 
-            @if($errors->any())
+            <h4>Selamat Datang</h4>
+            <p class="subtitle">Masuk ke panel super admin SILAPIN</p>
+
+            @if(session('status'))
+            <div class="alert alert-info alert-custom d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>{{ session('status') }}
+            </div>
+            @endif
+
+            @if ($errors->any())
             <div class="alert alert-danger alert-custom d-flex align-items-center">
                 <i class="fas fa-exclamation-circle me-2"></i>
                 <div>
-                    @foreach($errors->all() as $error)
+                    @foreach ($errors->all() as $error)
                         <div>{{ $error }}</div>
                     @endforeach
                 </div>
             </div>
             @endif
 
-            <form method="POST" action="{{ route('register') }}">
+            <form method="POST" action="{{ route('login.superadmin.post') }}">
                 @csrf
-
-                <div class="mb-3">
-                    <label class="form-label fw-medium text-secondary" style="font-size:.85rem;">Nama Lengkap</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-user"></i></span>
-                        <input type="text" name="name" class="form-control" value="{{ old('name') }}"
-                               placeholder="Masukkan nama" required autofocus>
-                    </div>
-                </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-medium text-secondary" style="font-size:.85rem;">Email</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-envelope"></i></span>
                         <input type="email" name="email" class="form-control" value="{{ old('email') }}"
-                               placeholder="Masukkan email" required>
+                               placeholder="Masukkan email" required autofocus>
                     </div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label fw-medium text-secondary" style="font-size:.85rem;">Password</label>
-                    <div class="input-group">
+                    <div class="input-group position-relative">
                         <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        <input type="password" name="password" class="form-control"
+                        <input type="password" name="password" id="inputPassword" class="form-control"
                                placeholder="Masukkan password" required>
+                        <button type="button" class="toggle-pw" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        </button>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-medium text-secondary" style="font-size:.85rem;">Konfirmasi Password</label>
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-lock"></i></span>
-                        <input type="password" name="password_confirmation" class="form-control"
-                               placeholder="Ulangi password" required>
+                <div class="d-flex justify-content-between align-items-center mb-4 form-links">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember" name="remember"
+                               {{ old('remember') ? 'checked' : '' }}>
+                        <label class="form-check-label text-secondary" for="remember" style="font-size:.85rem;">
+                            Ingat saya
+                        </label>
                     </div>
+                    @if (Route::has('password.request'))
+                    <a href="{{ route('password.request') }}">Lupa password?</a>
+                    @endif
                 </div>
 
-                <button type="submit" class="btn btn-register w-100 mt-2">
-                    <i class="fas fa-user-plus me-2"></i>Daftar
+                <button type="submit" class="btn btn-login w-100">
+                    <i class="fas fa-sign-in-alt me-2"></i>Masuk
                 </button>
             </form>
-
-            <div class="text-center mt-4 form-links">
-                <a href="{{ route('login') }}"><i class="fas fa-arrow-left me-1"></i>Sudah punya akun? Login</a>
-            </div>
 
         </div>
     </div>
@@ -230,6 +245,20 @@
     </div>
 
 </div>
+
+<script>
+    function togglePassword() {
+        const input = document.getElementById('inputPassword');
+        const icon = document.getElementById('toggleIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    }
+</script>
 
 </body>
 </html>

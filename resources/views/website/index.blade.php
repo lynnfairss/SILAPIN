@@ -44,7 +44,7 @@
                         <i class="fas fa-tachometer-alt me-1"></i>Dashboard
                     </a>
                 @else
-                    <a href="{{ route('login') }}" class="btn btn-light btn-sm fw-semibold">
+                    <a href="{{ route('login.admin') }}" class="btn btn-light btn-sm fw-semibold">
                         <i class="fas fa-sign-in-alt me-1"></i>Login Admin
                     </a>
                 @endauth

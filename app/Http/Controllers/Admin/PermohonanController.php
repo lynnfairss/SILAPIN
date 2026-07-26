@@ -94,6 +94,26 @@ class PermohonanController extends Controller
             ->with('success', 'Permohonan berhasil diubah.');
     }
 
+    public function updateStatus(Request $request, Permohonan $permohonan)
+    {
+        $request->validate([
+            'status' => 'required|in:Disetujui,Ditolak',
+            'catatan_admin' => $request->status === 'Ditolak' ? 'required|string' : 'nullable|string',
+        ]);
+
+        $permohonan->update([
+            'status' => $request->status,
+            'catatan_admin' => $request->catatan_admin,
+        ]);
+
+        $pesan = $request->status === 'Disetujui'
+            ? 'Permohonan berhasil disetujui.'
+            : 'Permohonan berhasil ditolak.';
+
+        return redirect()->route('permohonan.index')
+            ->with('success', $pesan);
+    }
+
     public function destroy(Permohonan $permohonan)
     {
         $permohonan->delete();

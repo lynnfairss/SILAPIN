@@ -311,24 +311,27 @@ return [
         'icon' => 'fas fa-home',
     ],
 
-    ['header' => 'MASTER DATA'],
+    ['header' => 'MASTER DATA', 'can' => 'is-super-admin'],
 
     [
         'text' => 'Instansi',
         'url'  => 'instansi',
         'icon' => 'fas fa-building',
+        'can'  => 'is-super-admin',
     ],
 
     [
         'text' => 'Kategori',
         'url'  => 'kategori',
         'icon' => 'fas fa-tags',
+        'can'  => 'is-super-admin',
     ],
 
     [
         'text' => 'Inventaris',
         'url'  => 'inventaris',
         'icon' => 'fas fa-boxes',
+        'can'  => 'is-super-admin',
     ],
 
     ['header' => 'TRANSAKSI'],
@@ -339,26 +342,13 @@ return [
         'icon' => 'fas fa-file-signature',
     ],
 
-    ['header' => 'LAPORAN'],
-
-    [
-        'text' => 'Laporan',
-        'url'  => 'laporan',
-        'icon' => 'fas fa-chart-bar',
-    ],
-
-    ['header' => 'PENGATURAN'],
-
-    [
-        'text' => 'Log Aktivitas',
-        'url'  => 'log-aktivitas',
-        'icon' => 'fas fa-history',
-    ],
+    ['header' => 'PENGATURAN', 'can' => 'is-super-admin'],
 
     [
         'text' => 'Manajemen Admin',
         'url'  => 'users',
         'icon' => 'fas fa-user-shield',
+        'can'  => 'is-super-admin',
     ],
 
 ],

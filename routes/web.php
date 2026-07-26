@@ -9,14 +9,12 @@ use App\Http\Controllers\Admin\InstansiController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\InventarisController;
 use App\Http\Controllers\Admin\PermohonanController as AdminPermohonanController;
+use App\Http\Controllers\Admin\UserController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Website Publik
 |--------------------------------------------------------------------------
-|
-| Website Publik SILAPIN
-|
 */
 
 Route::get('/', [WebsiteController::class, 'index'])->name('website');
@@ -36,33 +34,40 @@ Route::prefix('peminjam')->name('peminjam.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Admin Area
+| Admin Area (Semua role yang sudah login)
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth'])->group(function () {
 
-    // Dashboard
+    // Dashboard (semua role)
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
-
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
-
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
 
-    // Master Data
-    Route::resource('instansi', InstansiController::class);
-    Route::resource('kategori', KategoriController::class);
-    Route::resource('inventaris', InventarisController::class);
+    // Master Data (hanya Super Admin)
+    Route::middleware('role:super_admin')->group(function () {
+        Route::resource('instansi', InstansiController::class)->except(['create', 'edit']);
+        Route::resource('kategori', KategoriController::class)->except(['create', 'edit']);
+        Route::resource('inventaris', InventarisController::class)->except(['create', 'edit']);
 
-    // Transaksi
-    Route::resource('permohonan', AdminPermohonanController::class);
+        // Manajemen User (hanya Super Admin)
+        Route::resource('users', UserController::class)->except(['create', 'store', 'edit', 'update']);
+    });
+
+    // Permohonan (Super Admin + Admin)
+    Route::middleware('role:super_admin,admin')->group(function () {
+        Route::resource('permohonan', AdminPermohonanController::class);
+        Route::patch('permohonan/{permohonan}/status', [AdminPermohonanController::class, 'updateStatus'])
+            ->name('permohonan.status');
+    });
 
 });
 

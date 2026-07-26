@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\Storage;
 
 class InventarisController extends Controller
 {
-    /**
-     * Menampilkan daftar inventaris
-     */
     public function index()
     {
         $inventaris = Inventaris::with('kategori')
@@ -27,9 +24,6 @@ class InventarisController extends Controller
         ));
     }
 
-    /**
-     * Menyimpan data inventaris
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -63,9 +57,6 @@ class InventarisController extends Controller
             ->with('success', 'Data inventaris berhasil ditambahkan.');
     }
 
-    /**
-     * Mengupdate data inventaris
-     */
     public function update(Request $request, Inventaris $inventari)
     {
         $request->validate([
@@ -88,11 +79,9 @@ class InventarisController extends Controller
         ];
 
         if ($request->hasFile('foto')) {
-
             if ($inventari->foto && Storage::disk('public')->exists($inventari->foto)) {
                 Storage::disk('public')->delete($inventari->foto);
             }
-
             $data['foto'] = $request->file('foto')->store('inventaris', 'public');
         }
 
@@ -103,9 +92,6 @@ class InventarisController extends Controller
             ->with('success', 'Data inventaris berhasil diperbarui.');
     }
 
-    /**
-     * Menghapus data inventaris
-     */
     public function destroy(Inventaris $inventari)
     {
         if ($inventari->foto && Storage::disk('public')->exists($inventari->foto)) {

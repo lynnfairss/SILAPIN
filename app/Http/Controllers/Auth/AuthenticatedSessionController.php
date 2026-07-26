@@ -11,29 +11,50 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
-    public function create(): View
+    public function showAdminLogin(): View
     {
-        return view('auth.login');
+        return view('auth.login-admin');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
-    public function store(LoginRequest $request): RedirectResponse
+    public function showSuperAdminLogin(): View
+    {
+        return view('auth.login-superadmin');
+    }
+
+    public function storeAdmin(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+
+        $user = Auth::user();
+
+        if (!$user->isSuperAdmin() && !$user->isAdmin()) {
+            Auth::logout();
+            return redirect()->route('login.admin')
+                ->withErrors(['email' => 'Akun ini tidak memiliki akses ke panel admin.']);
+        }
 
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
+    public function storeSuperAdmin(LoginRequest $request): RedirectResponse
+    {
+        $request->authenticate();
+
+        $user = Auth::user();
+
+        if (!$user->isSuperAdmin()) {
+            Auth::logout();
+            return redirect()->route('login.superadmin')
+                ->withErrors(['email' => 'Akun ini bukan Super Admin.']);
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->intended(route('dashboard', absolute: false));
+    }
+
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
