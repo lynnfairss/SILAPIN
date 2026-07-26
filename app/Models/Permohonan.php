@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Permohonan extends Model
 {
     protected $fillable = [
+        'nomor_permohonan',
         'instansi_id',
+        'nama_instansi_lain',
         'nama_peminjam',
         'nik',
         'jabatan',
@@ -16,6 +18,9 @@ class Permohonan extends Model
         'tanggal_kembali',
         'keperluan',
         'status',
+        'catatan_admin',
+        'foto_ktp',
+        'surat_tugas',
     ];
 
     public function instansi()
