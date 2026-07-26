@@ -1,0 +1,198 @@
+body {
+    background: #f5f7fb;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    margin-top: auto;
+}
+
+.form-card {
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 2px 15px rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
+.form-card .card-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #fff;
+    font-weight: 600;
+    padding: 14px 20px;
+    border-bottom: none;
+}
+
+.step-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.step-indicator::before {
+    content: '';
+    position: absolute;
+    top: 24px;
+    left: 15%;
+    right: 15%;
+    height: 2px;
+    background: #dee2e6;
+    z-index: 0;
+}
+
+.step-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    flex: 1;
+}
+
+.step-number {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #dee2e6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #6c757d;
+    transition: all .3s ease;
+    margin-bottom: 8px;
+}
+
+.step-label {
+    font-size: .8rem;
+    color: #6c757d;
+    font-weight: 500;
+    transition: color .3s ease;
+}
+
+.step-item.active .step-number {
+    background: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(13,110,253,.3);
+}
+
+.step-item.active .step-label {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.step-item.completed .step-number {
+    background: #198754;
+    border-color: #198754;
+    color: #fff;
+}
+
+.step-item.completed .step-label {
+    color: #198754;
+}
+
+.step-content {
+    display: none;
+    animation: fadeStep .4s ease;
+}
+
+.step-content.active {
+    display: block;
+}
+
+@keyframes fadeStep {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.inventaris-card {
+    border: 2px solid #dee2e6;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all .2s ease;
+    background: #fff;
+}
+
+.inventaris-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 15px rgba(13,110,253,.12);
+}
+
+.inventaris-card.selected {
+    border-color: #0d6efd;
+    background: #f0f7ff;
+    box-shadow: 0 4px 15px rgba(13,110,253,.15);
+}
+
+.preview-table th {
+    background: #f8f9fa;
+    width: 180px;
+}
+
+.status-timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.status-item {
+    position: relative;
+    padding-bottom: 24px;
+    padding-left: 20px;
+    border-left: 2px solid #dee2e6;
+}
+
+.status-item:last-child {
+    border-left: 2px solid transparent;
+    padding-bottom: 0;
+}
+
+.status-dot {
+    position: absolute;
+    left: -9px;
+    top: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #dee2e6;
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px #dee2e6;
+}
+
+.status-item.completed .status-dot {
+    background: #198754;
+    box-shadow: 0 0 0 2px #198754;
+}
+
+.status-item.rejected .status-dot {
+    background: #dc3545;
+    box-shadow: 0 0 0 2px #dc3545;
+}
+
+.badge-status {
+    font-size: .85rem;
+    padding: .4em .8em;
+}
+
+@media (max-width: 575.98px) {
+    .navbar .container {
+        flex-wrap: nowrap;
+    }
+    .navbar .btn {
+        font-size: .75rem;
+        padding: .25rem .5rem;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .step-label { display: none; }
+    .step-indicator::before { left: 10%; right: 10%; }
+    .preview-table th { width: 120px; }
+}
