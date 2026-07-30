@@ -27,7 +27,7 @@
 </div>
 @endif
 
-<div class="card card-primary">
+<div class="card">
     <div class="card-header">
         <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-1"></i>Tambah Inventaris</h3>
     </div>
@@ -97,9 +97,16 @@
                 </div>
                 <div class="col-md-4">
                     <div class="form-group mb-0">
-                        <label>Foto <small class="text-muted">(jpg/png, max 2MB)</small></label>
-                        <input type="file" name="foto" id="inputFoto" class="form-control" accept="image/*">
-                        <div id="fotoPreview" class="mt-1"></div>
+                        <label>Foto <small class="text-muted">(jpg/png, max 2MB per foto, max 5 foto)</small></label>
+                        <div id="fotoSlots">
+                            @for($i = 0; $i < 5; $i++)
+                            <div class="d-flex align-items-center mb-1">
+                                <input type="file" name="foto[]" id="inputFoto{{ $i }}" class="form-control form-control-sm" accept="image/*">
+                                <span class="badge bg-secondary ms-2" id="fotoLabel{{ $i }}">Foto {{ $i + 1 }}</span>
+                                <div id="fotoPreview{{ $i }}" class="ms-2"></div>
+                            </div>
+                            @endfor
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
@@ -118,7 +125,7 @@
     </div>
     <div class="card-body">
         <table class="table table-bordered table-striped">
-            <thead>
+            <thead class="text-center">
                 <tr>
                     <th width="50">No</th>
                     <th>Kode</th>
@@ -148,15 +155,22 @@
                         @endif
                     </td>
                     <td>
-                        @if($item->foto)
-                            <img src="{{ asset('storage/'.$item->foto) }}" width="50" height="50" class="rounded object-fit-cover">
+                        @php $ft = $item->fotos; @endphp
+                        @if($ft->count() > 0)
+                            <div class="foto-cell" onclick='openFoto({{ json_encode($ft->pluck("foto")->map(fn($p) => asset("storage/".$p))) }})' style="cursor:pointer;position:relative;display:inline-block;">
+                                <img src="{{ asset('storage/'.$ft->first()->foto) }}" width="56" height="56" class="rounded object-fit-cover border">
+                                @if($ft->count() > 1)
+                                <span class="foto-count-badge">+{{ $ft->count() - 1 }}</span>
+                                @endif
+                                <div class="foto-hover"><i class="fas fa-search-plus"></i></div>
+                            </div>
                         @else
                             <span class="text-muted">-</span>
                         @endif
                     </td>
                     <td class="text-center">
                         <button class="btn btn-warning btn-sm" title="Edit"
-                            onclick='editItem({!! json_encode($item) !!})'>
+                            onclick='editItem({!! json_encode($item->load('fotos')) !!})'>
                             <i class="fas fa-edit"></i>
                         </button>
                         <form action="{{ route('inventaris.destroy', $item->id) }}" method="POST" style="display:inline;">
@@ -180,7 +194,57 @@
     @endif
 </div>
 
+<div class="image-modal-overlay" id="imageModal" onclick="closeFoto(event)">
+    <div class="image-modal-content">
+        <button type="button" class="modal-close" onclick="closeFoto()">&times;</button>
+        <button type="button" class="modal-nav modal-prev" onclick="navFoto(-1)"><i class="fas fa-chevron-left"></i></button>
+        <img id="modalFotoImg" src="" alt="Foto Barang">
+        <button type="button" class="modal-nav modal-next" onclick="navFoto(1)"><i class="fas fa-chevron-right"></i></button>
+        <div class="modal-caption" id="modalFotoCaption"></div>
+        <div class="modal-dots" id="modalFotoDots"></div>
+    </div>
+</div>
+
 <script>
+    let fotoList = [];
+    let fotoIndex = 0;
+
+    function openFoto(urls) {
+        fotoList = urls;
+        fotoIndex = 0;
+        document.getElementById('imageModal').classList.add('active');
+        updateFotoModal();
+    }
+
+    function navFoto(dir) {
+        if (!fotoList.length) return;
+        fotoIndex = (fotoIndex + dir + fotoList.length) % fotoList.length;
+        updateFotoModal();
+    }
+
+    function updateFotoModal() {
+        const img = document.getElementById('modalFotoImg');
+        img.src = fotoList[fotoIndex];
+        document.getElementById('modalFotoCaption').textContent = (fotoIndex + 1) + ' / ' + fotoList.length;
+        const dots = document.getElementById('modalFotoDots');
+        dots.innerHTML = fotoList.map((_, i) =>
+            '<span class="dot ' + (i === fotoIndex ? 'active' : '') + '" onclick="fotoIndex=' + i + ';updateFotoModal()"></span>'
+        ).join('');
+    }
+
+    function closeFoto(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('imageModal').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('imageModal').classList.contains('active')) {
+            if (e.key === 'Escape') closeFoto();
+            if (e.key === 'ArrowLeft') navFoto(-1);
+            if (e.key === 'ArrowRight') navFoto(1);
+        }
+    });
+
     function editItem(item) {
         document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Inventaris';
         document.getElementById('formMethod').value = 'PUT';
@@ -194,11 +258,15 @@
         document.getElementById('formInventaris').action = '{{ url("inventaris") }}/' + item.id;
         document.getElementById('btnCancel').style.display = 'inline-block';
 
-        if (item.foto) {
-            document.getElementById('fotoPreview').innerHTML =
-                '<img src="{{ asset("storage") }}/' + item.foto + '" width="60" height="60" class="rounded object-fit-cover">';
-        } else {
-            document.getElementById('fotoPreview').innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const preview = document.getElementById('fotoPreview' + i);
+            const input = document.getElementById('inputFoto' + i);
+            input.value = '';
+            if (item.fotos && item.fotos[i]) {
+                preview.innerHTML = '<img src="{{ asset("storage") }}/' + item.fotos[i].foto + '" width="50" height="50" class="rounded object-fit-cover">';
+            } else {
+                preview.innerHTML = '';
+            }
         }
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -214,10 +282,12 @@
         document.getElementById('inputStok').value = '1';
         document.getElementById('inputKondisi').value = 'Baik';
         document.getElementById('inputDeskripsi').value = '';
-        document.getElementById('inputFoto').value = '';
-        document.getElementById('fotoPreview').innerHTML = '';
         document.getElementById('formInventaris').action = '{{ route("inventaris.store") }}';
         document.getElementById('btnCancel').style.display = 'none';
+        for (let i = 0; i < 5; i++) {
+            document.getElementById('inputFoto' + i).value = '';
+            document.getElementById('fotoPreview' + i).innerHTML = '';
+        }
     }
 </script>
 

@@ -57,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('instansi', InstansiController::class)->except(['create', 'edit']);
         Route::resource('kategori', KategoriController::class)->except(['create', 'edit']);
         Route::resource('inventaris', InventarisController::class)->except(['create', 'edit']);
+        Route::delete('inventaris/foto/{foto}', [InventarisController::class, 'destroyFoto'])->name('inventaris.foto.destroy');
 
         // Manajemen User (hanya Super Admin)
         Route::resource('users', UserController::class)->except(['create', 'store', 'edit', 'update']);

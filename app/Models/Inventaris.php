@@ -22,8 +22,14 @@ class Inventaris extends Model
     {
         return $this->belongsTo(Kategori::class);
     }
+
     public function detailPermohonan()
     {
-    return $this->hasMany(DetailPermohonan::class);
+        return $this->hasMany(DetailPermohonan::class);
+    }
+
+    public function fotos()
+    {
+        return $this->hasMany(InventarisFoto::class)->orderBy('urutan');
     }
 }

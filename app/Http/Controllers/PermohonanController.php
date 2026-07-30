@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Permohonan;
 use App\Models\Instansi;
 use App\Models\Inventaris;
+use App\Models\Kategori;
 use App\Models\DetailPermohonan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -15,18 +16,19 @@ class PermohonanController extends Controller
     public function form()
     {
         $instansi = Instansi::all();
-        $inventaris = Inventaris::with('kategori')->where('stok', '>', 0)->get();
+        $kategori = Kategori::all();
+        $inventaris = Inventaris::with('kategori', 'fotos')->where('stok', '>', 0)->get();
 
-        return view('peminjam.index', compact('instansi', 'inventaris'));
+        return view('peminjam.index', compact('instansi', 'kategori', 'inventaris'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'nama_peminjam'    => 'required|string|max:150',
-            'nik'              => 'required|string|max:20',
+            'nik'              => 'required|string|max:30',
             'jabatan'          => 'nullable|string|max:100',
-            'telepon'          => 'required|string|max:20',
+            'telepon'          => 'required|string|max:15|regex:/^[0-9]+$/',
             'instansi_id'      => 'nullable',
             'nama_instansi_lain' => 'nullable|string|max:100',
             'tanggal_pinjam'   => 'required|date',

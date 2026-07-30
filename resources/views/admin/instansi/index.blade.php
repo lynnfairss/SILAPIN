@@ -56,8 +56,9 @@
                 <div class="col-md-2">
                     <div class="form-group">
                         <label>Telepon</label>
-                        <input type="text" name="telepon" id="inputTelepon" class="form-control"
-                               value="{{ old('telepon') }}" placeholder="08xxxxxxxxxx">
+                        <input type="tel" name="telepon" id="inputTelepon" class="form-control"
+                               value="{{ old('telepon') }}" placeholder="08xxxxxxxxxx"
+                               oninput="this.value = this.value.replace(/\D/g, '')" maxlength="15">
                     </div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end gap-1">
@@ -79,7 +80,7 @@
     </div>
     <div class="card-body">
         <table class="table table-bordered table-hover table-striped">
-            <thead class="bg-primary text-white">
+            <thead class="text-center">
                 <tr>
                     <th width="60">No</th>
                     <th>Nama Instansi</th>

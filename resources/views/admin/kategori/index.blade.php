@@ -72,7 +72,7 @@
     </div>
     <div class="card-body">
         <table class="table table-bordered table-hover table-striped">
-            <thead class="bg-primary text-white">
+            <thead class="text-center">
                 <tr>
                     <th width="60">No</th>
                     <th>Nama Kategori</th>

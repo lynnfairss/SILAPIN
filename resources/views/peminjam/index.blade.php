@@ -75,8 +75,8 @@
                                     <input type="text" name="nama_peminjam" class="form-control" value="{{ old('nama_peminjam') }}" required placeholder="Masukkan nama lengkap">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium">NIK <span class="text-danger">*</span></label>
-                                    <input type="text" name="nik" class="form-control" value="{{ old('nik') }}" required placeholder="Nomor Induk Kependudukan" maxlength="20">
+                                    <label class="form-label fw-medium"><span id="labelIdentitas">NIK</span> <span class="text-danger">*</span></label>
+                                    <input type="text" name="nik" id="nikField" class="form-control" value="{{ old('nik') }}" required placeholder="Nomor Induk Kependudukan" maxlength="30">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Jabatan</label>
@@ -84,7 +84,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Telepon <span class="text-danger">*</span></label>
-                                    <input type="text" name="telepon" class="form-control" value="{{ old('telepon') }}" required placeholder="08xxxxxxxxxx">
+                                    <input type="tel" name="telepon" class="form-control" value="{{ old('telepon') }}" required placeholder="08xxxxxxxxxx" maxlength="15" oninput="this.value = this.value.replace(/\D/g, '')">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Instansi</label>
@@ -149,21 +149,71 @@
                             <hr>
                             <h6 class="fw-bold mb-3"><i class="fas fa-box me-2 text-primary"></i>Pilih Barang</h6>
 
+                            {{-- Filter Search --}}
+                            <div class="filter-search mb-3">
+                                <i class="fas fa-search filter-search-icon"></i>
+                                <input type="text" id="filterBarang" class="form-control" placeholder="Cari kategori atau nama barang..." oninput="filterBarang(this.value)">
+                            </div>
+
+                            {{-- Kategori Chips --}}
+                            <div class="filter-chips mb-3" id="filterChips">
+                                <span class="filter-chip active" data-kategori="" onclick="filterByKategori(this, '')">Semua</span>
+                                @foreach($kategori as $kat)
+                                <span class="filter-chip" data-kategori="{{ $kat->nama_kategori }}" onclick="filterByKategori(this, '{{ $kat->nama_kategori }}')">{{ $kat->nama_kategori }}</span>
+                                @endforeach
+                            </div>
+
                             <div class="row g-3" id="barangContainer">
                                 @forelse($inventaris as $item)
-                                <div class="col-md-4 col-sm-6">
-                                    <div class="inventaris-card p-3" onclick="toggleBarang(this, {{ $item->id }})">
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})" onclick="event.stopPropagation()">
-                                            <label class="form-check-label fw-semibold" for="barang_{{ $item->id }}">{{ $item->nama_barang }}</label>
+                                <div class="col-md-4 col-sm-6 barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
+                                    <div class="product-card" onclick="toggleBarang(this, {{ $item->id }})">
+                                        {{-- Image Slider --}}
+                                        <div class="img-slider" id="slider_{{ $item->id }}">
+                                            @php $fotos = $item->fotos; @endphp
+                                            @if($fotos->count() > 0)
+                                                @foreach($fotos as $idx => $f)
+                                                <div class="slider-img {{ $idx === 0 ? 'active' : '' }}" data-img="{{ asset('storage/'.$f->foto) }}">
+                                                    <img src="{{ asset('storage/'.$f->foto) }}" alt="{{ $item->nama_barang }}" onclick="event.stopPropagation(); openLightbox({{ $item->id }})">
+                                                </div>
+                                                @endforeach
+                                                @if($fotos->count() > 1)
+                                                <button type="button" class="slider-btn slider-prev" onclick="event.stopPropagation(); slideImg({{ $item->id }}, -1)"><i class="fas fa-chevron-left"></i></button>
+                                                <button type="button" class="slider-btn slider-next" onclick="event.stopPropagation(); slideImg({{ $item->id }}, 1)"><i class="fas fa-chevron-right"></i></button>
+                                                <div class="slider-dots">
+                                                    @foreach($fotos as $idx => $f)
+                                                    <span class="dot {{ $idx === 0 ? 'active' : '' }}" onclick="event.stopPropagation(); goToSlide({{ $item->id }}, {{ $idx }})"></span>
+                                                    @endforeach
+                                                </div>
+                                                @endif
+                                            @else
+                                                <div class="slider-img active no-foto">
+                                                    <i class="fas fa-box"></i>
+                                                </div>
+                                            @endif
                                         </div>
-                                        <div class="ms-1 small text-muted">
-                                            <div>Kode: <code>{{ $item->kode_barang }}</code></div>
-                                            <div>Kategori: {{ $item->kategori->nama_kategori ?? '-' }}</div>
-                                            <div>Stok: <span class="badge bg-success">{{ $item->stok }}</span></div>
-                                            <div class="mt-2">
-                                                <label class="form-label" style="font-size:.8rem;">Jumlah</label>
-                                                <input type="number" name="jumlah[{{ $item->id }}]" class="form-control form-control-sm" min="1" max="{{ $item->stok }}" value="1" disabled onclick="event.stopPropagation()">
+
+                                        {{-- Info --}}
+                                        <div class="product-info">
+                                            <div class="product-name">{{ $item->nama_barang }}</div>
+                                            <div class="product-meta">
+                                                <span>Kode: <code>{{ $item->kode_barang }}</code></span>
+                                                <span class="product-kategori">{{ $item->kategori->nama_kategori ?? '-' }}</span>
+                                            </div>
+                                            <div class="product-stok">
+                                                <span class="badge bg-success">Stok: {{ $item->stok }}</span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Checkbox + Stepper --}}
+                                        <div class="product-action">
+                                            <div class="form-check" onclick="event.stopPropagation()">
+                                                <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})">
+                                                <label class="form-check-label" for="barang_{{ $item->id }}">Pilih</label>
+                                            </div>
+                                            <div class="qty-stepper" onclick="event.stopPropagation()">
+                                                <button type="button" class="qty-btn qty-minus" onclick="changeQty(this, -1)" disabled>&minus;</button>
+                                                <input type="text" name="jumlah[{{ $item->id }}]" class="qty-input" value="1" min="1" max="{{ $item->stok }}" disabled oninput="validateQty(this)" onkeydown="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 96 && event.keyCode <= 105) || event.keyCode === 8 || event.keyCode === 46">
+                                                <button type="button" class="qty-btn qty-plus" onclick="changeQty(this, 1)">+</button>
                                             </div>
                                         </div>
                                     </div>
@@ -236,6 +286,18 @@
     </div>
 </div>
 
+{{-- Lightbox Modal --}}
+<div class="image-modal-overlay" id="imageModal" onclick="closeLightbox(event)">
+    <div class="image-modal-content">
+        <button type="button" class="modal-close" onclick="closeLightbox()">&times;</button>
+        <button type="button" class="modal-nav modal-prev" onclick="navigateLightbox(-1)"><i class="fas fa-chevron-left"></i></button>
+        <img id="modalImg" src="" alt="Foto Barang">
+        <button type="button" class="modal-nav modal-next" onclick="navigateLightbox(1)"><i class="fas fa-chevron-right"></i></button>
+        <div class="modal-caption" id="modalCaption"></div>
+        <div class="modal-dots" id="modalDots"></div>
+    </div>
+</div>
+
 <footer class="bg-dark text-white text-center py-3 mt-5">
     <p class="mb-0 small">&copy; 2026 SILAPIN - Sistem Informasi Peminjaman Inventaris</p>
 </footer>
@@ -243,6 +305,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     let currentStep = 1;
+
+    // ========== STEP NAVIGATION ==========
 
     function goToStep(step) {
         if (step < 1 || step > 3) return;
@@ -270,13 +334,9 @@
             const nama = document.querySelector('[name="nama_peminjam"]').value.trim();
             const nik = document.querySelector('[name="nik"]').value.trim();
             const telepon = document.querySelector('[name="telepon"]').value.trim();
-            const ktp = document.querySelector('[name="foto_ktp"]').files.length;
+            const labelId = document.getElementById('labelIdentitas').textContent;
             if (!nama || !nik || !telepon) {
-                showError('Lengkapi data diri (Nama, NIK, Telepon).');
-                return false;
-            }
-            if (nik.length < 16) {
-                showError('NIK harus minimal 16 karakter.');
+                showError('Lengkapi data diri (Nama, ' + labelId + ', Telepon).');
                 return false;
             }
         }
@@ -304,11 +364,22 @@
         setTimeout(() => alert.remove(), 4000);
     }
 
+    // ========== PRODUCT CARD: SELECT + STEPPER ==========
+
     function toggleSelect(chk, id) {
-        const card = chk.closest('.inventaris-card');
+        const card = chk.closest('.product-card');
         card.classList.toggle('selected', chk.checked);
-        const jumlahInput = card.querySelector('[name^="jumlah"]');
-        if (jumlahInput) jumlahInput.disabled = !chk.checked;
+        const input = card.querySelector('.qty-input');
+        const minus = card.querySelector('.qty-minus');
+        const plus = card.querySelector('.qty-plus');
+        if (input) {
+            input.disabled = !chk.checked;
+            if (chk.checked) {
+                minus.disabled = parseInt(input.value) <= 1;
+            } else {
+                minus.disabled = true;
+            }
+        }
     }
 
     function toggleBarang(el, id) {
@@ -317,21 +388,180 @@
         toggleSelect(chk, id);
     }
 
+    function changeQty(btn, delta) {
+        const input = btn.parentElement.querySelector('.qty-input');
+        if (!input || input.disabled) return;
+        let val = parseInt(input.value) || 1;
+        const min = parseInt(input.min) || 1;
+        const max = parseInt(input.max) || 999;
+        val = Math.max(min, Math.min(max, val + delta));
+        input.value = val;
+        btn.parentElement.querySelector('.qty-minus').disabled = val <= min;
+        btn.parentElement.querySelector('.qty-plus').disabled = val >= max;
+    }
+
+    function validateQty(input) {
+        let val = parseInt(input.value) || 1;
+        const min = parseInt(input.min) || 1;
+        const max = parseInt(input.max) || 999;
+        if (val < min) val = min;
+        if (val > max) val = max;
+        input.value = val;
+        input.parentElement.querySelector('.qty-minus').disabled = val <= min;
+        input.parentElement.querySelector('.qty-plus').disabled = val >= max;
+    }
+
+    // ========== IMAGE SLIDER PER CARD ==========
+
+    function slideImg(itemId, dir) {
+        const slider = document.getElementById('slider_' + itemId);
+        if (!slider) return;
+        const imgs = slider.querySelectorAll('.slider-img');
+        const dots = slider.querySelectorAll('.dot');
+        let active = 0;
+        imgs.forEach((img, i) => { if (img.classList.contains('active')) active = i; });
+        imgs[active].classList.remove('active');
+        if (dots.length) dots[active].classList.remove('active');
+        active = (active + dir + imgs.length) % imgs.length;
+        imgs[active].classList.add('active');
+        if (dots.length) dots[active].classList.add('active');
+    }
+
+    function goToSlide(itemId, idx) {
+        const slider = document.getElementById('slider_' + itemId);
+        if (!slider) return;
+        const imgs = slider.querySelectorAll('.slider-img');
+        const dots = slider.querySelectorAll('.dot');
+        imgs.forEach(img => img.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+        imgs[idx].classList.add('active');
+        dots[idx].classList.add('active');
+    }
+
+    // ========== FILTER ==========
+
+    function filterBarang(query) {
+        const q = query.toLowerCase().trim();
+        document.querySelectorAll('.barang-item').forEach(el => {
+            const kategori = el.dataset.kategori.toLowerCase();
+            const nama = el.dataset.nama;
+            el.style.display = (kategori.includes(q) || nama.includes(q)) ? '' : 'none';
+        });
+        // Deactivate chip filter when typing
+        if (q) {
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        }
+    }
+
+    function filterByKategori(chip, kategori) {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.getElementById('filterBarang').value = '';
+        document.querySelectorAll('.barang-item').forEach(el => {
+            if (!kategori) { el.style.display = ''; return; }
+            el.style.display = el.dataset.kategori === kategori ? '' : 'none';
+        });
+    }
+
+    // ========== LIGHTBOX ==========
+
+    let lightboxData = [];
+    let lightboxIndex = 0;
+
+    function openLightbox(itemId) {
+        const slider = document.getElementById('slider_' + itemId);
+        if (!slider) return;
+        const imgs = slider.querySelectorAll('.slider-img.active img');
+        if (!imgs.length) return;
+        const allImgs = slider.querySelectorAll('.slider-img');
+        lightboxData = [];
+        allImgs.forEach(img => {
+            const src = img.dataset.img;
+            if (src) lightboxData.push(src);
+        });
+        if (!lightboxData.length) return;
+        let startIdx = 0;
+        allImgs.forEach((img, i) => { if (img.classList.contains('active') && img.dataset.img) startIdx = i; });
+
+        lightboxIndex = startIdx;
+        const modal = document.getElementById('imageModal');
+        modal.classList.add('active');
+        updateLightbox();
+    }
+
+    function navigateLightbox(dir) {
+        if (!lightboxData.length) return;
+        lightboxIndex = (lightboxIndex + dir + lightboxData.length) % lightboxData.length;
+        updateLightbox();
+    }
+
+    function updateLightbox() {
+        const img = document.getElementById('modalImg');
+        img.src = lightboxData[lightboxIndex];
+        const caption = document.getElementById('modalCaption');
+        caption.textContent = (lightboxIndex + 1) + ' / ' + lightboxData.length;
+        const dots = document.getElementById('modalDots');
+        dots.innerHTML = lightboxData.map((_, i) =>
+            '<span class="dot ' + (i === lightboxIndex ? 'active' : '') + '" onclick="lightboxIndex=' + i + ';updateLightbox()"></span>'
+        ).join('');
+    }
+
+    function closeLightbox(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('imageModal').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('imageModal').classList.contains('active')) {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') navigateLightbox(-1);
+            if (e.key === 'ArrowRight') navigateLightbox(1);
+        }
+    });
+
+    // ========== IDENTITAS (NIK/NRP/NIP) ==========
+
+    const identitasMap = [
+        { keywords: ['polres','polsek','polresta','poltabes','polda'],     label: 'NRP',      placeholder: 'Masukkan NRP',        maxlength: 30 },
+        { keywords: ['kodim','korem','koramil','mabes','tni','denma'],    label: 'NDP / NRP', placeholder: 'Masukkan NDP/NRP',    maxlength: 30 },
+        { keywords: ['dinas','pemkot','pemkab','kecamatan','sekretariat','pemerintah','pns','sma','smk','sdn','smp','sd'], label: 'NIP', placeholder: 'Masukkan NIP',      maxlength: 30 },
+    ];
+
+    function updateIdentitasField(selectedText) {
+        const text = (selectedText || '').toLowerCase();
+        const match = identitasMap.find(m => m.keywords.some(k => text.includes(k)));
+        const result = match || { label: 'NIK', placeholder: 'Nomor Induk Kependudukan', maxlength: 30 };
+        document.getElementById('labelIdentitas').textContent = result.label;
+        document.getElementById('nikField').placeholder = result.placeholder;
+        document.getElementById('nikField').maxLength = result.maxlength;
+    }
+
     document.getElementById('instansiSelect').addEventListener('change', function() {
         const wrapper = document.getElementById('instansiLainWrapper');
         if (this.value === 'lainnya') {
             wrapper.style.display = 'block';
             wrapper.querySelector('input').required = true;
+            updateIdentitasField('');
         } else {
             wrapper.style.display = 'none';
             wrapper.querySelector('input').required = false;
+            const selectedText = this.options[this.selectedIndex]?.text || '';
+            updateIdentitasField(selectedText);
         }
     });
+
+    updateIdentitasField(
+        document.getElementById('instansiSelect').options[
+            document.getElementById('instansiSelect').selectedIndex
+        ]?.text || ''
+    );
+
+    // ========== PREVIEW ==========
 
     function updatePreview() {
         const dataDiri = [
             { label: 'Nama Lengkap', value: document.querySelector('[name="nama_peminjam"]').value },
-            { label: 'NIK', value: document.querySelector('[name="nik"]').value },
+            { label: document.getElementById('labelIdentitas').textContent, value: document.querySelector('[name="nik"]').value },
             { label: 'Jabatan', value: document.querySelector('[name="jabatan"]').value || '-' },
             { label: 'Telepon', value: document.querySelector('[name="telepon"]').value },
             { label: 'Instansi', value: (() => {
@@ -357,9 +587,9 @@
         const checked = document.querySelectorAll('[name="inventaris[]"]:checked');
         let html = '';
         checked.forEach((chk, i) => {
-            const card = chk.closest('.inventaris-card');
-            const nama = card.querySelector('.form-check-label')?.textContent || 'Barang';
-            const jumlah = card.querySelector('[name^="jumlah"]')?.value || 1;
+            const card = chk.closest('.product-card');
+            const nama = card.querySelector('.product-name')?.textContent || 'Barang';
+            const jumlah = card.querySelector('.qty-input')?.value || 1;
             html += `<tr><td>${i + 1}</td><td>${nama}</td><td>${jumlah}</td></tr>`;
         });
         document.getElementById('previewBarang').innerHTML = html || '<tr><td colspan="3" class="text-center text-muted">Belum ada barang dipilih.</td></tr>';

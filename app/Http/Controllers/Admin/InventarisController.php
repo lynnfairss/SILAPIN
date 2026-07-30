@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Inventaris;
+use App\Models\InventarisFoto;
 use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -12,7 +13,7 @@ class InventarisController extends Controller
 {
     public function index()
     {
-        $inventaris = Inventaris::with('kategori')
+        $inventaris = Inventaris::with('kategori', 'fotos')
             ->latest()
             ->paginate(10);
 
@@ -33,24 +34,20 @@ class InventarisController extends Controller
             'stok' => 'required|integer|min:1',
             'kondisi' => 'required',
             'deskripsi' => 'nullable',
-            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'foto' => 'nullable|array',
+            'foto.*' => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $foto = null;
-
-        if ($request->hasFile('foto')) {
-            $foto = $request->file('foto')->store('inventaris', 'public');
-        }
-
-        Inventaris::create([
+        $inventaris = Inventaris::create([
             'kategori_id' => $request->kategori_id,
             'kode_barang' => $request->kode_barang,
             'nama_barang' => $request->nama_barang,
             'stok' => $request->stok,
             'kondisi' => $request->kondisi,
             'deskripsi' => $request->deskripsi,
-            'foto' => $foto,
         ]);
+
+        $this->simpanFotos($request, $inventaris);
 
         return redirect()
             ->route('inventaris.index')
@@ -66,26 +63,20 @@ class InventarisController extends Controller
             'stok' => 'required|integer|min:1',
             'kondisi' => 'required',
             'deskripsi' => 'nullable',
-            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+            'foto' => 'nullable|array',
+            'foto.*' => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $data = [
+        $inventari->update([
             'kategori_id' => $request->kategori_id,
             'kode_barang' => $request->kode_barang,
             'nama_barang' => $request->nama_barang,
             'stok' => $request->stok,
             'kondisi' => $request->kondisi,
             'deskripsi' => $request->deskripsi,
-        ];
+        ]);
 
-        if ($request->hasFile('foto')) {
-            if ($inventari->foto && Storage::disk('public')->exists($inventari->foto)) {
-                Storage::disk('public')->delete($inventari->foto);
-            }
-            $data['foto'] = $request->file('foto')->store('inventaris', 'public');
-        }
-
-        $inventari->update($data);
+        $this->simpanFotos($request, $inventari);
 
         return redirect()
             ->route('inventaris.index')
@@ -94,8 +85,10 @@ class InventarisController extends Controller
 
     public function destroy(Inventaris $inventari)
     {
-        if ($inventari->foto && Storage::disk('public')->exists($inventari->foto)) {
-            Storage::disk('public')->delete($inventari->foto);
+        foreach ($inventari->fotos as $foto) {
+            if (Storage::disk('public')->exists($foto->foto)) {
+                Storage::disk('public')->delete($foto->foto);
+            }
         }
 
         $inventari->delete();
@@ -103,5 +96,39 @@ class InventarisController extends Controller
         return redirect()
             ->route('inventaris.index')
             ->with('success', 'Data inventaris berhasil dihapus.');
+    }
+
+    public function destroyFoto(InventarisFoto $foto)
+    {
+        if (Storage::disk('public')->exists($foto->foto)) {
+            Storage::disk('public')->delete($foto->foto);
+        }
+        $foto->delete();
+
+        return response()->json(['success' => true]);
+    }
+
+    private function simpanFotos(Request $request, Inventaris $inventaris)
+    {
+        if ($request->hasFile('foto')) {
+            $fotos = $request->file('foto');
+
+            foreach ($fotos as $urutan => $file) {
+                if (!$file || !$file->isValid()) continue;
+
+                $path = $file->store('inventaris', 'public');
+
+                InventarisFoto::create([
+                    'inventaris_id' => $inventaris->id,
+                    'foto' => $path,
+                    'urutan' => $urutan,
+                ]);
+
+                // Foto pertama jadi thumbnail
+                if ($urutan === 0) {
+                    $inventaris->update(['foto' => $path]);
+                }
+            }
+        }
     }
 }

@@ -20,7 +20,7 @@ class InstansiController extends Controller
         $request->validate([
             'nama_instansi' => 'required|max:100',
             'alamat'        => 'nullable',
-            'telepon'       => 'nullable|max:20',
+            'telepon'       => 'nullable|max:20|regex:/^[0-9]+$/',
         ]);
 
         Instansi::create([
@@ -38,7 +38,7 @@ class InstansiController extends Controller
         $request->validate([
             'nama_instansi' => 'required|max:100',
             'alamat'        => 'nullable',
-            'telepon'       => 'nullable|max:20',
+            'telepon'       => 'nullable|max:20|regex:/^[0-9]+$/',
         ]);
 
         $instansi->update([
