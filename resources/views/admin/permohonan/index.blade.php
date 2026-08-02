@@ -24,7 +24,7 @@
                     <th>No</th>
                     <th>Instansi</th>
                     <th>Nama</th>
-                    <th>NIK</th>
+                    <th>Identitas</th>
                     <th>Tanggal Pinjam</th>
                     <th>Tanggal Kembali</th>
                     <th>Status</th>
@@ -38,7 +38,10 @@
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td>{{ $item->instansi->nama_instansi ?? '-' }}</td>
                 <td>{{ $item->nama_peminjam }}</td>
-                <td>{{ $item->nik }}</td>
+                <td>
+                    <div>{{ $item->nik }}</div>
+                    <small class="text-muted">({{ $item->instansi->effective_tipe_identitas }})</small>
+                </td>
                 <td>{{ $item->tanggal_pinjam }}</td>
                 <td>{{ $item->tanggal_kembali }}</td>
 

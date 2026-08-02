@@ -39,14 +39,14 @@
 
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label>Nama Instansi <span class="text-danger">*</span></label>
                         <input type="text" name="nama_instansi" id="inputNama" class="form-control"
                                value="{{ old('nama_instansi') }}" placeholder="Masukkan nama instansi" required>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label>Alamat</label>
                         <input type="text" name="alamat" id="inputAlamat" class="form-control"
@@ -59,6 +59,17 @@
                         <input type="tel" name="telepon" id="inputTelepon" class="form-control"
                                value="{{ old('telepon') }}" placeholder="08xxxxxxxxxx"
                                oninput="this.value = this.value.replace(/\D/g, '')" maxlength="15">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Tipe Identitas <span class="text-danger">*</span></label>
+                        <select name="tipe_identitas" id="inputTipeIdentitas" class="form-control" required>
+                            <option value="NIK">NIK</option>
+                            <option value="NRP">NRP</option>
+                            <option value="NIP">NIP</option>
+                            <option value="NDP/NRP">NDP / NRP</option>
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-2 d-flex align-items-end gap-1">
@@ -86,6 +97,7 @@
                     <th>Nama Instansi</th>
                     <th>Alamat</th>
                     <th width="170">Telepon</th>
+                    <th width="130" class="text-center">Tipe Identitas</th>
                     <th width="150" class="text-center">Aksi</th>
                 </tr>
             </thead>
@@ -97,8 +109,11 @@
                     <td>{{ $item->alamat ?? '-' }}</td>
                     <td>{{ $item->telepon ?? '-' }}</td>
                     <td class="text-center">
+                        <span class="badge badge-info">{{ $item->effective_tipe_identitas }}</span>
+                    </td>
+                    <td class="text-center">
                         <button class="btn btn-warning btn-sm" title="Edit"
-                            onclick="editItem({{ $item->id }}, '{{ addslashes($item->nama_instansi) }}', '{{ addslashes($item->alamat ?? '') }}', '{{ addslashes($item->telepon ?? '') }}')">
+                            onclick="editItem({{ $item->id }}, '{{ addslashes($item->nama_instansi) }}', '{{ addslashes($item->alamat ?? '') }}', '{{ addslashes($item->telepon ?? '') }}', '{{ $item->effective_tipe_identitas }}')">
                             <i class="fas fa-edit"></i>
                         </button>
                         <form action="{{ route('instansi.destroy', $item->id) }}" method="POST" style="display:inline-block;">
@@ -111,7 +126,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="text-center text-muted">
+                    <td colspan="6" class="text-center text-muted">
                         <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
                         Belum ada data instansi.
                     </td>
@@ -126,13 +141,14 @@
 </div>
 
 <script>
-    function editItem(id, nama, alamat, telepon) {
+    function editItem(id, nama, alamat, telepon, tipeIdentitas) {
         document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Instansi';
         document.getElementById('formMethod').value = 'PUT';
         document.getElementById('editId').value = id;
         document.getElementById('inputNama').value = nama;
         document.getElementById('inputAlamat').value = alamat;
         document.getElementById('inputTelepon').value = telepon;
+        document.getElementById('inputTipeIdentitas').value = tipeIdentitas || 'NIK';
         document.getElementById('formInstansi').action = '{{ url("instansi") }}/' + id;
         document.getElementById('btnCancel').style.display = 'inline-block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -145,6 +161,7 @@
         document.getElementById('inputNama').value = '';
         document.getElementById('inputAlamat').value = '';
         document.getElementById('inputTelepon').value = '';
+        document.getElementById('inputTipeIdentitas').value = 'NIK';
         document.getElementById('formInstansi').action = '{{ route("instansi.store") }}';
         document.getElementById('btnCancel').style.display = 'none';
     }

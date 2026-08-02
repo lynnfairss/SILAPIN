@@ -524,19 +524,38 @@
 
     // ========== IDENTITAS (NIK/NRP/NIP) ==========
 
-    const identitasMap = [
-        { keywords: ['polres','polsek','polresta','poltabes','polda'],     label: 'NRP',      placeholder: 'Masukkan NRP',        maxlength: 30 },
-        { keywords: ['kodim','korem','koramil','mabes','tni','denma'],    label: 'NDP / NRP', placeholder: 'Masukkan NDP/NRP',    maxlength: 30 },
-        { keywords: ['dinas','pemkot','pemkab','kecamatan','sekretariat','pemerintah','pns','sma','smk','sdn','smp','sd'], label: 'NIP', placeholder: 'Masukkan NIP',      maxlength: 30 },
+    const instansiTipe = @json($instansiTipe);
+
+    const keywordMap = [
+        { keywords: ['polres','polsek','polresta','poltabes','polda'],     label: 'NRP' },
+        { keywords: ['kodim','korem','koramil','mabes','tni','denma'],    label: 'NDP/NRP' },
+        { keywords: ['dinas','pemkot','pemkab','kecamatan','sekretariat','pemerintah','sma','smk','sdn','smp','sd'], label: 'NIP' },
     ];
 
-    function updateIdentitasField(selectedText) {
-        const text = (selectedText || '').toLowerCase();
-        const match = identitasMap.find(m => m.keywords.some(k => text.includes(k)));
-        const result = match || { label: 'NIK', placeholder: 'Nomor Induk Kependudukan', maxlength: 30 };
-        document.getElementById('labelIdentitas').textContent = result.label;
-        document.getElementById('nikField').placeholder = result.placeholder;
-        document.getElementById('nikField').maxLength = result.maxlength;
+    const tipeConfig = {
+        'NIK':     { placeholder: 'Nomor Induk Kependudukan', maxlength: 30 },
+        'NRP':     { placeholder: 'Masukkan NRP',            maxlength: 30 },
+        'NIP':     { placeholder: 'Masukkan NIP',            maxlength: 30 },
+        'NDP/NRP': { placeholder: 'Masukkan NDP/NRP',        maxlength: 30 },
+    };
+
+    function detectTipeFromNama(namaInstansi) {
+        const text = (namaInstansi || '').toLowerCase();
+        const match = keywordMap.find(m => m.keywords.some(k => text.includes(k)));
+        return match ? match.label : null;
+    }
+
+    function updateIdentitasField(instansiId, instansiNama) {
+        let tipe = instansiTipe[instansiId] || null;
+        if (!tipe || tipe === 'NIK') {
+            const detected = detectTipeFromNama(instansiNama);
+            if (detected) tipe = detected;
+            else tipe = 'NIK';
+        }
+        const cfg = tipeConfig[tipe] || tipeConfig['NIK'];
+        document.getElementById('labelIdentitas').textContent = tipe;
+        document.getElementById('nikField').placeholder = cfg.placeholder;
+        document.getElementById('nikField').maxLength = cfg.maxlength;
     }
 
     document.getElementById('instansiSelect').addEventListener('change', function() {
@@ -544,20 +563,19 @@
         if (this.value === 'lainnya') {
             wrapper.style.display = 'block';
             wrapper.querySelector('input').required = true;
-            updateIdentitasField('');
+            document.getElementById('labelIdentitas').textContent = 'NIK';
+            document.getElementById('nikField').placeholder = 'Nomor Induk Kependudukan';
+            document.getElementById('nikField').maxLength = 30;
         } else {
             wrapper.style.display = 'none';
             wrapper.querySelector('input').required = false;
-            const selectedText = this.options[this.selectedIndex]?.text || '';
-            updateIdentitasField(selectedText);
+            const nama = this.options[this.selectedIndex]?.text || '';
+            updateIdentitasField(this.value, nama);
         }
     });
 
-    updateIdentitasField(
-        document.getElementById('instansiSelect').options[
-            document.getElementById('instansiSelect').selectedIndex
-        ]?.text || ''
-    );
+    const firstOption = document.getElementById('instansiSelect').options[document.getElementById('instansiSelect').selectedIndex];
+    updateIdentitasField(document.getElementById('instansiSelect').value, firstOption?.text || '');
 
     // ========== PREVIEW ==========
 

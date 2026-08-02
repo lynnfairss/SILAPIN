@@ -18,15 +18,17 @@ class InstansiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_instansi' => 'required|max:100',
-            'alamat'        => 'nullable',
-            'telepon'       => 'nullable|max:20|regex:/^[0-9]+$/',
+            'nama_instansi'   => 'required|max:100',
+            'alamat'          => 'nullable',
+            'telepon'         => 'nullable|max:20|regex:/^[0-9]+$/',
+            'tipe_identitas'  => 'required|in:NIK,NRP,NIP,NDP/NRP',
         ]);
 
         Instansi::create([
-            'nama_instansi' => $request->nama_instansi,
-            'alamat'        => $request->alamat,
-            'telepon'       => $request->telepon,
+            'nama_instansi'   => $request->nama_instansi,
+            'alamat'          => $request->alamat,
+            'telepon'         => $request->telepon,
+            'tipe_identitas'  => $request->tipe_identitas,
         ]);
 
         return redirect()->route('instansi.index')
@@ -36,15 +38,17 @@ class InstansiController extends Controller
     public function update(Request $request, Instansi $instansi)
     {
         $request->validate([
-            'nama_instansi' => 'required|max:100',
-            'alamat'        => 'nullable',
-            'telepon'       => 'nullable|max:20|regex:/^[0-9]+$/',
+            'nama_instansi'   => 'required|max:100',
+            'alamat'          => 'nullable',
+            'telepon'         => 'nullable|max:20|regex:/^[0-9]+$/',
+            'tipe_identitas'  => 'required|in:NIK,NRP,NIP,NDP/NRP',
         ]);
 
         $instansi->update([
-            'nama_instansi' => $request->nama_instansi,
-            'alamat'        => $request->alamat,
-            'telepon'       => $request->telepon,
+            'nama_instansi'   => $request->nama_instansi,
+            'alamat'          => $request->alamat,
+            'telepon'         => $request->telepon,
+            'tipe_identitas'  => $request->tipe_identitas,
         ]);
 
         return redirect()->route('instansi.index')

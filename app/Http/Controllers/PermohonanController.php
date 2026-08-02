@@ -19,7 +19,9 @@ class PermohonanController extends Controller
         $kategori = Kategori::all();
         $inventaris = Inventaris::with('kategori', 'fotos')->where('stok', '>', 0)->get();
 
-        return view('peminjam.index', compact('instansi', 'kategori', 'inventaris'));
+        $instansiTipe = $instansi->mapWithKeys(fn($item) => [$item->id => $item->effective_tipe_identitas]);
+
+        return view('peminjam.index', compact('instansi', 'kategori', 'inventaris', 'instansiTipe'));
     }
 
     public function store(Request $request)
