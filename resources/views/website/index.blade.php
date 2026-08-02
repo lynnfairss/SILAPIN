@@ -99,67 +99,79 @@
         <h3 class="text-center fw-bold mb-2 section-title fade-up">Daftar Inventaris</h3>
         <p class="text-center text-muted mb-4 fade-up">Daftar barang yang tersedia untuk dipinjam</p>
 
-        <div class="card shadow-sm fade-up">
-            <div class="card-body p-0">
-                <div class="table-responsive-custom">
-                    <table class="table table-bordered table-hover mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th width="50" class="text-center">No</th>
-                                <th>Kode</th>
-                                <th>Nama Barang</th>
-                                <th>Kategori</th>
-                                <th class="text-center">Stok</th>
-                                <th>Kondisi</th>
-                                <th>Foto</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($inventaris as $item)
-                            <tr>
-                                <td class="text-center">{{ $loop->iteration }}</td>
-                                <td><code>{{ $item->kode_barang }}</code></td>
-                                <td class="fw-semibold">{{ $item->nama_barang }}</td>
-                                <td><span class="badge bg-secondary badge-kondisi">{{ $item->kategori->nama_kategori ?? '-' }}</span></td>
-                                <td class="text-center">
-                                    @if($item->stok > 0)
-                                        <span class="badge bg-success badge-kondisi">{{ $item->stok }}</span>
-                                    @else
-                                        <span class="badge bg-danger badge-kondisi">Habis</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($item->kondisi == 'Baik')
-                                        <span class="badge bg-success badge-kondisi"><i class="fas fa-check-circle me-1"></i>{{ ucfirst($item->kondisi) }}</span>
-                                    @elseif($item->kondisi == 'Rusak Ringan')
-                                        <span class="badge bg-warning text-dark badge-kondisi"><i class="fas fa-exclamation-triangle me-1"></i>{{ $item->kondisi }}</span>
-                                    @else
-                                        <span class="badge bg-danger badge-kondisi"><i class="fas fa-times-circle me-1"></i>{{ $item->kondisi }}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    @if($item->foto)
-                                        <img src="{{ asset('storage/'.$item->foto) }}" width="60" height="60" class="rounded object-fit-cover" alt="{{ $item->nama_barang }}">
-                                    @else
-                                        <span class="text-muted"><i class="fas fa-image"></i></span>
-                                    @endif
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="7" class="text-center text-muted py-4">
-                                    <i class="fas fa-inbox fa-2x mb-2 d-block"></i>
-                                    Belum ada data barang.
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+        <div class="inventory-grid fade-up">
+            @forelse($inventaris as $item)
+            <div class="product-card">
+                <div class="img-slider" id="slider_inv_{{ $item->id }}">
+                    @php $fotos = $item->fotos; @endphp
+                    @if($fotos->count() > 0)
+                        @foreach($fotos as $idx => $f)
+                        <div class="slider-img {{ $idx === 0 ? 'active' : '' }}" data-img="{{ asset('storage/'.$f->foto) }}">
+                            <img src="{{ asset('storage/'.$f->foto) }}" alt="{{ $item->nama_barang }}" onclick="openLightboxInv({{ $item->id }})">
+                        </div>
+                        @endforeach
+                        @if($fotos->count() > 1)
+                        <button type="button" class="slider-btn slider-prev" onclick="event.stopPropagation(); slideImgInv({{ $item->id }}, -1)"><i class="fas fa-chevron-left"></i></button>
+                        <button type="button" class="slider-btn slider-next" onclick="event.stopPropagation(); slideImgInv({{ $item->id }}, 1)"><i class="fas fa-chevron-right"></i></button>
+                        <div class="slider-dots">
+                            @foreach($fotos as $idx => $f)
+                            <span class="dot {{ $idx === 0 ? 'active' : '' }}" onclick="event.stopPropagation(); goToSlideInv({{ $item->id }}, {{ $idx }})"></span>
+                            @endforeach
+                        </div>
+                        @endif
+                    @elseif($item->foto)
+                        <div class="slider-img active" data-img="{{ asset('storage/'.$item->foto) }}">
+                            <img src="{{ asset('storage/'.$item->foto) }}" alt="{{ $item->nama_barang }}" onclick="openLightboxInv({{ $item->id }})">
+                        </div>
+                    @else
+                        <div class="slider-img active no-foto">
+                            <i class="fas fa-box"></i>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="product-info">
+                    <div class="product-name">{{ $item->nama_barang }}</div>
+                    <div class="product-meta">
+                        <span><code>{{ $item->kode_barang }}</code></span>
+                        <span class="product-kategori">{{ $item->kategori->nama_kategori ?? '-' }}</span>
+                    </div>
+                    <div class="product-stok-kondisi">
+                        @if($item->stok > 0)
+                            <span class="badge bg-success badge-kondisi">Stok: {{ $item->stok }}</span>
+                        @else
+                            <span class="badge bg-danger badge-kondisi">Habis</span>
+                        @endif
+                        @if($item->kondisi == 'Baik')
+                            <span class="badge bg-success badge-kondisi"><i class="fas fa-check-circle me-1"></i>{{ $item->kondisi }}</span>
+                        @elseif($item->kondisi == 'Rusak Ringan')
+                            <span class="badge bg-warning text-dark badge-kondisi"><i class="fas fa-exclamation-triangle me-1"></i>{{ $item->kondisi }}</span>
+                        @else
+                            <span class="badge bg-danger badge-kondisi"><i class="fas fa-times-circle me-1"></i>{{ $item->kondisi }}</span>
+                        @endif
+                    </div>
                 </div>
             </div>
+            @empty
+            <div class="col-12 text-center py-5 text-muted">
+                <i class="fas fa-inbox fa-3x d-block mb-2"></i>
+                Belum ada data barang.
+            </div>
+            @endforelse
         </div>
     </div>
 </section>
+
+<div class="inv-modal-overlay" id="invImageModal" onclick="closeLightboxInv(event)">
+    <div class="inv-modal-content">
+        <button type="button" class="inv-modal-close" onclick="closeLightboxInv()">&times;</button>
+        <button type="button" class="inv-modal-nav inv-modal-prev" onclick="navigateLightboxInv(-1)"><i class="fas fa-chevron-left"></i></button>
+        <img id="invModalImg" src="" alt="Foto Barang">
+        <button type="button" class="inv-modal-nav inv-modal-next" onclick="navigateLightboxInv(1)"><i class="fas fa-chevron-right"></i></button>
+        <div class="inv-modal-caption" id="invModalCaption"></div>
+        <div class="inv-modal-dots" id="invModalDots"></div>
+    </div>
+</div>
 
 <section id="layanan" class="py-5">
     <div class="container">
@@ -428,6 +440,80 @@
     window.addEventListener('load', () => {
         handleFadeUp();
         handleCounter();
+    });
+
+    // ========== INVENTORY IMAGE SLIDER ==========
+    function slideImgInv(itemId, dir) {
+        const slider = document.getElementById('slider_inv_' + itemId);
+        if (!slider) return;
+        const imgs = slider.querySelectorAll('.slider-img');
+        const dots = slider.querySelectorAll('.dot');
+        let active = 0;
+        imgs.forEach((img, i) => { if (img.classList.contains('active')) active = i; });
+        imgs[active].classList.remove('active');
+        if (dots.length) dots[active].classList.remove('active');
+        active = (active + dir + imgs.length) % imgs.length;
+        imgs[active].classList.add('active');
+        if (dots.length) dots[active].classList.add('active');
+    }
+
+    function goToSlideInv(itemId, idx) {
+        const slider = document.getElementById('slider_inv_' + itemId);
+        if (!slider) return;
+        const imgs = slider.querySelectorAll('.slider-img');
+        const dots = slider.querySelectorAll('.dot');
+        imgs.forEach(img => img.classList.remove('active'));
+        dots.forEach(d => d.classList.remove('active'));
+        imgs[idx].classList.add('active');
+        dots[idx].classList.add('active');
+    }
+
+    // ========== INVENTORY LIGHTBOX ==========
+    let invLightboxData = [];
+    let invLightboxIndex = 0;
+
+    function openLightboxInv(itemId) {
+        const slider = document.getElementById('slider_inv_' + itemId);
+        if (!slider) return;
+        const allImgs = slider.querySelectorAll('.slider-img');
+        invLightboxData = [];
+        let startIdx = 0;
+        allImgs.forEach((img, i) => {
+            const src = img.dataset.img;
+            if (src) invLightboxData.push(src);
+            if (img.classList.contains('active') && src) startIdx = i;
+        });
+        if (!invLightboxData.length) return;
+        invLightboxIndex = startIdx;
+        document.getElementById('invImageModal').classList.add('active');
+        updateInvLightbox();
+    }
+
+    function navigateLightboxInv(dir) {
+        if (!invLightboxData.length) return;
+        invLightboxIndex = (invLightboxIndex + dir + invLightboxData.length) % invLightboxData.length;
+        updateInvLightbox();
+    }
+
+    function updateInvLightbox() {
+        document.getElementById('invModalImg').src = invLightboxData[invLightboxIndex];
+        document.getElementById('invModalCaption').textContent = (invLightboxIndex + 1) + ' / ' + invLightboxData.length;
+        document.getElementById('invModalDots').innerHTML = invLightboxData.map((_, i) =>
+            '<span class="dot ' + (i === invLightboxIndex ? 'active' : '') + '" onclick="invLightboxIndex=' + i + ';updateInvLightbox()"></span>'
+        ).join('');
+    }
+
+    function closeLightboxInv(e) {
+        if (e && e.target !== e.currentTarget) return;
+        document.getElementById('invImageModal').classList.remove('active');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (document.getElementById('invImageModal').classList.contains('active')) {
+            if (e.key === 'Escape') closeLightboxInv();
+            if (e.key === 'ArrowLeft') navigateLightboxInv(-1);
+            if (e.key === 'ArrowRight') navigateLightboxInv(1);
+        }
     });
 </script>
 

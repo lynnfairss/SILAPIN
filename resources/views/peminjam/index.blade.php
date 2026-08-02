@@ -117,7 +117,10 @@
                             </div>
                         </div>
                     </div>
-                    <div class="text-end mt-3">
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <a href="{{ route('website') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Kembali ke Halaman Utama
+                        </a>
                         <button type="button" class="btn btn-primary btn-next px-4" onclick="goToStep(2)">
                             Selanjutnya <i class="fas fa-arrow-right ms-1"></i>
                         </button>
