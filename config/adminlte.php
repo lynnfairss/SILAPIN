@@ -342,6 +342,12 @@ return [
         'icon' => 'fas fa-file-signature',
     ],
 
+    [
+        'text' => 'Keamanan',
+        'url'  => 'security',
+        'icon' => 'fas fa-shield-alt',
+    ],
+
     ['header' => 'PENGATURAN', 'can' => 'is-super-admin'],
 
     [

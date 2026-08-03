@@ -235,6 +235,20 @@
                 <button type="submit" class="btn btn-login w-100">
                     <i class="fas fa-sign-in-alt me-2"></i>Masuk
                 </button>
+
+                <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1">
+                    <span class="px-3 text-muted" style="font-size:.75rem;">atau</span>
+                    <hr class="flex-grow-1">
+                </div>
+
+                <div id="passkeyAlert" class="alert alert-danger d-none alert-custom mb-3"></div>
+
+                <button type="button" id="btnPasskey" class="btn w-100"
+                        style="border-radius:10px; padding:11px; font-weight:600; font-size:.95rem;
+                               border:1.5px solid #0d6efd; color:#0d6efd; background:#fff; transition:all .2s;">
+                    <i class="fas fa-fingerprint me-2"></i>Masuk dengan Passkey
+                </button>
             </form>
 
         </div>
@@ -246,6 +260,7 @@
 
 </div>
 
+<script src="{{ asset('vendor/webauthn/webauthn.js') }}"></script>
 <script>
     function togglePassword() {
         const input = document.getElementById('inputPassword');
@@ -258,6 +273,99 @@
             icon.classList.replace('fa-eye-slash', 'fa-eye');
         }
     }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+    function showPasskeyError(message) {
+        const alert = document.getElementById('passkeyAlert');
+        alert.textContent = message;
+        alert.classList.remove('d-none');
+    }
+
+    function reloadStale() {
+        sessionStorage.setItem('passkey_stale', '1');
+        window.location.reload();
+    }
+
+    if (sessionStorage.getItem('passkey_stale') === '1') {
+        sessionStorage.removeItem('passkey_stale');
+        showPasskeyError('Sesi halaman sudah diperbarui. Silakan klik "Masuk dengan Passkey" lagi.');
+    }
+
+    document.getElementById('btnPasskey').addEventListener('click', function () {
+        const btn = this;
+        const email = document.querySelector('input[name="email"]').value.trim();
+
+        if (!email) {
+            showPasskeyError('Masukkan email terlebih dahulu sebelum login dengan passkey.');
+            return;
+        }
+
+        const remember = document.getElementById('remember') ? document.getElementById('remember').checked : false;
+        btn.disabled = true;
+
+        fetch('{{ route('passkey.options') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+            body: JSON.stringify({ email: email, role: 'super_admin' }),
+        })
+        .then(r => {
+            if (r.status === 419) {
+                reloadStale();
+                return new Promise(() => {});
+            }
+            return r.json().then(d => ({ ok: r.ok, d }));
+        })
+        .then(({ ok, d }) => {
+            if (!ok) {
+                btn.disabled = false;
+                showPasskeyError(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Gagal memulai login passkey.'));
+                return;
+            }
+
+            const webauthn = new WebAuthn();
+            webauthn.sign(d.publicKey, function (credential) {
+                credential.remember = remember;
+
+                fetch('{{ route('passkey.login') }}', {
+                    method: 'POST',
+                    headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+            },
+                    body: JSON.stringify(credential),
+                })
+                .then(r => {
+            if (r.status === 419) {
+                reloadStale();
+                return new Promise(() => {});
+            }
+            return r.json().then(d => ({ ok: r.ok, d }));
+        })
+                .then(({ ok, d }) => {
+                    if (ok && d.callback) {
+                        window.location.href = d.callback;
+                        return;
+                    }
+                    btn.disabled = false;
+                    showPasskeyError(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Login passkey gagal.'));
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    showPasskeyError('Terjadi kesalahan saat login passkey. Silakan coba lagi.');
+                });
+            });
+        })
+        .catch(() => {
+            btn.disabled = false;
+            showPasskeyError('Terjadi kesalahan. Silakan coba lagi.');
+        });
+    });
 </script>
 
 </body>

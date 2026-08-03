@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Admin\InstansiController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\InventarisController;
 use App\Http\Controllers\Admin\PermohonanController as AdminPermohonanController;
+use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\UserController;
 
 /*
@@ -51,6 +53,24 @@ Route::middleware(['auth'])->group(function () {
         ->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+
+    // Keamanan (2FA + Passkey) - semua role yang sudah login
+    Route::get('/security', [SecurityController::class, 'index'])
+        ->name('security');
+    Route::post('/security/2fa/enable', [SecurityController::class, 'enableTwoFactor'])
+        ->name('security.2fa.enable');
+    Route::post('/security/2fa/confirm', [SecurityController::class, 'confirmTwoFactor'])
+        ->name('security.2fa.confirm');
+    Route::post('/security/2fa/disable', [SecurityController::class, 'disableTwoFactor'])
+        ->name('security.2fa.disable');
+
+    // Passkey management
+    Route::post('/passkey/register/options', [PasskeyController::class, 'registerOptions'])
+        ->name('passkey.register.options');
+    Route::post('/passkey/register', [PasskeyController::class, 'register'])
+        ->name('passkey.register');
+    Route::delete('/passkey/{key}', [PasskeyController::class, 'destroy'])
+        ->name('passkey.destroy');
 
     // Master Data (hanya Super Admin)
     Route::middleware('role:super_admin')->group(function () {
