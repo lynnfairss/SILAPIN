@@ -99,9 +99,21 @@
         <h3 class="text-center fw-bold mb-2 section-title fade-up">Daftar Inventaris</h3>
         <p class="text-center text-muted mb-4 fade-up">Daftar barang yang tersedia untuk dipinjam</p>
 
-        <div class="inventory-grid fade-up">
+        <div class="inv-search fade-up">
+            <i class="fas fa-search inv-search-icon"></i>
+            <input type="text" id="filterInventaris" class="form-control" placeholder="Cari barang, kode, atau kategori..." oninput="filterInventaris(this.value)">
+        </div>
+
+        <div class="inv-chips fade-up" id="invFilterChips">
+            <span class="inv-chip active" data-kategori="" onclick="filterInvByKategori(this, '')">Semua</span>
+            @foreach($kategori as $kat)
+            <span class="inv-chip" data-kategori="{{ $kat->nama_kategori }}" onclick="filterInvByKategori(this, '{{ $kat->nama_kategori }}')">{{ $kat->nama_kategori }}</span>
+            @endforeach
+        </div>
+
+        <div class="inventory-grid fade-up" id="inventoryGrid">
             @forelse($inventaris as $item)
-            <div class="product-card">
+            <div class="product-card" data-nama="{{ strtolower($item->nama_barang) }}" data-kode="{{ strtolower($item->kode_barang) }}" data-kategori="{{ strtolower($item->kategori->nama_kategori ?? '') }}">
                 <div class="img-slider" id="slider_inv_{{ $item->id }}">
                     @php $fotos = $item->fotos; @endphp
                     @if($fotos->count() > 0)
@@ -466,6 +478,30 @@
         dots.forEach(d => d.classList.remove('active'));
         imgs[idx].classList.add('active');
         dots[idx].classList.add('active');
+    }
+
+    // ========== INVENTORY FILTER ==========
+    function filterInventaris(query) {
+        const q = query.toLowerCase().trim();
+        document.querySelectorAll('#inventoryGrid .product-card').forEach(el => {
+            const nama = el.dataset.nama || '';
+            const kode = el.dataset.kode || '';
+            const kategori = el.dataset.kategori || '';
+            el.style.display = (nama.includes(q) || kode.includes(q) || kategori.includes(q)) ? '' : 'none';
+        });
+        if (q) {
+            document.querySelectorAll('.inv-chip').forEach(c => c.classList.remove('active'));
+        }
+    }
+
+    function filterInvByKategori(chip, kategori) {
+        document.querySelectorAll('.inv-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        document.getElementById('filterInventaris').value = '';
+        document.querySelectorAll('#inventoryGrid .product-card').forEach(el => {
+            if (!kategori) { el.style.display = ''; return; }
+            el.style.display = el.dataset.kategori === kategori.toLowerCase() ? '' : 'none';
+        });
     }
 
     // ========== INVENTORY LIGHTBOX ==========

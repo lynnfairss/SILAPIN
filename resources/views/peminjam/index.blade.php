@@ -317,10 +317,22 @@
 <div class="image-modal-overlay" id="cameraModal" onclick="if(event.target===this)closeCamera()">
     <div class="image-modal-content camera-modal-content">
         <button type="button" class="modal-close" onclick="closeCamera()">&times;</button>
-        <h6 class="fw-bold mb-3 text-center"><i class="fas fa-camera me-2 text-primary"></i>Scan Dokumen</h6>
+        <h6 class="fw-bold mb-3 text-center"><i class="fas fa-camera me-2 text-primary"></i><span id="cameraModalTitle">Scan Dokumen</span></h6>
         <div class="camera-frame">
             <video id="cameraPreview" autoplay playsinline muted></video>
             <canvas id="cameraCanvas" class="d-none"></canvas>
+            <div class="camera-flash" id="cameraFlash"></div>
+            <div class="ktp-frame hidden" id="ktpFrame">
+                <div class="ktp-hole">
+                    <span class="ktp-corner tl"></span>
+                    <span class="ktp-corner tr"></span>
+                    <span class="ktp-corner bl"></span>
+                    <span class="ktp-corner br"></span>
+                    <span class="ktp-face-label">Wajah</span>
+                    <span class="ktp-face-box"></span>
+                </div>
+                <span class="ktp-label"><i class="fas fa-id-card me-1"></i>Letakkan KTP di dalam bingkai, wajah di dalam kotak</span>
+            </div>
         </div>
         <div id="cameraStatus" class="text-center text-muted small py-2"></div>
         <div class="d-flex justify-content-center gap-3 mt-2">
@@ -540,6 +552,9 @@
         dots.innerHTML = lightboxData.map((_, i) =>
             '<span class="dot ' + (i === lightboxIndex ? 'active' : '') + '" onclick="lightboxIndex=' + i + ';updateLightbox()"></span>'
         ).join('');
+        document.querySelector('.modal-prev').style.display = lightboxData.length > 1 ? '' : 'none';
+        document.querySelector('.modal-next').style.display = lightboxData.length > 1 ? '' : 'none';
+        dots.style.display = lightboxData.length > 1 ? '' : 'none';
     }
 
     function closeLightbox(e) {
@@ -658,17 +673,154 @@
     // ========== SCAN DOKUMEN (KAMERA) ==========
 
     let cameraStream = null;
+    const KTP_RATIO = 85.6 / 53.98; // rasio ukuran KTP standar
+
+    // ===== AUTO-CAPTURE KTP =====
+    const AUTO_DETECT = {
+        interval: 100,       // ms antar sampling
+        sampleWidth: 96,     // lebar canvas sampling (px)
+        stableFrames: 2,     // jumlah sampel stabil berturut-turut sebelum capture (±0,2 detik)
+        minBrightness: 120,  // kecerahan rata-rata minimum area bingkai
+        maxBrightness: 235,  // kecerahan rata-rata maksimum
+        minEdge: 0.08,       // rasio piksel tepi minimum (teks KTP)
+        maxEdge: 0.55,       // rasio piksel tepi maksimum
+        maxDiff: 7,          // selisih rata-rata antar frame (stabilitas)
+    };
+    let autoDetectTimer = null;
+    let autoDetectFrame = null;
+    let autoDetectStable = 0;
+    let autoCapturing = false;
+
+    function getHoleSourceRect(video, frame) {
+        const frameW = frame.offsetWidth;
+        const frameH = frame.offsetHeight;
+        const scale = Math.max(frameW / video.videoWidth, frameH / video.videoHeight);
+        const dw = video.videoWidth * scale;
+        const dh = video.videoHeight * scale;
+        const dx = (frameW - dw) / 2;
+        const dy = (frameH - dh) / 2;
+        const hw = frameW * 0.78;
+        const hh = hw / KTP_RATIO;
+        const hx = (frameW - hw) / 2;
+        const hy = (frameH - hh) / 2;
+        return {
+            sx: (hx - dx) / scale,
+            sy: (hy - dy) / scale,
+            sw: hw / scale,
+            sh: hh / scale,
+        };
+    }
+
+    function startAutoDetect() {
+        stopAutoDetect();
+        autoDetectFrame = null;
+        autoDetectStable = 0;
+        autoDetectTimer = setInterval(autoDetectTick, AUTO_DETECT.interval);
+    }
+
+    function stopAutoDetect() {
+        if (autoDetectTimer) {
+            clearInterval(autoDetectTimer);
+            autoDetectTimer = null;
+        }
+        autoDetectFrame = null;
+        autoDetectStable = 0;
+    }
+
+    function autoDetectTick() {
+        const video = document.getElementById('cameraPreview');
+        if (!cameraStream || !autoDetectTimer || video.videoWidth === 0 || autoCapturing) return;
+
+        const frame = document.querySelector('.camera-frame');
+        if (!frame) return;
+
+        const rect = getHoleSourceRect(video, frame);
+        const sampleW = AUTO_DETECT.sampleWidth;
+        const sampleH = Math.max(1, Math.round(sampleW / KTP_RATIO));
+
+        const canvas = document.getElementById('cameraCanvas');
+        canvas.width = sampleW;
+        canvas.height = sampleH;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, rect.sx, rect.sy, rect.sw, rect.sh, 0, 0, sampleW, sampleH);
+
+        const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
+        const gray = new Uint8Array(sampleW * sampleH);
+        let sum = 0;
+        for (let y = 0; y < sampleH; y++) {
+            for (let x = 0; x < sampleW; x++) {
+                const i = (y * sampleW + x) * 4;
+                const g = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                gray[y * sampleW + x] = g;
+                sum += g;
+            }
+        }
+        const mean = sum / (sampleW * sampleH);
+
+        let edgeCount = 0;
+        for (let y = 0; y < sampleH; y++) {
+            for (let x = 0; x < sampleW; x++) {
+                const i = y * sampleW + x;
+                const right = x < sampleW - 1 ? gray[i + 1] : gray[i];
+                const down = y < sampleH - 1 ? gray[i + sampleW] : gray[i];
+                if (Math.max(Math.abs(right - gray[i]), Math.abs(down - gray[i])) > 35) edgeCount++;
+            }
+        }
+        const edgeRatio = edgeCount / (sampleW * sampleH);
+
+        let diffSum = -1;
+        if (autoDetectFrame) {
+            let diff = 0;
+            for (let i = 0; i < gray.length; i++) diff += Math.abs(gray[i] - autoDetectFrame[i]);
+            diffSum = diff / gray.length;
+        }
+        autoDetectFrame = gray.slice();
+
+        const brightnessOk = mean >= AUTO_DETECT.minBrightness && mean <= AUTO_DETECT.maxBrightness;
+        const edgeOk = edgeRatio >= AUTO_DETECT.minEdge && edgeRatio <= AUTO_DETECT.maxEdge;
+        const stableOk = diffSum >= 0 && diffSum <= AUTO_DETECT.maxDiff;
+
+        const status = document.getElementById('cameraStatus');
+        if (brightnessOk && edgeOk && stableOk) {
+            autoDetectStable++;
+            if (autoDetectStable >= AUTO_DETECT.stableFrames) {
+                status.textContent = 'KTP terdeteksi — mengambil foto…';
+                autoCapture();
+            } else if (autoDetectStable === 1) {
+                status.textContent = 'KTP terdeteksi…';
+            }
+        } else {
+            autoDetectStable = 0;
+            status.textContent = 'Arahkan KTP ke bingkai, biarkan foto otomatis…';
+        }
+    }
+
+    function autoCapture() {
+        stopAutoDetect();
+        autoCapturing = true;
+        const flash = document.getElementById('cameraFlash');
+        flash.classList.remove('active');
+        void flash.offsetWidth;
+        flash.classList.add('active');
+        setTimeout(function() {
+            capturePhoto();
+            autoCapturing = false;
+        }, 150);
+    }
 
     async function openCamera(btn) {
         const video = document.getElementById('cameraPreview');
         const status = document.getElementById('cameraStatus');
         const btnCapture = document.getElementById('btnCapture');
+        const isKtp = btn.dataset.scan === 'foto_ktp';
 
         closeCamera();
         video.dataset.target = btn.dataset.scan;
+        document.getElementById('ktpFrame').classList.toggle('hidden', !isKtp);
+        document.getElementById('cameraModalTitle').textContent = isKtp ? 'Scan KTP' : 'Scan Dokumen';
         document.getElementById('cameraModal').classList.add('active');
         btnCapture.disabled = true;
-        status.textContent = 'Mengaktifkan kamera…';
+        status.textContent = isKtp ? 'Aktifkan kamera, lalu letakkan KTP di dalam bingkai…' : 'Mengaktifkan kamera…';
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             status.textContent = 'Browser tidak mendukung kamera. Gunakan upload file biasa.';
@@ -683,7 +835,12 @@
             video.srcObject = cameraStream;
             await video.play();
             btnCapture.disabled = false;
-            status.textContent = 'Arahkan kamera ke dokumen, lalu klik "Ambil Foto".';
+            if (isKtp) {
+                startAutoDetect();
+                status.textContent = 'Arahkan KTP ke bingkai, foto otomatis saat posisi pas.';
+            } else {
+                status.textContent = 'Arahkan kamera ke dokumen, lalu klik "Ambil Foto".';
+            }
         } catch (e) {
             status.textContent = 'Kamera tidak tersedia / izin ditolak. Gunakan upload file biasa.';
         }
@@ -695,9 +852,39 @@
         const field = video.dataset.target;
         if (!cameraStream || !field || video.videoWidth === 0) return;
 
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0);
+        stopAutoDetect();
+        const frame = document.querySelector('.camera-frame');
+        const isKtp = field === 'foto_ktp' && frame;
+
+        if (isKtp) {
+            // Mode KTP: crop tepat sesuai bingkai yang terlihat di viewfinder.
+            // Mapping "cover": video memenuhi frame penuh, hitung wilayah sumber.
+            const frameW = frame.offsetWidth;
+            const frameH = frame.offsetHeight;
+            const scale = Math.max(frameW / video.videoWidth, frameH / video.videoHeight);
+            const dw = video.videoWidth * scale;
+            const dh = video.videoHeight * scale;
+            const dx = (frameW - dw) / 2;
+            const dy = (frameH - dh) / 2;
+
+            const hw = frameW * 0.78;
+            const hh = hw / KTP_RATIO;
+            const hx = (frameW - hw) / 2;
+            const hy = (frameH - hh) / 2;
+
+            const sx = (hx - dx) / scale;
+            const sy = (hy - dy) / scale;
+            const sw = hw / scale;
+            const sh = hh / scale;
+
+            canvas.width = Math.round(sw * 2); // 2x untuk hasil lebih tajam
+            canvas.height = Math.round(sh * 2);
+            canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+        } else {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+        }
 
         canvas.toBlob(function(blob) {
             if (blob) {
@@ -720,11 +907,23 @@
         const preview = input.closest('.col-md-6').querySelector('.scan-preview');
         preview.innerHTML =
             '<div class="scan-thumb">' +
-                '<img src="' + url + '" alt="Hasil scan">' +
+                '<img src="' + url + '" alt="Hasil scan" onclick="viewScan(\'' + field + '\')" title="Klik untuk lihat besar">' +
                 '<button type="button" class="btn btn-sm btn-danger scan-remove" onclick="removeScan(\'' + field + '\')" title="Hapus">' +
                     '<i class="fas fa-trash"></i>' +
                 '</button>' +
             '</div>';
+    }
+
+    function viewScan(field) {
+        const input = document.querySelector('input[name="' + field + '"]');
+        if (!input) return;
+        const img = input.closest('.col-md-6').querySelector('.scan-thumb img');
+        if (!img || !img.src) return;
+        lightboxData = [img.src];
+        lightboxIndex = 0;
+        const modal = document.getElementById('imageModal');
+        modal.classList.add('active');
+        updateLightbox();
     }
 
     function removeScan(field) {
@@ -735,11 +934,15 @@
     }
 
     function closeCamera() {
+        stopAutoDetect();
+        autoCapturing = false;
+        document.getElementById('cameraFlash').classList.remove('active');
         if (cameraStream) {
             cameraStream.getTracks().forEach(function(t) { t.stop(); });
             cameraStream = null;
         }
         document.getElementById('cameraPreview').srcObject = null;
+        document.getElementById('ktpFrame').classList.add('hidden');
         document.getElementById('cameraModal').classList.remove('active');
     }
 </script>
