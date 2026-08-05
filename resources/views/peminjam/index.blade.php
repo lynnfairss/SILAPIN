@@ -106,13 +106,25 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Foto KTP <span class="text-danger">*</span> <small class="text-muted">(max 2MB, jpg/png)</small></label>
-                                    <input type="file" name="foto_ktp" class="form-control" accept="image/*">
-                                    <div class="form-text">Upload scan/foto KTP sebagai bukti.</div>
+                                    <div class="input-group">
+                                        <input type="file" name="foto_ktp" class="form-control" accept="image/*">
+                                        <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Scan / foto KTP">
+                                            <i class="fas fa-camera me-1"></i>Scan
+                                        </button>
+                                    </div>
+                                    <div class="scan-preview"></div>
+                                    <div class="form-text">Upload atau scan/foto KTP sebagai bukti.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Surat Tugas <small class="text-muted">(opsional, max 2MB)</small></label>
-                                    <input type="file" name="surat_tugas" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                    <div class="form-text">Upload surat tugas jika ada.</div>
+                                    <div class="input-group">
+                                        <input type="file" name="surat_tugas" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                        <button type="button" class="btn btn-outline-primary" data-scan="surat_tugas" onclick="openCamera(this)" title="Scan / foto surat tugas">
+                                            <i class="fas fa-camera me-1"></i>Scan
+                                        </button>
+                                    </div>
+                                    <div class="scan-preview"></div>
+                                    <div class="form-text">Upload atau scan surat tugas jika ada.</div>
                                 </div>
                             </div>
                         </div>
@@ -298,6 +310,27 @@
         <button type="button" class="modal-nav modal-next" onclick="navigateLightbox(1)"><i class="fas fa-chevron-right"></i></button>
         <div class="modal-caption" id="modalCaption"></div>
         <div class="modal-dots" id="modalDots"></div>
+    </div>
+</div>
+
+{{-- Camera Scan Modal --}}
+<div class="image-modal-overlay" id="cameraModal" onclick="if(event.target===this)closeCamera()">
+    <div class="image-modal-content camera-modal-content">
+        <button type="button" class="modal-close" onclick="closeCamera()">&times;</button>
+        <h6 class="fw-bold mb-3 text-center"><i class="fas fa-camera me-2 text-primary"></i>Scan Dokumen</h6>
+        <div class="camera-frame">
+            <video id="cameraPreview" autoplay playsinline muted></video>
+            <canvas id="cameraCanvas" class="d-none"></canvas>
+        </div>
+        <div id="cameraStatus" class="text-center text-muted small py-2"></div>
+        <div class="d-flex justify-content-center gap-3 mt-2">
+            <button type="button" class="btn btn-outline-secondary" onclick="closeCamera()">
+                <i class="fas fa-times me-1"></i>Batal
+            </button>
+            <button type="button" class="btn btn-success" id="btnCapture" onclick="capturePhoto()" disabled>
+                <i class="fas fa-camera me-1"></i>Ambil Foto
+            </button>
+        </div>
     </div>
 </div>
 
@@ -621,6 +654,94 @@
         document.getElementById('btnSubmit').disabled = true;
         document.getElementById('btnSubmit').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mengirim...';
     });
+
+    // ========== SCAN DOKUMEN (KAMERA) ==========
+
+    let cameraStream = null;
+
+    async function openCamera(btn) {
+        const video = document.getElementById('cameraPreview');
+        const status = document.getElementById('cameraStatus');
+        const btnCapture = document.getElementById('btnCapture');
+
+        closeCamera();
+        video.dataset.target = btn.dataset.scan;
+        document.getElementById('cameraModal').classList.add('active');
+        btnCapture.disabled = true;
+        status.textContent = 'Mengaktifkan kamera…';
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            status.textContent = 'Browser tidak mendukung kamera. Gunakan upload file biasa.';
+            return;
+        }
+
+        try {
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 } },
+                audio: false,
+            });
+            video.srcObject = cameraStream;
+            await video.play();
+            btnCapture.disabled = false;
+            status.textContent = 'Arahkan kamera ke dokumen, lalu klik "Ambil Foto".';
+        } catch (e) {
+            status.textContent = 'Kamera tidak tersedia / izin ditolak. Gunakan upload file biasa.';
+        }
+    }
+
+    function capturePhoto() {
+        const video = document.getElementById('cameraPreview');
+        const canvas = document.getElementById('cameraCanvas');
+        const field = video.dataset.target;
+        if (!cameraStream || !field || video.videoWidth === 0) return;
+
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0);
+
+        canvas.toBlob(function(blob) {
+            if (blob) {
+                const input = document.querySelector('input[name="' + field + '"]');
+                if (input) {
+                    const file = new File([blob], field + '-scan.jpg', { type: 'image/jpeg' });
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    input.files = dt.files;
+                    showScanPreview(field, URL.createObjectURL(file));
+                }
+            }
+            closeCamera();
+        }, 'image/jpeg', 0.9);
+    }
+
+    function showScanPreview(field, url) {
+        const input = document.querySelector('input[name="' + field + '"]');
+        if (!input) return;
+        const preview = input.closest('.col-md-6').querySelector('.scan-preview');
+        preview.innerHTML =
+            '<div class="scan-thumb">' +
+                '<img src="' + url + '" alt="Hasil scan">' +
+                '<button type="button" class="btn btn-sm btn-danger scan-remove" onclick="removeScan(\'' + field + '\')" title="Hapus">' +
+                    '<i class="fas fa-trash"></i>' +
+                '</button>' +
+            '</div>';
+    }
+
+    function removeScan(field) {
+        const input = document.querySelector('input[name="' + field + '"]');
+        if (input) input.value = '';
+        const preview = input ? input.closest('.col-md-6').querySelector('.scan-preview') : null;
+        if (preview) preview.innerHTML = '';
+    }
+
+    function closeCamera() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(function(t) { t.stop(); });
+            cameraStream = null;
+        }
+        document.getElementById('cameraPreview').srcObject = null;
+        document.getElementById('cameraModal').classList.remove('active');
+    }
 </script>
 
 </body>
