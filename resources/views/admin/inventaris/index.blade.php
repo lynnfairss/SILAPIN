@@ -6,6 +6,20 @@
     <h1>Data Inventaris</h1>
 @stop
 
+@section('css')
+<style>
+    .btn-foto-hapus {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        border-radius: 50%;
+        padding: .1rem .35rem;
+        font-size: .65rem;
+        line-height: 1;
+    }
+</style>
+@stop
+
 @section('content')
 
 @if(session('success'))
@@ -36,6 +50,7 @@
         @csrf
         <input type="hidden" name="_method" id="formMethod" value="POST">
         <input type="hidden" name="id" id="editId" value="">
+        <input type="hidden" name="hapus_foto" id="hapusFotoHidden" value="">
 
         <div class="card-body">
             <div class="row g-3">
@@ -101,7 +116,7 @@
                         <div id="fotoSlots">
                             @for($i = 0; $i < 5; $i++)
                             <div class="d-flex align-items-center mb-1">
-                                <input type="file" name="foto[]" id="inputFoto{{ $i }}" class="form-control form-control-sm" accept="image/*">
+                                <input type="file" name="foto[]" id="inputFoto{{ $i }}" class="form-control form-control-sm" accept="image/*" onchange="previewFoto({{ $i }}, this)">
                                 <span class="badge bg-secondary ms-2" id="fotoLabel{{ $i }}">Foto {{ $i + 1 }}</span>
                                 <div id="fotoPreview{{ $i }}" class="ms-2"></div>
                             </div>
@@ -209,6 +224,9 @@
     let fotoList = [];
     let fotoIndex = 0;
 
+    let fotoDihapus = [];
+    let fotoIdSlot = {};
+
     function openFoto(urls) {
         fotoList = urls;
         fotoIndex = 0;
@@ -245,6 +263,29 @@
         }
     });
 
+    function previewFoto(i, input) {
+        const el = document.getElementById('fotoPreview' + i);
+        if (input.files && input.files[0]) {
+            // Jika slot ini sebelumnya ditandai hapus, batal hapus (karena akan diganti file baru)
+            if (fotoIdSlot[i]) {
+                fotoDihapus = fotoDihapus.filter(id => id !== fotoIdSlot[i]);
+            }
+            el.innerHTML = '<img src="' + URL.createObjectURL(input.files[0]) + '" width="50" height="50" class="rounded object-fit-cover border" style="object-fit:cover;">';
+        } else {
+            el.innerHTML = '';
+        }
+    }
+
+    function hapusFoto(i, fotoId) {
+        if (!fotoId) return;
+        if (!fotoDihapus.includes(fotoId)) {
+            fotoDihapus.push(fotoId);
+        }
+        const el = document.getElementById('fotoPreview' + i);
+        el.innerHTML = '<span class="badge bg-danger">Akan dihapus</span>';
+        document.getElementById('inputFoto' + i).value = '';
+    }
+
     function editItem(item) {
         document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Inventaris';
         document.getElementById('formMethod').value = 'PUT';
@@ -258,12 +299,21 @@
         document.getElementById('formInventaris').action = '{{ url("inventaris") }}/' + item.id;
         document.getElementById('btnCancel').style.display = 'inline-block';
 
+        fotoDihapus = [];
+        fotoIdSlot = {};
         for (let i = 0; i < 5; i++) {
             const preview = document.getElementById('fotoPreview' + i);
             const input = document.getElementById('inputFoto' + i);
             input.value = '';
             if (item.fotos && item.fotos[i]) {
-                preview.innerHTML = '<img src="{{ asset("storage") }}/' + item.fotos[i].foto + '" width="50" height="50" class="rounded object-fit-cover">';
+                fotoIdSlot[i] = item.fotos[i].id;
+                preview.innerHTML =
+                    '<div class="position-relative d-inline-block">' +
+                        '<img src="{{ asset("storage") }}/' + item.fotos[i].foto + '" width="50" height="50" class="rounded object-fit-cover border">' +
+                        '<button type="button" class="btn btn-sm btn-danger btn-foto-hapus" title="Hapus foto" onclick="hapusFoto(' + i + ', ' + item.fotos[i].id + ')">' +
+                            '<i class="fas fa-times"></i>' +
+                        '</button>' +
+                    '</div>';
             } else {
                 preview.innerHTML = '';
             }
@@ -284,11 +334,18 @@
         document.getElementById('inputDeskripsi').value = '';
         document.getElementById('formInventaris').action = '{{ route("inventaris.store") }}';
         document.getElementById('btnCancel').style.display = 'none';
+        fotoDihapus = [];
+        fotoIdSlot = {};
+        document.getElementById('hapusFotoHidden').value = '';
         for (let i = 0; i < 5; i++) {
             document.getElementById('inputFoto' + i).value = '';
             document.getElementById('fotoPreview' + i).innerHTML = '';
         }
     }
+
+    document.getElementById('formInventaris').addEventListener('submit', function() {
+        document.getElementById('hapusFotoHidden').value = fotoDihapus.join(',');
+    });
 </script>
 
 @stop
