@@ -438,14 +438,88 @@
         btn.disabled = true;
         btn.querySelector('.btn-text').textContent = 'Mencari';
         btn.querySelector('.search-loading').classList.add('active');
+        result.style.display = 'none';
 
-        setTimeout(() => {
+        const statusMap = {
+            'Menunggu':     { badge: 'warning',  icon: 'fa-clock' },
+            'Disetujui':    { badge: 'success',  icon: 'fa-check-circle' },
+            'Ditolak':      { badge: 'danger',   icon: 'fa-times-circle' },
+            'Dipinjam':     { badge: 'info',     icon: 'fa-box' },
+            'Dikembalikan': { badge: 'secondary', icon: 'fa-undo' },
+        };
+
+        fetch("{{ route('peminjam.cek-status') }}?nomor=" + encodeURIComponent(val), {
+            headers: { 'Accept': 'application/json' }
+        })
+        .then(res => res.json().then(data => ({ ok: res.ok, data })))
+        .then(({ ok, data }) => {
+            result.style.display = 'block';
+
+            if (!ok) {
+                result.innerHTML = '<div class="alert alert-danger mb-0"><i class="fas fa-times-circle me-2"></i>' +
+                    (data.error || 'Data permohonan tidak ditemukan.') + '</div>';
+                return;
+            }
+
+            const st = statusMap[data.status] || { badge: 'secondary', icon: 'fa-question' };
+
+            let barangHtml = '<div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">' +
+                '<thead class="table-light"><tr><th style="width:40px">No</th><th>Barang</th><th class="text-center" style="width:70px">Jumlah</th></tr></thead><tbody>';
+
+            if (data.barang && data.barang.length) {
+                data.barang.forEach((b, i) => {
+                    barangHtml += '<tr><td class="text-center">' + (i + 1) + '</td><td>' +
+                        '<div class="fw-semibold">' + b.nama + '</div>' +
+                        (b.kode ? '<small class="text-muted">' + b.kode + '</small>' : '') +
+                        '</td><td class="text-center fw-semibold">' + b.jumlah + '</td></tr>';
+                });
+            } else {
+                barangHtml += '<tr><td colspan="3" class="text-center text-muted">Tidak ada barang.</td></tr>';
+            }
+            barangHtml += '</tbody></table></div>';
+
+            let catatanHtml = '';
+            if (data.catatan) {
+                catatanHtml = '<div class="mb-3">' +
+                    '<small class="text-muted d-block mb-1"><i class="fas fa-sticky-note me-1"></i>Catatan Admin</small>' +
+                    '<div class="p-2 bg-light rounded small">' + data.catatan + '</div></div>';
+            }
+
+            result.innerHTML =
+                '<div class="card border-0 shadow-sm status-result">' +
+                    '<div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">' +
+                        '<div>' +
+                            '<h6 class="fw-bold mb-0"><i class="fas fa-file-invoice text-primary me-2"></i>' + data.nomor + '</h6>' +
+                            '<small class="text-muted">Diajukan ' + (data.created_at || '-') + '</small>' +
+                        '</div>' +
+                        '<span class="badge bg-' + st.badge + ' fs-6"><i class="fas ' + st.icon + ' me-1"></i>' + data.status + '</span>' +
+                    '</div>' +
+                    '<div class="card-body">' +
+                        '<div class="row g-3 mb-3">' +
+                            '<div class="col-sm-6"><small class="text-muted d-block">Pemohon</small><strong>' + data.nama + '</strong></div>' +
+                            '<div class="col-sm-6"><small class="text-muted d-block">Instansi</small><strong>' + data.instansi + '</strong></div>' +
+                            '<div class="col-sm-6"><small class="text-muted d-block">Tanggal Pinjam</small><strong>' + data.tanggal_pinjam + '</strong></div>' +
+                            '<div class="col-sm-6"><small class="text-muted d-block">Tanggal Kembali</small><strong>' + data.tanggal_kembali + '</strong></div>' +
+                        '</div>' +
+                        catatanHtml +
+                        '<h6 class="fw-bold mb-2"><i class="fas fa-boxes me-2 text-primary"></i>Barang Dipinjam</h6>' +
+                        barangHtml +
+                    '</div>' +
+                    '<div class="card-footer bg-white text-end">' +
+                        '<a href="{{ route('peminjam.cek-status') }}?nomor=' + encodeURIComponent(val) + '" class="btn btn-primary btn-sm">' +
+                            '<i class="fas fa-history me-1"></i>Lihat Riwayat Lengkap</a>' +
+                    '</div>' +
+                '</div>';
+        })
+        .catch(() => {
+            result.style.display = 'block';
+            result.innerHTML = '<div class="alert alert-danger mb-0"><i class="fas fa-exclamation-circle me-2"></i>Terjadi kesalahan saat memeriksa status. Silakan coba lagi.</div>';
+        })
+        .finally(() => {
             btn.disabled = false;
             btn.querySelector('.btn-text').textContent = 'Cek';
             btn.querySelector('.search-loading').classList.remove('active');
-            result.style.display = 'block';
-            result.innerHTML = '<div class="alert alert-info mb-0"><i class="fas fa-info-circle me-2"></i>Data permohonan dengan nomor <strong>' + val + '</strong> tidak ditemukan.</div>';
-        }, 1500);
+        });
     });
 
     // Init on load

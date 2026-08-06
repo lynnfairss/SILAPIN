@@ -63,6 +63,18 @@
     border-radius: 16px;
 }
 
+.status-result {
+    border-radius: 16px;
+    overflow: hidden;
+    animation: fadeStep .35s ease;
+}
+.status-result .card-header {
+    border-bottom: 1px solid #eef0f4;
+}
+.status-result .card-footer {
+    border-top: 1px solid #eef0f4;
+}
+
 .contact-item {
     transition: transform .2s ease;
 }

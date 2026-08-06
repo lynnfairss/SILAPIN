@@ -81,6 +81,14 @@ class PermohonanController extends Controller
                     'jumlah'         => $jml,
                 ]);
             }
+
+            \App\Models\PermohonanStatusLog::create([
+                'permohonan_id' => $permohonan->id,
+                'status_lama'   => null,
+                'status_baru'   => 'Menunggu',
+                'catatan'       => 'Permohonan diajukan oleh peminjam.',
+                'user_id'       => null,
+            ]);
         });
 
         $permohonan = Permohonan::with('detailPermohonan.inventaris', 'instansi')
@@ -93,6 +101,34 @@ class PermohonanController extends Controller
 
     public function cekStatus(Request $request)
     {
+        if ($request->expectsJson()) {
+            $permohonan = Permohonan::with('detailPermohonan.inventaris', 'instansi')
+                ->where('nomor_permohonan', $request->nomor)
+                ->first();
+
+            if (!$permohonan) {
+                return response()->json([
+                    'error' => 'Permohonan dengan nomor tersebut tidak ditemukan.',
+                ], 404);
+            }
+
+            return response()->json([
+                'nomor'           => $permohonan->nomor_permohonan,
+                'nama'            => $permohonan->nama_peminjam,
+                'instansi'        => $permohonan->instansi?->nama_instansi ?? $permohonan->nama_instansi_lain ?? '-',
+                'status'          => $permohonan->status,
+                'tanggal_pinjam'  => $permohonan->tanggal_pinjam,
+                'tanggal_kembali' => $permohonan->tanggal_kembali,
+                'catatan'         => $permohonan->catatan_admin,
+                'created_at'      => $permohonan->created_at?->format('d M Y H:i'),
+                'barang'          => $permohonan->detailPermohonan->map(fn ($d) => [
+                    'nama'   => $d->inventaris?->nama_barang ?? 'Barang #'.$d->inventaris_id,
+                    'kode'   => $d->inventaris?->kode_barang ?? '',
+                    'jumlah' => $d->jumlah,
+                ]),
+            ]);
+        }
+
         $permohonan = null;
 
         if ($request->filled('nomor')) {

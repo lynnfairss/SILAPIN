@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Permohonan;
+use App\Models\PermohonanStatusLog;
 use App\Models\Instansi;
 use Illuminate\Http\Request;
 use App\Models\Inventaris;
@@ -14,9 +15,16 @@ class PermohonanController extends Controller
 {
     public function index()
     {
-        $permohonan = Permohonan::with('instansi')->get();
+        $permohonan = Permohonan::with('instansi', 'detailPermohonan.inventaris')->get();
 
         return view('admin.permohonan.index', compact('permohonan'));
+    }
+
+    public function show(Permohonan $permohonan)
+    {
+        $permohonan->load('instansi', 'detailPermohonan.inventaris', 'statusLogs.user');
+
+        return view('admin.permohonan.show', compact('permohonan'));
     }
 
     public function create()
@@ -53,6 +61,11 @@ class PermohonanController extends Controller
             'tanggal_kembali'  => $request->tanggal_kembali,
             'keperluan'        => $request->keperluan,
             'status'           => 'Menunggu',
+        ])->statusLogs()->create([
+            'status_lama' => null,
+            'status_baru' => 'Menunggu',
+            'catatan'     => 'Permohonan dibuat oleh admin.',
+            'user_id'     => auth()->id(),
         ]);
 
         return redirect()->route('permohonan.index')
@@ -101,10 +114,22 @@ class PermohonanController extends Controller
             'catatan_admin' => $request->status === 'Ditolak' ? 'required|string' : 'nullable|string',
         ]);
 
-        $permohonan->update([
-            'status' => $request->status,
-            'catatan_admin' => $request->catatan_admin,
-        ]);
+        $statusLama = $permohonan->status;
+
+        DB::transaction(function () use ($request, $permohonan, $statusLama) {
+            $permohonan->update([
+                'status' => $request->status,
+                'catatan_admin' => $request->catatan_admin,
+            ]);
+
+            PermohonanStatusLog::create([
+                'permohonan_id' => $permohonan->id,
+                'status_lama'   => $statusLama,
+                'status_baru'   => $request->status,
+                'catatan'       => $request->catatan_admin,
+                'user_id'       => auth()->id(),
+            ]);
+        });
 
         $pesan = $request->status === 'Disetujui'
             ? 'Permohonan berhasil disetujui.'

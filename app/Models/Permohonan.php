@@ -32,4 +32,9 @@ class Permohonan extends Model
     {
         return $this->hasMany(DetailPermohonan::class);
     }
+
+    public function statusLogs()
+    {
+        return $this->hasMany(PermohonanStatusLog::class)->orderBy('created_at');
+    }
 }

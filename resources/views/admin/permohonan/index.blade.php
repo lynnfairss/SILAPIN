@@ -60,6 +60,10 @@
                 </td>
 
                 <td class="text-center">
+                    <a href="{{ route('permohonan.show', $item->id) }}" class="btn btn-info btn-sm" title="Lihat Detail">
+                        <i class="fas fa-eye"></i>
+                    </a>
+
                     @if($item->status == 'Menunggu')
                         <button type="button" class="btn btn-success btn-sm"
                             data-toggle="modal" data-target="#modalACC"
@@ -185,7 +189,7 @@
 
 @endsection
 
-@push('scripts')
+@section('js')
 <script>
     $('#modalACC').on('show.bs.modal', function (e) {
         var btn = $(e.relatedTarget);
@@ -209,4 +213,4 @@
         $(this).find('form').attr('action', '/permohonan/' + id + '/status');
     });
 </script>
-@endpush
+@stop
