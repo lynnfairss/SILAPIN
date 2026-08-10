@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('css/peminjam.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -100,6 +101,14 @@
                                     <label class="form-label fw-medium">Nama Instansi <span class="text-danger">*</span></label>
                                     <input type="text" name="nama_instansi_lain" class="form-control" value="{{ old('nama_instansi_lain') }}" placeholder="Masukkan nama instansi">
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">Tempat / Tgl Lahir</label>
+                                    <input type="text" name="tempat_tanggal_lahir" id="ttlField" class="form-control" value="{{ old('tempat_tanggal_lahir') }}" placeholder="Contoh: Jakarta, 12-08-1990" maxlength="120">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-medium">Alamat</label>
+                                    <textarea name="alamat" id="alamatField" class="form-control" rows="2" placeholder="Masukkan alamat sesuai KTP" maxlength="255">{{ old('alamat') }}</textarea>
+                                </div>
                                 <div class="col-12">
                                     <hr>
                                     <h6 class="fw-bold text-primary"><i class="fas fa-upload me-2"></i>Upload Dokumen</h6>
@@ -107,12 +116,18 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Foto KTP <span class="text-danger">*</span> <small class="text-muted">(max 2MB, jpg/png)</small></label>
                                     <div class="input-group">
-                                        <input type="file" name="foto_ktp" class="form-control" accept="image/*">
+                                        <input type="file" name="foto_ktp" id="fotoKtpInput" class="form-control" accept="image/*">
                                         <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Scan / foto KTP">
                                             <i class="fas fa-camera me-1"></i>Scan
                                         </button>
                                     </div>
-                                    <div class="scan-preview"></div>
+                                    <div class="d-flex align-items-center gap-2 mt-2">
+                                        <div class="scan-preview"></div>
+                                        <button type="button" class="btn btn-sm btn-outline-info" id="btnOcrKtp" onclick="runOcrKtp()" disabled title="Deteksi otomatis Nama, NIK, Alamat & TTL dari foto KTP">
+                                            <i class="fas fa-magic me-1"></i>Deteksi Data KTP
+                                        </button>
+                                    </div>
+                                    <div class="ocr-status" id="ocrStatus"></div>
                                     <div class="form-text">Upload atau scan/foto KTP sebagai bukti.</div>
                                 </div>
                                 <div class="col-md-6">
@@ -895,6 +910,9 @@
                     dt.items.add(file);
                     input.files = dt.files;
                     showScanPreview(field, URL.createObjectURL(file));
+                    if (field === 'foto_ktp') {
+                        setTimeout(runOcrKtp, 400);
+                    }
                 }
             }
             closeCamera();
@@ -931,6 +949,10 @@
         if (input) input.value = '';
         const preview = input ? input.closest('.col-md-6').querySelector('.scan-preview') : null;
         if (preview) preview.innerHTML = '';
+        if (field === 'foto_ktp') {
+            setOcrStatus('', 'idle');
+            updateOcrButton();
+        }
     }
 
     function closeCamera() {
@@ -944,6 +966,173 @@
         document.getElementById('cameraPreview').srcObject = null;
         document.getElementById('ktpFrame').classList.add('hidden');
         document.getElementById('cameraModal').classList.remove('active');
+    }
+
+    // ========== OCR KTP (TESSERACT.JS) ==========
+
+    let ocrWorker = null;
+    let ocrBusy = false;
+
+    function ocrSupported() {
+        return typeof Tesseract !== 'undefined' && !!Tesseract.createWorker;
+    }
+
+    async function getOcrWorker() {
+        if (ocrWorker) return ocrWorker;
+        const worker = await Tesseract.createWorker('ind');
+        await worker.setParameters({ preserve_interword_spaces: '1' });
+        ocrWorker = worker;
+        return ocrWorker;
+    }
+
+    function setOcrStatus(msg, type) {
+        const el = document.getElementById('ocrStatus');
+        el.textContent = msg;
+        el.className = 'ocr-status ocr-' + type;
+    }
+
+    function updateOcrButton() {
+        const input = document.getElementById('fotoKtpInput');
+        const btn = document.getElementById('btnOcrKtp');
+        const hasImg = input && input.files && input.files.length > 0 && input.files[0].type.startsWith('image/');
+        btn.disabled = !hasImg || ocrBusy;
+    }
+
+    function preprocessForOcr(img) {
+        const maxDim = 1200;
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        const scale = Math.min(1, maxDim / Math.max(w, h));
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h);
+        const d = data.data;
+        for (let i = 0; i < d.length; i += 4) {
+            let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+            gray = (gray - 128) * 1.4 + 128;
+            gray = Math.max(0, Math.min(255, gray));
+            d[i] = d[i + 1] = d[i + 2] = gray;
+        }
+        ctx.putImageData(data, 0, 0);
+        return canvas;
+    }
+
+    function cleanValue(s) {
+        return s.replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, ' ').trim();
+    }
+
+    function grabValue(lines, labelRe) {
+        for (let i = 0; i < lines.length; i++) {
+            const m = lines[i].match(labelRe);
+            if (!m) continue;
+            const same = m[1] ? m[1].trim() : '';
+            if (same.replace(/[^a-z0-9]/gi, '').length >= 3) {
+                return cleanValue(same);
+            }
+            const val = [];
+            for (let j = i + 1; j < lines.length; j++) {
+                const nxt = lines[j];
+                if (/^(tempat|tgl|jenis|golongan|rt|kel|kecamatan|agama|status|pekerjaan|kewarganegaraan|berlaku|nik|provinsi|alamat|nama)/i.test(nxt.replace(/\s+/g, ''))) break;
+                val.push(nxt);
+                if (val.length >= 3) break;
+            }
+            if (val.length) {
+                const joined = cleanValue(val.join(' '));
+                if (joined.replace(/[^a-z0-9]/gi, '').length >= 3) return joined;
+            }
+        }
+        return '';
+    }
+
+    function parseKtpText(raw) {
+        const result = { nik: '', nama: '', alamat: '', tempatTglLahir: '' };
+        if (!raw) return result;
+        const text = raw.replace(/\r/g, '\n').replace(/[ \t]+/g, ' ');
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+        const nikMatch = text.replace(/\s+/g, '').match(/[0-9]{16}/);
+        if (nikMatch) result.nik = nikMatch[0];
+
+        let nama = grabValue(lines, /^n\s*a\s*m\s*a\s*:?\s*(.*)/i);
+        if (!nama) {
+            const im = text.match(/nama\s*:?\s*([A-Z][A-Za-z .'-]{3,})/i);
+            if (im) nama = im[1];
+        }
+        if (nama) {
+            nama = nama.replace(/[^\w .'-]/g, '').replace(/\s+/g, ' ').trim();
+            if (nama.length >= 3 && nama.length <= 80) result.nama = nama;
+        }
+
+        result.tempatTglLahir = grabValue(lines, /^tempat\s*\/?\s*tgl\s*lahir\s*:?\s*(.*)/i);
+        result.alamat = grabValue(lines, /^alamat\s*:?\s*(.*)/i);
+        return result;
+    }
+
+    async function runOcrKtp() {
+        const input = document.getElementById('fotoKtpInput');
+        const file = input && input.files && input.files[0];
+        if (ocrBusy || !file || !file.type.startsWith('image/')) return;
+        if (!ocrSupported()) {
+            setOcrStatus('Lib OCR tidak termuat (butuh internet saat pertama kali). Isi manual saja.', 'error');
+            return;
+        }
+
+        ocrBusy = true;
+        updateOcrButton();
+        setOcrStatus('Mendeteksi data KTP…', 'busy');
+
+        try {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = url;
+            });
+            const canvas = preprocessForOcr(img);
+            URL.revokeObjectURL(url);
+
+            const worker = await getOcrWorker();
+            const { data } = await worker.recognize(canvas);
+
+            const parsed = parseKtpText(data.text);
+            let filled = 0;
+            if (parsed.nik) { document.querySelector('[name="nik"]').value = parsed.nik; filled++; }
+            if (parsed.nama) { document.querySelector('[name="nama_peminjam"]').value = parsed.nama; filled++; }
+            if (parsed.alamat) { document.querySelector('[name="alamat"]').value = parsed.alamat; filled++; }
+            if (parsed.tempatTglLahir) { document.querySelector('[name="tempat_tanggal_lahir"]').value = parsed.tempatTglLahir; filled++; }
+
+            if (filled === 0) {
+                setOcrStatus('Data KTP tidak terdeteksi. Perbaiki foto lalu coba lagi, atau isi manual.', 'error');
+            } else {
+                setOcrStatus('Data terisi dari KTP (Nama, NIK, Alamat, TTL). Mohon periksa kembali sebelum lanjut.', 'success');
+            }
+        } catch (e) {
+            setOcrStatus('OCR gagal: ' + (e && e.message ? e.message : e) + '. Isi manual saja.', 'error');
+        } finally {
+            ocrBusy = false;
+            updateOcrButton();
+        }
+    }
+
+    const fotoKtpInputEl = document.getElementById('fotoKtpInput');
+    if (fotoKtpInputEl) {
+        fotoKtpInputEl.addEventListener('change', function() {
+            updateOcrButton();
+            const file = this.files && this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                runOcrKtp();
+            } else {
+                setOcrStatus('', 'idle');
+            }
+        });
     }
 </script>
 
