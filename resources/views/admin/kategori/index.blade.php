@@ -27,9 +27,9 @@
 </div>
 @endif
 
-<div class="card card-flat">
+<div class="card card-primary">
     <div class="card-header">
-        <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-2 text-primary"></i>Tambah Kategori</h3>
+        <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-1"></i>Tambah Kategori</h3>
     </div>
 
     <form id="formKategori" action="{{ route('kategori.store') }}" method="POST">
@@ -66,13 +66,12 @@
     </form>
 </div>
 
-<div class="card card-flat">
+<div class="card">
     <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-tags me-2 text-primary"></i>Daftar Kategori</h3>
+        <h3 class="card-title">Daftar Kategori</h3>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-        <table class="table table-modern mb-0">
+    <div class="card-body">
+        <table class="table table-bordered table-hover table-striped">
             <thead class="text-center">
                 <tr>
                     <th width="60">No</th>
@@ -102,24 +101,17 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center text-muted py-4">
-                        <i class="fas fa-tags fa-2x mb-2 d-block"></i>
-                        Belum ada data kategori.
-                    </td>
+                    <td colspan="4" class="text-center text-muted">Belum ada data kategori.</td>
                 </tr>
             @endforelse
             </tbody>
         </table>
-        </div>
     </div>
     @if($kategori->count())
     <div class="card-footer">{{ $kategori->links() }}</div>
     @endif
 </div>
 
-@stop
-
-@section('js')
 <script>
     function editItem(id, nama, keterangan) {
         document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Kategori';
@@ -142,4 +134,5 @@
         document.getElementById('btnCancel').style.display = 'none';
     }
 </script>
+
 @stop

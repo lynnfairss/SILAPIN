@@ -26,18 +26,18 @@
 
     {{-- 2FA --}}
     <div class="col-lg-6">
-        <div class="card card-flat">
+        <div class="card">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-mobile-alt me-2 text-primary"></i>Autentikasi Dua Faktor (2FA)</h3>
+                <h3 class="card-title"><i class="fas fa-mobile-alt mr-2"></i>Autentikasi Dua Faktor (2FA)</h3>
             </div>
             <div class="card-body">
 
                 @if($user->twoFactorEnabled())
                     <div class="d-flex align-items-center mb-3">
-                        <span class="badge badge-soft-success"><i class="fas fa-check-circle me-1"></i>Aktif</span>
-                        <span class="ms-2 text-muted small">Terverifikasi sejak {{ $user->two_factor_confirmed_at->format('d M Y') }}</span>
+                        <span class="badge badge-success" style="font-size:.9rem;"><i class="fas fa-check-circle mr-1"></i>Aktif</span>
+                        <span class="ml-2 text-muted" style="font-size:.85rem;">Terverifikasi sejak {{ $user->two_factor_confirmed_at->format('d M Y') }}</span>
                     </div>
-                    <p class="text-muted">
+                    <p class="text-muted" style="font-size:.9rem;">
                         Setiap kali masuk dengan kata sandi, Anda akan diminta memasukkan kode 6 digit dari aplikasi authenticator.
                     </p>
 
@@ -48,27 +48,27 @@
                                    maxlength="6" placeholder="Kode OTP saat ini" required>
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-danger" onclick="return confirm('Nonaktifkan autentikasi dua faktor?');">
-                                    <i class="fas fa-unlock me-1"></i>Nonaktifkan
+                                    <i class="fas fa-unlock mr-1"></i>Nonaktifkan
                                 </button>
                             </div>
                         </div>
                         @error('code')
-                        <span class="text-danger small">{{ $message }}</span>
+                        <span class="text-danger" style="font-size:.8rem;">{{ $message }}</span>
                         @enderror
                     </form>
 
                 @elseif($user->two_factor_secret)
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle me-1"></i>
+                    <div class="alert alert-warning" style="font-size:.9rem;">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
                         Pindai QR di bawah dengan aplikasi Google Authenticator, lalu masukkan kode untuk mengaktifkan.
                     </div>
 
                     <div class="text-center mb-3">
                         <img src="data:image/svg+xml;base64,{{ base64_encode($user->getTwoFactorQrCode()) }}"
-                             alt="QR Code 2FA" class="img-fluid border rounded" style="width:220px; max-width:220px;">
+                             alt="QR Code 2FA" style="width:220px; height:220px; border:1px solid #dee2e6; border-radius:8px;">
                     </div>
 
-                    <p class="text-center text-muted mb-3 small">
+                    <p class="text-center text-muted mb-3" style="font-size:.8rem;">
                         Tidak bisa memindai? Masukkan kunci manual:
                         <code>{{ $user->two_factor_secret }}</code>
                     </p>
@@ -80,17 +80,17 @@
                                    maxlength="6" placeholder="Kode OTP dari aplikasi" required autofocus>
                             <div class="input-group-append">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-check me-1"></i>Aktifkan
+                                    <i class="fas fa-check mr-1"></i>Aktifkan
                                 </button>
                             </div>
                         </div>
                         @error('code')
-                        <span class="text-danger small">{{ $message }}</span>
+                        <span class="text-danger" style="font-size:.8rem;">{{ $message }}</span>
                         @enderror
                     </form>
 
                 @else
-                    <p class="text-muted">
+                    <p class="text-muted" style="font-size:.9rem;">
                         Autentikasi dua faktor menambah lapisan keamanan: selain kata sandi, Anda perlu memasukkan kode
                         sekali pakai dari aplikasi <strong>Google Authenticator</strong>.
                     </p>
@@ -98,7 +98,7 @@
                     <form method="POST" action="{{ route('security.2fa.enable') }}">
                         @csrf
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-qrcode me-1"></i>Aktifkan 2FA
+                            <i class="fas fa-qrcode mr-1"></i>Aktifkan 2FA
                         </button>
                     </form>
                 @endif
@@ -109,30 +109,29 @@
 
     {{-- Passkey --}}
     <div class="col-lg-6">
-        <div class="card card-flat">
+        <div class="card">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-fingerprint me-2 text-primary"></i>Passkey (Masuk Tanpa Kata Sandi)</h3>
+                <h3 class="card-title"><i class="fas fa-fingerprint mr-2"></i>Passkey (Masuk Tanpa Kata Sandi)</h3>
                 <div class="card-tools">
                     <button type="button" class="btn btn-sm btn-primary" id="btnAddPasskey">
-                        <i class="fas fa-plus me-1"></i>Tambah Passkey
+                        <i class="fas fa-plus mr-1"></i>Tambah Passkey
                     </button>
                 </div>
             </div>
             <div class="card-body">
 
-                <p class="text-muted">
+                <p class="text-muted" style="font-size:.9rem;">
                     Passkey memungkinkan Anda masuk dengan sidik jari, wajah, atau PIN perangkat — tanpa memasukkan
                     kata sandi. Daftarkan passkey dari perangkat yang Anda percaya.
                 </p>
 
                 @if($passkeys->isEmpty())
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-1"></i>
+                    <div class="alert alert-info" style="font-size:.9rem;">
+                        <i class="fas fa-info-circle mr-1"></i>
                         Belum ada passkey terdaftar.
                     </div>
                 @else
-                    <div class="table-responsive">
-                    <table class="table table-modern mb-0">
+                    <table class="table table-bordered table-striped">
                         <thead class="text-center">
                             <tr>
                                 <th>Nama</th>
@@ -143,7 +142,7 @@
                         <tbody>
                         @foreach($passkeys as $key)
                             <tr>
-                                <td><i class="fas fa-key me-1 text-muted"></i>{{ $key->name }}</td>
+                                <td><i class="fas fa-key mr-1 text-muted"></i>{{ $key->name }}</td>
                                 <td class="text-center">{{ $key->created_at->format('d M Y H:i') }}</td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-danger"
@@ -155,10 +154,9 @@
                         @endforeach
                         </tbody>
                     </table>
-                    </div>
                 @endif
 
-                <div id="passkeyAlert" class="alert alert-danger d-none mt-2 small"></div>
+                <div id="passkeyAlert" class="alert alert-danger d-none mt-2" style="font-size:.85rem;"></div>
 
             </div>
         </div>

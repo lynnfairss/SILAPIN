@@ -8,6 +8,25 @@
 
 @section('content')
 
+<style>
+    .inventaris-card {
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all .2s ease;
+        background: #fff;
+    }
+    .inventaris-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 15px rgba(13,110,253,.12);
+    }
+    .inventaris-card.selected {
+        border-color: #0d6efd;
+        background: #f0f7ff;
+        box-shadow: 0 4px 15px rgba(13,110,253,.15);
+    }
+</style>
+
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show">
     <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
@@ -30,9 +49,9 @@
 <form action="{{ route('permohonan.store') }}" method="POST">
     @csrf
 
-    <div class="card card-flat">
+    <div class="card">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-user me-2 text-primary"></i>Data Peminjam</h3>
+            <h3 class="card-title"><i class="fas fa-user me-2"></i>Data Peminjam</h3>
         </div>
         <div class="card-body">
             <div class="row">
@@ -104,9 +123,9 @@
         </div>
     </div>
 
-    <div class="card card-flat">
+    <div class="card">
         <div class="card-header">
-            <h3 class="card-title"><i class="fas fa-boxes me-2 text-primary"></i>Pilih Inventaris</h3>
+            <h3 class="card-title"><i class="fas fa-boxes me-2"></i>Pilih Inventaris</h3>
         </div>
         <div class="card-body">
             <div class="row g-3" id="barangContainer">
@@ -120,9 +139,9 @@
                         <div class="ms-1 small text-muted">
                             <div>Kode: <code>{{ $item->kode_barang }}</code></div>
                             <div>Kategori: {{ $item->kategori->nama_kategori ?? '-' }}</div>
-                            <div>Stok: <span class="badge badge-soft-success">{{ $item->stok }}</span></div>
+                            <div>Stok: <span class="badge bg-success">{{ $item->stok }}</span></div>
                             <div class="mt-2">
-                                <label class="form-label small">Jumlah</label>
+                                <label class="form-label" style="font-size:.8rem;">Jumlah</label>
                                 <input type="number" name="jumlah[{{ $item->id }}]" class="form-control form-control-sm" min="1" max="{{ $item->stok }}" value="1" disabled onclick="event.stopPropagation()">
                             </div>
                         </div>
@@ -148,9 +167,6 @@
     </div>
 </form>
 
-@stop
-
-@section('js')
 <script>
     function toggleSelect(chk, id) {
         const card = chk.closest('.inventaris-card');
@@ -172,7 +188,7 @@
             alert.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
             alert.style.zIndex = '9999';
             alert.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Pilih minimal 1 barang.
-                <button type="button" class="close" data-dismiss="alert">&times;</button>`;
+                <button type="button" class="btn-close" data-dismiss="alert"></button>`;
             document.body.appendChild(alert);
             setTimeout(() => alert.remove(), 4000);
             return false;
@@ -189,7 +205,7 @@
                 alert.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
                 alert.style.zIndex = '9999';
                 alert.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Jumlah "${nama}" melebihi stok tersedia (${maxStok}).
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>`;
+                    <button type="button" class="btn-close" data-dismiss="alert"></button>`;
                 document.body.appendChild(alert);
                 setTimeout(() => alert.remove(), 4000);
                 return false;
@@ -199,4 +215,5 @@
         return true;
     }
 </script>
+
 @stop

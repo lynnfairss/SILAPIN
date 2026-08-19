@@ -7,8 +7,8 @@
     <title>Ajukan Peminjaman - SILAPIN</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ asset('vendor/flatpickr/material_blue.css') }}" rel="stylesheet">
     <link href="{{ asset('css/peminjam.css') }}" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
@@ -74,77 +74,33 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Nama Lengkap <span class="text-danger">*</span></label>
-                                    <input type="text" name="nama_peminjam" id="namaField" class="form-control" value="{{ old('nama_peminjam') }}" required placeholder="Masukkan nama lengkap">
+                                    <input type="text" name="nama_peminjam" class="form-control" value="{{ old('nama_peminjam') }}" required placeholder="Masukkan nama lengkap">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium"><span id="labelIdentitas">NIK</span> <span class="text-danger">*</span></label>
                                     <input type="text" name="nik" id="nikField" class="form-control" value="{{ old('nik') }}" required placeholder="Nomor Induk Kependudukan" maxlength="30">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium">Provinsi</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-globe-asia"></i></span>
-                                        <select id="provinsiSelect" class="form-control" aria-label="Pilih provinsi">
-                                            <option value="">-- Semua Provinsi --</option>
-                                            @foreach($daftarKota as $prov => $kotaList)
-                                                <option value="{{ $prov }}">{{ $prov }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="form-text">Pilih provinsi untuk mempersempit saran kota.</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Tempat Lahir</label>
-                                    <div class="ttl-wrapper">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                                            <input type="text" name="tempat_lahir" id="tempatLahirField" class="form-control" value="{{ old('tempat_lahir') }}" maxlength="100" autocomplete="off" placeholder="Ketik kota / pilih dari saran">
-                                            <button type="button" class="btn btn-outline-secondary ttl-toggle" id="ttlToggleBtn" tabindex="-1" aria-label="Buka daftar kota">
-                                                <i class="fas fa-chevron-down"></i>
-                                            </button>
-                                        </div>
-                                        <div class="ttl-dropdown" id="ttlDropdown"></div>
-                                    </div>
-                                    <div class="form-text">Ketik untuk mencari, atau klik panah untuk melihat daftar.</div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-medium">Tanggal Lahir</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                        <input type="text" name="tanggal_lahir" id="tanggalLahirField" class="form-control" value="{{ old('tanggal_lahir') }}" maxlength="10" placeholder="DD-MM-YYYY">
-                                    </div>
-                                    <div class="form-text">Pilih dari kalender atau ketik manual.</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Jabatan <span class="text-danger">*</span></label>
-                                    <input type="text" name="jabatan" id="jabatanField" class="form-control" value="{{ old('jabatan') }}" required placeholder="Contoh: Kepala Subbag, Staf">
+                                    <label class="form-label fw-medium">Jabatan</label>
+                                    <input type="text" name="jabatan" class="form-control" value="{{ old('jabatan') }}" placeholder="Contoh: Kepala Subbag, Staf">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Telepon <span class="text-danger">*</span></label>
-                                    <input type="tel" name="telepon" id="teleponField" class="form-control" value="{{ old('telepon') }}" required placeholder="08xxxxxxxxxx" maxlength="15" oninput="this.value = this.value.replace(/\D/g, '')">
+                                    <input type="tel" name="telepon" class="form-control" value="{{ old('telepon') }}" required placeholder="08xxxxxxxxxx" maxlength="15" oninput="this.value = this.value.replace(/\D/g, '')">
                                 </div>
-                                @php
-                                    $oldInstVal = old('instansi_id', '');
-                                    $instSearchVal = $oldInstVal === 'lainnya' ? 'Lainnya (isi manual)' : ($instansi->firstWhere('id', $oldInstVal)?->nama_instansi ?? '');
-                                @endphp
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium">Instansi <span class="text-danger">*</span></label>
-                                    <input type="hidden" name="instansi_id" id="instansiIdHidden" value="{{ $oldInstVal }}">
-                                    <div class="ttl-wrapper">
-                                        <div class="input-group">
-                                            <span class="input-group-text"><i class="fas fa-building"></i></span>
-                                            <input type="text" id="instansiSearch" class="form-control" value="{{ $instSearchVal }}" autocomplete="off" placeholder="Ketik nama instansi...">
-                                            <button type="button" class="btn btn-outline-secondary ttl-toggle" id="instansiToggleBtn" tabindex="-1" aria-label="Buka daftar instansi">
-                                                <i class="fas fa-chevron-down"></i>
-                                            </button>
-                                        </div>
-                                        <div class="ttl-dropdown" id="instansiDropdown"></div>
-                                    </div>
-                                    <div class="form-text">Ketik untuk mencari, atau klik panah untuk melihat daftar.</div>
+                                    <label class="form-label fw-medium">Instansi</label>
+                                    <select name="instansi_id" class="form-control" id="instansiSelect">
+                                        <option value="">-- Pilih Instansi --</option>
+                                        @foreach($instansi as $item)
+                                            <option value="{{ $item->id }}" {{ old('instansi_id')==$item->id ? 'selected' : '' }}>{{ $item->nama_instansi }}</option>
+                                        @endforeach
+                                        <option value="lainnya" {{ old('instansi_id')=='lainnya' ? 'selected' : '' }}>Lainnya (isi manual)</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-6" id="instansiLainWrapper" style="{{ old('instansi_id')=='lainnya' ? '' : 'display:none' }}">
                                     <label class="form-label fw-medium">Nama Instansi <span class="text-danger">*</span></label>
-                                    <input type="text" name="nama_instansi_lain" id="namaInstansiField" class="form-control" value="{{ old('nama_instansi_lain') }}" placeholder="Masukkan nama instansi">
+                                    <input type="text" name="nama_instansi_lain" class="form-control" value="{{ old('nama_instansi_lain') }}" placeholder="Masukkan nama instansi">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Tempat / Tgl Lahir</label>
@@ -161,20 +117,26 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Foto KTP <span class="text-danger">*</span> <small class="text-muted">(max 2MB, jpg/png)</small></label>
                                     <div class="input-group">
-                                        <input type="file" name="foto_ktp" class="form-control" accept="image/*">
+                                        <input type="file" name="foto_ktp" id="fotoKtpInput" class="form-control" accept="image/*">
                                         <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Scan / foto KTP">
                                             <i class="fas fa-camera me-1"></i>Scan
                                         </button>
                                     </div>
-                                    <div class="scan-preview"></div>
+                                    <div class="d-flex align-items-center gap-2 mt-2">
+                                        <div class="scan-preview"></div>
+                                        <button type="button" class="btn btn-sm btn-outline-info" id="btnOcrKtp" onclick="runOcrKtp()" disabled title="Deteksi otomatis Nama, NIK, Alamat & TTL dari foto KTP">
+                                            <i class="fas fa-magic me-1"></i>Deteksi Data KTP
+                                        </button>
+                                    </div>
+                                    <div class="ocr-status" id="ocrStatus"></div>
                                     <div class="form-text">Upload atau scan/foto KTP sebagai bukti.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Surat Tugas <small class="text-muted">(opsional, max 2MB)</small></label>
                                     <div class="input-group">
                                         <input type="file" name="surat_tugas" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                        <button type="button" class="btn btn-outline-primary" data-scan="surat_tugas" onclick="openCamera(this)" title="Foto surat tugas pakai kamera">
-                                            <i class="fas fa-camera me-1"></i>Kamera
+                                        <button type="button" class="btn btn-outline-primary" data-scan="surat_tugas" onclick="openCamera(this)" title="Scan / foto surat tugas">
+                                            <i class="fas fa-camera me-1"></i>Scan
                                         </button>
                                     </div>
                                     <div class="scan-preview"></div>
@@ -405,9 +367,8 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('vendor/flatpickr/flatpickr.min.js') }}"></script>
-<script src="{{ asset('vendor/flatpickr/l10n/id.js') }}"></script>
-<script src="{{ asset('vendor/tesseract/tesseract.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     let currentStep = 1;
 
@@ -435,139 +396,38 @@
     }
 
     function validateStep(step) {
-        clearToasts();
-        const errors = [];
-
         if (step === 1) {
             const nama = document.querySelector('[name="nama_peminjam"]').value.trim();
             const nik = document.querySelector('[name="nik"]').value.trim();
             const telepon = document.querySelector('[name="telepon"]').value.trim();
             const labelId = document.getElementById('labelIdentitas').textContent;
-
-            if (!nama) {
-                errors.push('Nama belum diisi.');
-                setFieldInvalid(document.getElementById('namaField'), true);
-            }
-            if (!nik) {
-                errors.push(labelId + ' belum diisi.');
-                setFieldInvalid(document.getElementById('nikField'), true);
-            }
-            if (!telepon) {
-                errors.push('Telepon belum diisi.');
-                setFieldInvalid(document.getElementById('teleponField'), true);
-            }
-            if (!document.getElementById('jabatanField').value.trim()) {
-                errors.push('Jabatan belum diisi.');
-                setFieldInvalid(document.getElementById('jabatanField'), true);
-            }
-
-            const instansiHidden = document.getElementById('instansiIdHidden');
-            const instansiSearch = document.getElementById('instansiSearch');
-            const instansiVal = instansiHidden ? instansiHidden.value : '';
-            if (!instansiVal) {
-                errors.push('Instansi belum dipilih.');
-                setFieldInvalid(instansiSearch, true);
-            } else if (instansiVal === 'lainnya') {
-                const namaInstansi = document.getElementById('namaInstansiField');
-                if (namaInstansi && !namaInstansi.value.trim()) {
-                    errors.push('Nama Instansi belum diisi.');
-                    setFieldInvalid(namaInstansi, true);
-                }
-            }
-
-            const fotoKtp = document.getElementById('fotoKtpField');
-            if (fotoKtp && (!fotoKtp.files || fotoKtp.files.length === 0)) {
-                errors.push('Foto KTP belum diunggah.');
-                setFieldInvalid(fotoKtp, true);
-            }
-
-            const tempat = document.getElementById('tempatLahirField');
-            const tglLahir = document.getElementById('tanggalLahirField');
-
-            if (tempat && tempat.value.trim()) {
-                if (!/^[A-Za-z][A-Za-z .'-]{0,99}$/.test(tempat.value.trim())) {
-                    errors.push('Tempat lahir hanya boleh berisi huruf, spasi, titik, atau tanda hubung.');
-                    setFieldInvalid(tempat, true);
-                }
-            }
-
-            if (tglLahir && tglLahir.value.trim()) {
-                const v = tglLahir.value.trim();
-                const m = v.match(/^(\d{2})-(\d{2})-(\d{4})$/);
-                if (!m) {
-                    errors.push('Format tanggal lahir harus DD-MM-YYYY (contoh: 15-08-1990).');
-                    setFieldInvalid(tglLahir, true);
-                } else {
-                    const d = parseInt(m[1], 10), mo = parseInt(m[2], 10), y = parseInt(m[3], 10);
-                    const dt = new Date(y, mo - 1, d);
-                    const real = dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d;
-                    if (!real) {
-                        errors.push('Tanggal lahir tidak valid.');
-                        setFieldInvalid(tglLahir, true);
-                    } else {
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        if (dt > today) {
-                            errors.push('Tanggal lahir tidak boleh di masa depan.');
-                            setFieldInvalid(tglLahir, true);
-                        }
-                    }
-                }
+            if (!nama || !nik || !telepon) {
+                showError('Lengkapi data diri (Nama, ' + labelId + ', Telepon).');
+                return false;
             }
         }
-
         if (step === 2) {
             const pinjam = document.querySelector('[name="tanggal_pinjam"]').value;
             const kembali = document.querySelector('[name="tanggal_kembali"]').value;
             const keperluan = document.querySelector('[name="keperluan"]').value.trim();
             const checked = document.querySelectorAll('[name="inventaris[]"]:checked');
-            if (!pinjam) { errors.push('Pilih tanggal pinjam.'); }
-            if (!kembali) { errors.push('Pilih tanggal kembali.'); }
-            if (kembali && pinjam && kembali < pinjam) { errors.push('Tanggal kembali harus setelah tanggal pinjam.'); }
-            if (!keperluan) { errors.push('Isi keperluan peminjaman.'); }
-            if (checked.length === 0) { errors.push('Pilih minimal 1 barang.'); }
-        }
-
-        if (errors.length > 0) {
-            errors.forEach(showError);
-            return false;
+            if (!pinjam) { showError('Pilih tanggal pinjam.'); return false; }
+            if (!kembali) { showError('Pilih tanggal kembali.'); return false; }
+            if (kembali < pinjam) { showError('Tanggal kembali harus setelah tanggal pinjam.'); return false; }
+            if (!keperluan) { showError('Isi keperluan peminjaman.'); return false; }
+            if (checked.length === 0) { showError('Pilih minimal 1 barang.'); return false; }
         }
         return true;
     }
 
-    function setFieldInvalid(field, invalid) {
-        if (!field) return;
-        field.classList.toggle('is-invalid', !!invalid);
-    }
-
-    function clearToasts() {
-        document.querySelectorAll('.validation-toast').forEach(el => el.remove());
-        toastCount = 0;
-    }
-
-    ['namaField', 'nikField', 'teleponField', 'jabatanField', 'instansiSearch', 'namaInstansiField', 'fotoKtpField', 'tempatLahirField', 'tanggalLahirField'].forEach(function (id) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', function () { el.classList.remove('is-invalid'); });
-            el.addEventListener('change', function () { el.classList.remove('is-invalid'); });
-        }
-    });
-
-    let toastCount = 0;
-
     function showError(msg) {
         const alert = document.createElement('div');
-        alert.className = 'alert alert-danger alert-dismissible fade show validation-toast position-fixed start-50 translate-middle-x mt-4';
+        alert.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
         alert.style.zIndex = '9999';
-        alert.style.top = (toastCount * 58 + 16) + 'px';
         alert.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>${msg}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>`;
         document.body.appendChild(alert);
-        toastCount++;
-        setTimeout(() => {
-            alert.remove();
-            toastCount = Math.max(0, toastCount - 1);
-        }, 4500);
+        setTimeout(() => alert.remove(), 4000);
     }
 
     // ========== PRODUCT CARD: SELECT + STEPPER ==========
@@ -764,158 +624,33 @@
         document.getElementById('nikField').maxLength = cfg.maxlength;
     }
 
-    // ========== INSTANSI: auto-complete search ==========
-    (function () {
-        const INSTANSI_LIST = @json($instansi->map(fn ($i) => [$i->id, $i->nama_instansi]));
-        const INSTANSI_NAME = {};
-        INSTANSI_LIST.forEach(function (it) { INSTANSI_NAME[String(it[0])] = it[1]; });
-
-        const searchInput = document.getElementById('instansiSearch');
-        const hidden = document.getElementById('instansiIdHidden');
-        const dropdown = document.getElementById('instansiDropdown');
-        const toggleBtn = document.getElementById('instansiToggleBtn');
+    document.getElementById('instansiSelect').addEventListener('change', function() {
         const wrapper = document.getElementById('instansiLainWrapper');
-        const manualInput = document.getElementById('namaInstansiField');
-        if (!searchInput || !hidden || !dropdown) return;
-
-        let activeIndex = -1;
-        let items = [];
-
-        function escapeHtml(s) {
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        if (this.value === 'lainnya') {
+            wrapper.style.display = 'block';
+            wrapper.querySelector('input').required = true;
+            document.getElementById('labelIdentitas').textContent = 'NIK';
+            document.getElementById('nikField').placeholder = 'Nomor Induk Kependudukan';
+            document.getElementById('nikField').maxLength = 30;
+        } else {
+            wrapper.style.display = 'none';
+            wrapper.querySelector('input').required = false;
+            const nama = this.options[this.selectedIndex]?.text || '';
+            updateIdentitasField(this.value, nama);
         }
+    });
 
-        function highlight(name, q) {
-            if (!q) return escapeHtml(name);
-            const i = name.toLowerCase().indexOf(q);
-            if (i === -1) return escapeHtml(name);
-            return escapeHtml(name.slice(0, i)) + '<mark>' + escapeHtml(name.slice(i, i + q.length)) + '</mark>' + escapeHtml(name.slice(i + q.length));
-        }
+    const firstOption = document.getElementById('instansiSelect').options[document.getElementById('instansiSelect').selectedIndex];
+    updateIdentitasField(document.getElementById('instansiSelect').value, firstOption?.text || '');
 
-        function lainnyaRow() {
-            return '<div class="ttl-item" data-id="lainnya" data-value="Lainnya (isi manual)">'
-                + '<i class="fas fa-plus-circle ttl-item-icon"></i>'
-                + '<span>Lainnya (isi manual)</span>'
-                + '</div>';
-        }
-
-        function renderDropdown() {
-            const q = searchInput.value.trim().toLowerCase();
-            const qLen = q.length;
-            let html = '';
-            let total = 0;
-            items = [];
-
-            INSTANSI_LIST.forEach(function (it) {
-                const nama = it[1];
-                const lower = nama.toLowerCase();
-                const match = qLen === 0 || lower.indexOf(q) > 0 || lower.indexOf(q) === 0;
-                if (!match) return;
-                total++;
-                html += '<div class="ttl-item" data-id="' + it[0] + '" data-value="' + escapeHtml(nama) + '">'
-                    + '<i class="fas fa-building ttl-item-icon"></i>'
-                    + '<span>' + highlight(nama, q) + '</span>'
-                    + '</div>';
-            });
-
-            if (total === 0) {
-                html = '<div class="ttl-empty"><i class="fas fa-search me-1"></i>Instansi tidak ditemukan untuk "<strong>' + escapeHtml(q) + '"</strong></div>' + html;
-            }
-            html += lainnyaRow();
-
-            dropdown.innerHTML = html;
-            dropdown.querySelectorAll('.ttl-item').forEach(function (el) {
-                items.push({ el: el, id: el.getAttribute('data-id'), value: el.getAttribute('data-value') });
-                el.addEventListener('mousedown', function (e) {
-                    e.preventDefault();
-                    selectValue(el.getAttribute('data-id'), el.getAttribute('data-value'));
-                });
-            });
-            dropdown.classList.add('open');
-            setActive(-1);
-        }
-
-        function setActive(idx) {
-            if (items.length === 0) return;
-            items.forEach(function (it, i) {
-                it.el.classList.toggle('active', i === idx);
-            });
-            activeIndex = idx;
-            if (idx >= 0 && items[idx]) {
-                items[idx].el.scrollIntoView({ block: 'nearest' });
-            }
-        }
-
-        function selectValue(id, label) {
-            hidden.value = id;
-            searchInput.value = label;
-            closeDropdown();
-            if (id === 'lainnya') {
-                wrapper.style.display = 'block';
-                if (manualInput) manualInput.required = true;
-                document.getElementById('labelIdentitas').textContent = 'NIK';
-                document.getElementById('nikField').placeholder = 'Nomor Induk Kependudukan';
-                document.getElementById('nikField').maxLength = 30;
-                if (manualInput) manualInput.focus();
-            } else {
-                wrapper.style.display = 'none';
-                if (manualInput) manualInput.required = false;
-                updateIdentitasField(id, label);
-                searchInput.focus();
-            }
-            searchInput.classList.remove('is-invalid');
-            hidden.classList.remove('is-invalid');
-            if (typeof updatePreview === 'function') updatePreview();
-        }
-
-        function closeDropdown() {
-            dropdown.classList.remove('open');
-            activeIndex = -1;
-        }
-
-        searchInput.addEventListener('input', renderDropdown);
-        searchInput.addEventListener('focus', renderDropdown);
-
-        searchInput.addEventListener('keydown', function (e) {
-            if (!dropdown.classList.contains('open')) {
-                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    renderDropdown();
-                }
-                return;
-            }
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setActive(Math.min(activeIndex + 1, items.length - 1));
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setActive(Math.max(activeIndex - 1, 0));
-            } else if (e.key === 'Enter') {
-                if (activeIndex >= 0 && items[activeIndex]) {
-                    e.preventDefault();
-                    selectValue(items[activeIndex].id, items[activeIndex].value);
-                } else {
-                    closeDropdown();
-                }
-            } else if (e.key === 'Escape') {
-                closeDropdown();
-            } else if (e.key === 'Tab') {
-                closeDropdown();
-            }
+    // Instansi: dropdown searchable (Select2)
+    if (window.jQuery && jQuery.fn.select2 && document.getElementById('instansiSelect')) {
+        jQuery('#instansiSelect').select2({
+            width: '100%',
+            placeholder: '-- Pilih Instansi --',
+            allowClear: false,
         });
-
-        toggleBtn.addEventListener('click', function () {
-            if (dropdown.classList.contains('open')) {
-                closeDropdown();
-            } else {
-                renderDropdown();
-            }
-        });
-
-        if (hidden.value && hidden.value !== 'lainnya') {
-            updateIdentitasField(hidden.value, INSTANSI_NAME[hidden.value] || '');
-        }
-    })();
+    }
 
     // ========== PREVIEW ==========
 
@@ -926,10 +661,9 @@
             { label: 'Jabatan', value: document.querySelector('[name="jabatan"]').value || '-' },
             { label: 'Telepon', value: document.querySelector('[name="telepon"]').value },
             { label: 'Instansi', value: (() => {
-                const hid = document.getElementById('instansiIdHidden');
-                const val = hid ? hid.value : '';
-                if (val && val !== 'lainnya') return document.getElementById('instansiSearch')?.value || val;
-                return document.querySelector('[name="nama_instansi_lain"]')?.value || '-';
+                const sel = document.getElementById('instansiSelect');
+                if (sel.value && sel.value !== 'lainnya') return sel.options[sel.selectedIndex].text;
+                return document.querySelector('[name="nama_instansi_lain"]').value || '-';
             })() },
         ];
 
@@ -968,6 +702,139 @@
     let cameraStream = null;
     const KTP_RATIO = 85.6 / 53.98; // rasio ukuran KTP standar
 
+    // ===== AUTO-CAPTURE KTP =====
+    const AUTO_DETECT = {
+        interval: 100,       // ms antar sampling
+        sampleWidth: 96,     // lebar canvas sampling (px)
+        stableFrames: 2,     // jumlah sampel stabil berturut-turut sebelum capture (±0,2 detik)
+        minBrightness: 120,  // kecerahan rata-rata minimum area bingkai
+        maxBrightness: 235,  // kecerahan rata-rata maksimum
+        minEdge: 0.08,       // rasio piksel tepi minimum (teks KTP)
+        maxEdge: 0.55,       // rasio piksel tepi maksimum
+        maxDiff: 7,          // selisih rata-rata antar frame (stabilitas)
+    };
+    let autoDetectTimer = null;
+    let autoDetectFrame = null;
+    let autoDetectStable = 0;
+    let autoCapturing = false;
+
+    function getHoleSourceRect(video, frame) {
+        const frameW = frame.offsetWidth;
+        const frameH = frame.offsetHeight;
+        const scale = Math.max(frameW / video.videoWidth, frameH / video.videoHeight);
+        const dw = video.videoWidth * scale;
+        const dh = video.videoHeight * scale;
+        const dx = (frameW - dw) / 2;
+        const dy = (frameH - dh) / 2;
+        const hw = frameW * 0.78;
+        const hh = hw / KTP_RATIO;
+        const hx = (frameW - hw) / 2;
+        const hy = (frameH - hh) / 2;
+        return {
+            sx: (hx - dx) / scale,
+            sy: (hy - dy) / scale,
+            sw: hw / scale,
+            sh: hh / scale,
+        };
+    }
+
+    function startAutoDetect() {
+        stopAutoDetect();
+        autoDetectFrame = null;
+        autoDetectStable = 0;
+        autoDetectTimer = setInterval(autoDetectTick, AUTO_DETECT.interval);
+    }
+
+    function stopAutoDetect() {
+        if (autoDetectTimer) {
+            clearInterval(autoDetectTimer);
+            autoDetectTimer = null;
+        }
+        autoDetectFrame = null;
+        autoDetectStable = 0;
+    }
+
+    function autoDetectTick() {
+        const video = document.getElementById('cameraPreview');
+        if (!cameraStream || !autoDetectTimer || video.videoWidth === 0 || autoCapturing) return;
+
+        const frame = document.querySelector('.camera-frame');
+        if (!frame) return;
+
+        const rect = getHoleSourceRect(video, frame);
+        const sampleW = AUTO_DETECT.sampleWidth;
+        const sampleH = Math.max(1, Math.round(sampleW / KTP_RATIO));
+
+        const canvas = document.getElementById('cameraCanvas');
+        canvas.width = sampleW;
+        canvas.height = sampleH;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, rect.sx, rect.sy, rect.sw, rect.sh, 0, 0, sampleW, sampleH);
+
+        const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
+        const gray = new Uint8Array(sampleW * sampleH);
+        let sum = 0;
+        for (let y = 0; y < sampleH; y++) {
+            for (let x = 0; x < sampleW; x++) {
+                const i = (y * sampleW + x) * 4;
+                const g = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                gray[y * sampleW + x] = g;
+                sum += g;
+            }
+        }
+        const mean = sum / (sampleW * sampleH);
+
+        let edgeCount = 0;
+        for (let y = 0; y < sampleH; y++) {
+            for (let x = 0; x < sampleW; x++) {
+                const i = y * sampleW + x;
+                const right = x < sampleW - 1 ? gray[i + 1] : gray[i];
+                const down = y < sampleH - 1 ? gray[i + sampleW] : gray[i];
+                if (Math.max(Math.abs(right - gray[i]), Math.abs(down - gray[i])) > 35) edgeCount++;
+            }
+        }
+        const edgeRatio = edgeCount / (sampleW * sampleH);
+
+        let diffSum = -1;
+        if (autoDetectFrame) {
+            let diff = 0;
+            for (let i = 0; i < gray.length; i++) diff += Math.abs(gray[i] - autoDetectFrame[i]);
+            diffSum = diff / gray.length;
+        }
+        autoDetectFrame = gray.slice();
+
+        const brightnessOk = mean >= AUTO_DETECT.minBrightness && mean <= AUTO_DETECT.maxBrightness;
+        const edgeOk = edgeRatio >= AUTO_DETECT.minEdge && edgeRatio <= AUTO_DETECT.maxEdge;
+        const stableOk = diffSum >= 0 && diffSum <= AUTO_DETECT.maxDiff;
+
+        const status = document.getElementById('cameraStatus');
+        if (brightnessOk && edgeOk && stableOk) {
+            autoDetectStable++;
+            if (autoDetectStable >= AUTO_DETECT.stableFrames) {
+                status.textContent = 'KTP terdeteksi — mengambil foto…';
+                autoCapture();
+            } else if (autoDetectStable === 1) {
+                status.textContent = 'KTP terdeteksi…';
+            }
+        } else {
+            autoDetectStable = 0;
+            status.textContent = 'Arahkan KTP ke bingkai, biarkan foto otomatis…';
+        }
+    }
+
+    function autoCapture() {
+        stopAutoDetect();
+        autoCapturing = true;
+        const flash = document.getElementById('cameraFlash');
+        flash.classList.remove('active');
+        void flash.offsetWidth;
+        flash.classList.add('active');
+        setTimeout(function() {
+            capturePhoto();
+            autoCapturing = false;
+        }, 150);
+    }
+
     async function openCamera(btn) {
         const video = document.getElementById('cameraPreview');
         const status = document.getElementById('cameraStatus');
@@ -988,29 +855,19 @@
         }
 
         try {
-            const constraintsList = [
-                { video: { facingMode: 'environment', width: { ideal: 1920 } }, audio: false },
-                { video: { facingMode: 'user', width: { ideal: 1920 } }, audio: false },
-                { video: { width: { ideal: 1920 } }, audio: false },
-            ];
-
-            let lastErr = null;
-            for (const c of constraintsList) {
-                try {
-                    cameraStream = await navigator.mediaDevices.getUserMedia(c);
-                    break;
-                } catch (err) {
-                    lastErr = err;
-                }
-            }
-            if (!cameraStream) throw lastErr;
-
+            cameraStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment', width: { ideal: 1280 } },
+                audio: false,
+            });
             video.srcObject = cameraStream;
             await video.play();
             btnCapture.disabled = false;
-            status.textContent = isKtp
-                ? 'Letakkan KTP di dalam bingkai, lalu klik "Ambil Foto".'
-                : 'Arahkan kamera ke dokumen, lalu klik "Ambil Foto".';
+            if (isKtp) {
+                startAutoDetect();
+                status.textContent = 'Arahkan KTP ke bingkai, foto otomatis saat posisi pas.';
+            } else {
+                status.textContent = 'Arahkan kamera ke dokumen, lalu klik "Ambil Foto".';
+            }
         } catch (e) {
             status.textContent = 'Kamera tidak tersedia / izin ditolak. Gunakan upload file biasa.';
         }
@@ -1022,6 +879,7 @@
         const field = video.dataset.target;
         if (!cameraStream || !field || video.videoWidth === 0) return;
 
+        stopAutoDetect();
         const frame = document.querySelector('.camera-frame');
         const isKtp = field === 'foto_ktp' && frame;
 
@@ -1046,8 +904,8 @@
             const sw = hw / scale;
             const sh = hh / scale;
 
-            canvas.width = Math.round(sw * 3); // 3x untuk hasil lebih tajam
-            canvas.height = Math.round(sh * 3);
+            canvas.width = Math.round(sw * 2); // 2x untuk hasil lebih tajam
+            canvas.height = Math.round(sh * 2);
             canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
         } else {
             canvas.width = video.videoWidth;
@@ -1064,6 +922,9 @@
                     dt.items.add(file);
                     input.files = dt.files;
                     showScanPreview(field, URL.createObjectURL(file));
+                    if (field === 'foto_ktp') {
+                        setTimeout(runOcrKtp, 400);
+                    }
                 }
             }
             closeCamera();
@@ -1100,9 +961,15 @@
         if (input) input.value = '';
         const preview = input ? input.closest('.col-md-6').querySelector('.scan-preview') : null;
         if (preview) preview.innerHTML = '';
+        if (field === 'foto_ktp') {
+            setOcrStatus('', 'idle');
+            updateOcrButton();
+        }
     }
 
     function closeCamera() {
+        stopAutoDetect();
+        autoCapturing = false;
         document.getElementById('cameraFlash').classList.remove('active');
         if (cameraStream) {
             cameraStream.getTracks().forEach(function(t) { t.stop(); });
@@ -1111,6 +978,173 @@
         document.getElementById('cameraPreview').srcObject = null;
         document.getElementById('ktpFrame').classList.add('hidden');
         document.getElementById('cameraModal').classList.remove('active');
+    }
+
+    // ========== OCR KTP (TESSERACT.JS) ==========
+
+    let ocrWorker = null;
+    let ocrBusy = false;
+
+    function ocrSupported() {
+        return typeof Tesseract !== 'undefined' && !!Tesseract.createWorker;
+    }
+
+    async function getOcrWorker() {
+        if (ocrWorker) return ocrWorker;
+        const worker = await Tesseract.createWorker('ind');
+        await worker.setParameters({ preserve_interword_spaces: '1' });
+        ocrWorker = worker;
+        return ocrWorker;
+    }
+
+    function setOcrStatus(msg, type) {
+        const el = document.getElementById('ocrStatus');
+        el.textContent = msg;
+        el.className = 'ocr-status ocr-' + type;
+    }
+
+    function updateOcrButton() {
+        const input = document.getElementById('fotoKtpInput');
+        const btn = document.getElementById('btnOcrKtp');
+        const hasImg = input && input.files && input.files.length > 0 && input.files[0].type.startsWith('image/');
+        btn.disabled = !hasImg || ocrBusy;
+    }
+
+    function preprocessForOcr(img) {
+        const maxDim = 1200;
+        let w = img.naturalWidth || img.width;
+        let h = img.naturalHeight || img.height;
+        const scale = Math.min(1, maxDim / Math.max(w, h));
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        const data = ctx.getImageData(0, 0, w, h);
+        const d = data.data;
+        for (let i = 0; i < d.length; i += 4) {
+            let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+            gray = (gray - 128) * 1.4 + 128;
+            gray = Math.max(0, Math.min(255, gray));
+            d[i] = d[i + 1] = d[i + 2] = gray;
+        }
+        ctx.putImageData(data, 0, 0);
+        return canvas;
+    }
+
+    function cleanValue(s) {
+        return s.replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, ' ').trim();
+    }
+
+    function grabValue(lines, labelRe) {
+        for (let i = 0; i < lines.length; i++) {
+            const m = lines[i].match(labelRe);
+            if (!m) continue;
+            const same = m[1] ? m[1].trim() : '';
+            if (same.replace(/[^a-z0-9]/gi, '').length >= 3) {
+                return cleanValue(same);
+            }
+            const val = [];
+            for (let j = i + 1; j < lines.length; j++) {
+                const nxt = lines[j];
+                if (/^(tempat|tgl|jenis|golongan|rt|kel|kecamatan|agama|status|pekerjaan|kewarganegaraan|berlaku|nik|provinsi|alamat|nama)/i.test(nxt.replace(/\s+/g, ''))) break;
+                val.push(nxt);
+                if (val.length >= 3) break;
+            }
+            if (val.length) {
+                const joined = cleanValue(val.join(' '));
+                if (joined.replace(/[^a-z0-9]/gi, '').length >= 3) return joined;
+            }
+        }
+        return '';
+    }
+
+    function parseKtpText(raw) {
+        const result = { nik: '', nama: '', alamat: '', tempatTglLahir: '' };
+        if (!raw) return result;
+        const text = raw.replace(/\r/g, '\n').replace(/[ \t]+/g, ' ');
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+        const nikMatch = text.replace(/\s+/g, '').match(/[0-9]{16}/);
+        if (nikMatch) result.nik = nikMatch[0];
+
+        let nama = grabValue(lines, /^n\s*a\s*m\s*a\s*:?\s*(.*)/i);
+        if (!nama) {
+            const im = text.match(/nama\s*:?\s*([A-Z][A-Za-z .'-]{3,})/i);
+            if (im) nama = im[1];
+        }
+        if (nama) {
+            nama = nama.replace(/[^\w .'-]/g, '').replace(/\s+/g, ' ').trim();
+            if (nama.length >= 3 && nama.length <= 80) result.nama = nama;
+        }
+
+        result.tempatTglLahir = grabValue(lines, /^tempat\s*\/?\s*tgl\s*lahir\s*:?\s*(.*)/i);
+        result.alamat = grabValue(lines, /^alamat\s*:?\s*(.*)/i);
+        return result;
+    }
+
+    async function runOcrKtp() {
+        const input = document.getElementById('fotoKtpInput');
+        const file = input && input.files && input.files[0];
+        if (ocrBusy || !file || !file.type.startsWith('image/')) return;
+        if (!ocrSupported()) {
+            setOcrStatus('Lib OCR tidak termuat (butuh internet saat pertama kali). Isi manual saja.', 'error');
+            return;
+        }
+
+        ocrBusy = true;
+        updateOcrButton();
+        setOcrStatus('Mendeteksi data KTP…', 'busy');
+
+        try {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = url;
+            });
+            const canvas = preprocessForOcr(img);
+            URL.revokeObjectURL(url);
+
+            const worker = await getOcrWorker();
+            const { data } = await worker.recognize(canvas);
+
+            const parsed = parseKtpText(data.text);
+            let filled = 0;
+            if (parsed.nik) { document.querySelector('[name="nik"]').value = parsed.nik; filled++; }
+            if (parsed.nama) { document.querySelector('[name="nama_peminjam"]').value = parsed.nama; filled++; }
+            if (parsed.alamat) { document.querySelector('[name="alamat"]').value = parsed.alamat; filled++; }
+            if (parsed.tempatTglLahir) { document.querySelector('[name="tempat_tanggal_lahir"]').value = parsed.tempatTglLahir; filled++; }
+
+            if (filled === 0) {
+                setOcrStatus('Data KTP tidak terdeteksi. Perbaiki foto lalu coba lagi, atau isi manual.', 'error');
+            } else {
+                setOcrStatus('Data terisi dari KTP (Nama, NIK, Alamat, TTL). Mohon periksa kembali sebelum lanjut.', 'success');
+            }
+        } catch (e) {
+            setOcrStatus('OCR gagal: ' + (e && e.message ? e.message : e) + '. Isi manual saja.', 'error');
+        } finally {
+            ocrBusy = false;
+            updateOcrButton();
+        }
+    }
+
+    const fotoKtpInputEl = document.getElementById('fotoKtpInput');
+    if (fotoKtpInputEl) {
+        fotoKtpInputEl.addEventListener('change', function() {
+            updateOcrButton();
+            const file = this.files && this.files[0];
+            if (file && file.type.startsWith('image/')) {
+                runOcrKtp();
+            } else {
+                setOcrStatus('', 'idle');
+            }
+        });
     }
 </script>
 

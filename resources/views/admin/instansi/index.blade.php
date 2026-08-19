@@ -27,9 +27,9 @@
 </div>
 @endif
 
-<div class="card card-flat">
+<div class="card card-primary">
     <div class="card-header">
-        <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-2 text-primary"></i>Tambah Instansi</h3>
+        <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-1"></i>Tambah Instansi</h3>
     </div>
 
     <form id="formInstansi" action="{{ route('instansi.store') }}" method="POST">
@@ -85,13 +85,12 @@
     </form>
 </div>
 
-<div class="card card-flat">
+<div class="card">
     <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-building me-2 text-primary"></i>Daftar Instansi</h3>
+        <h3 class="card-title">Daftar Instansi</h3>
     </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-        <table class="table table-modern mb-0">
+    <div class="card-body">
+        <table class="table table-bordered table-hover table-striped">
             <thead class="text-center">
                 <tr>
                     <th width="60">No</th>
@@ -110,7 +109,7 @@
                     <td>{{ $item->alamat ?? '-' }}</td>
                     <td>{{ $item->telepon ?? '-' }}</td>
                     <td class="text-center">
-                        <span class="badge badge-soft-info">{{ $item->effective_tipe_identitas }}</span>
+                        <span class="badge badge-info">{{ $item->effective_tipe_identitas }}</span>
                     </td>
                     <td class="text-center">
                         <button class="btn btn-warning btn-sm" title="Edit"
@@ -135,16 +134,12 @@
             @endforelse
             </tbody>
         </table>
-        </div>
     </div>
     @if($instansi->count())
     <div class="card-footer">{{ $instansi->links() }}</div>
     @endif
 </div>
 
-@stop
-
-@section('js')
 <script>
     function editItem(id, nama, alamat, telepon, tipeIdentitas) {
         document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Instansi';
@@ -171,4 +166,5 @@
         document.getElementById('btnCancel').style.display = 'none';
     }
 </script>
+
 @stop
