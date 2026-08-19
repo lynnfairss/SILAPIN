@@ -41,9 +41,9 @@
 </div>
 @endif
 
-<div class="card">
+<div class="card card-flat">
     <div class="card-header">
-        <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-1"></i>Tambah Inventaris</h3>
+        <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-2 text-primary"></i>Tambah Inventaris</h3>
     </div>
 
     <form id="formInventaris" action="{{ route('inventaris.store') }}" method="POST" enctype="multipart/form-data">
@@ -117,7 +117,7 @@
                             @for($i = 0; $i < 5; $i++)
                             <div class="d-flex align-items-center mb-1">
                                 <input type="file" name="foto[]" id="inputFoto{{ $i }}" class="form-control form-control-sm" accept="image/*" onchange="previewFoto({{ $i }}, this)">
-                                <span class="badge bg-secondary ms-2" id="fotoLabel{{ $i }}">Foto {{ $i + 1 }}</span>
+                                <span class="badge badge-soft-secondary ms-2" id="fotoLabel{{ $i }}">Foto {{ $i + 1 }}</span>
                                 <div id="fotoPreview{{ $i }}" class="ms-2"></div>
                             </div>
                             @endfor
@@ -134,12 +134,13 @@
     </form>
 </div>
 
-<div class="card">
+<div class="card card-flat">
     <div class="card-header">
-        <h3 class="card-title">Daftar Inventaris</h3>
+        <h3 class="card-title"><i class="fas fa-boxes me-2 text-primary"></i>Daftar Inventaris</h3>
     </div>
-    <div class="card-body">
-        <table class="table table-bordered table-striped">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-modern mb-0">
             <thead class="text-center">
                 <tr>
                     <th width="50">No</th>
@@ -162,11 +163,11 @@
                     <td class="text-center">{{ $item->stok }}</td>
                     <td>
                         @if($item->kondisi == 'Baik')
-                            <span class="badge bg-success">{{ $item->kondisi }}</span>
+                            <span class="badge badge-soft-success">{{ $item->kondisi }}</span>
                         @elseif($item->kondisi == 'Rusak Ringan')
-                            <span class="badge bg-warning text-dark">{{ $item->kondisi }}</span>
+                            <span class="badge badge-soft-warning">{{ $item->kondisi }}</span>
                         @else
-                            <span class="badge bg-danger">{{ $item->kondisi }}</span>
+                            <span class="badge badge-soft-danger">{{ $item->kondisi }}</span>
                         @endif
                     </td>
                     <td>
@@ -198,11 +199,15 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center text-muted">Belum ada data inventaris.</td>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="fas fa-boxes fa-2x mb-2 d-block"></i>
+                        Belum ada data inventaris.
+                    </td>
                 </tr>
             @endforelse
             </tbody>
         </table>
+        </div>
     </div>
     @if($inventaris->count())
     <div class="card-footer">{{ $inventaris->links() }}</div>
@@ -220,6 +225,9 @@
     </div>
 </div>
 
+@stop
+
+@section('js')
 <script>
     let fotoList = [];
     let fotoIndex = 0;
@@ -282,7 +290,7 @@
             fotoDihapus.push(fotoId);
         }
         const el = document.getElementById('fotoPreview' + i);
-        el.innerHTML = '<span class="badge bg-danger">Akan dihapus</span>';
+        el.innerHTML = '<span class="badge badge-soft-danger">Akan dihapus</span>';
         document.getElementById('inputFoto' + i).value = '';
     }
 

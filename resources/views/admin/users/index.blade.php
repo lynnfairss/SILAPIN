@@ -22,10 +22,13 @@
 </div>
 @endif
 
-<div class="card">
-    <div class="card-body">
-
-        <table class="table table-bordered table-striped">
+<div class="card card-flat">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-user-shield me-2 text-primary"></i>Daftar Admin &amp; Super Admin</h3>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-modern mb-0">
             <thead class="text-center">
                 <tr>
                     <th width="50">No</th>
@@ -44,9 +47,9 @@
                 <td>{{ $item->email }}</td>
                 <td class="text-center">
                     @if($item->isSuperAdmin())
-                        <span class="badge badge-dark">Super Admin</span>
+                        <span class="badge badge-soft-dark">Super Admin</span>
                     @else
-                        <span class="badge badge-info">Admin</span>
+                        <span class="badge badge-soft-info">Admin</span>
                     @endif
                 </td>
                 <td>{{ $item->created_at->format('d M Y') }}</td>
@@ -71,7 +74,7 @@
             @endforelse
             </tbody>
         </table>
-
+        </div>
     </div>
 </div>
 

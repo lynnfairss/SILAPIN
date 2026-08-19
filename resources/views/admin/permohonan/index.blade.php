@@ -15,10 +15,13 @@
 </div>
 @endif
 
-<div class="card">
-    <div class="card-body">
-
-        <table class="table table-bordered table-striped">
+<div class="card card-flat">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-file-signature me-2 text-primary"></i>Daftar Permohonan</h3>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+        <table class="table table-modern mb-0">
             <thead class="text-center">
                 <tr>
                     <th>No</th>
@@ -36,31 +39,31 @@
             @forelse($permohonan as $item)
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
-                <td>{{ $item->instansi->nama_instansi ?? '-' }}</td>
+                <td>{{ $item->instansi?->nama_instansi ?? $item->nama_instansi_lain ?? '-' }}</td>
                 <td>{{ $item->nama_peminjam }}</td>
                 <td>
                     <div>{{ $item->nik }}</div>
-                    <small class="text-muted">({{ $item->instansi->effective_tipe_identitas }})</small>
+                    <small class="text-muted">({{ $item->instansi?->effective_tipe_identitas ?? 'NIK' }})</small>
                 </td>
-                <td>{{ $item->tanggal_pinjam }}</td>
-                <td>{{ $item->tanggal_kembali }}</td>
+                <td>{{ $item->tanggal_pinjam ? \Carbon\Carbon::parse($item->tanggal_pinjam)->translatedFormat('d M Y') : '-' }}</td>
+                <td>{{ $item->tanggal_kembali ? \Carbon\Carbon::parse($item->tanggal_kembali)->translatedFormat('d M Y') : '-' }}</td>
 
                 <td class="text-center">
                     @if($item->status == 'Menunggu')
-                        <span class="badge badge-warning">Menunggu</span>
+                        <span class="badge badge-soft-warning">Menunggu</span>
                     @elseif($item->status == 'Disetujui')
-                        <span class="badge badge-success">Disetujui</span>
+                        <span class="badge badge-soft-success">Disetujui</span>
                     @elseif($item->status == 'Ditolak')
-                        <span class="badge badge-danger">Ditolak</span>
+                        <span class="badge badge-soft-danger">Ditolak</span>
                     @elseif($item->status == 'Dipinjam')
-                        <span class="badge badge-primary">Dipinjam</span>
+                        <span class="badge badge-soft-info">Dipinjam</span>
                     @else
-                        <span class="badge badge-secondary">Dikembalikan</span>
+                        <span class="badge badge-soft-secondary">Dikembalikan</span>
                     @endif
                 </td>
 
                 <td class="text-center">
-                    <a href="{{ route('permohonan.show', $item->id) }}" class="btn btn-info btn-sm" title="Lihat Detail">
+                    <a href="{{ route('permohonan.show', $item->id) }}" class="btn btn-primary btn-sm" title="Lihat Detail">
                         <i class="fas fa-eye"></i>
                     </a>
 
@@ -96,13 +99,15 @@
             </tr>
             @empty
             <tr>
-                <td colspan="8" class="text-center text-muted">
+                <td colspan="8" class="text-center text-muted py-4">
+                    <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
                     Belum ada data permohonan.
                 </td>
             </tr>
             @endforelse
             </tbody>
         </table>
+        </div>
 
     </div>
 </div>
@@ -117,15 +122,15 @@
 
                 <input type="hidden" name="status" value="Disetujui">
 
-                <div class="modal-header bg-success text-white">
+                <div class="modal-header modal-header-grad-success">
                     <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Setujui Permohonan</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
 
                 <div class="modal-body">
                     <p>Anda yakin ingin menyetujui permohonan ini?</p>
-                    <table class="table table-bordered mb-3">
-                        <tr><th style="width:130px">Nama</th><td id="accNama"></td></tr>
+                    <table class="table table-detail mb-3">
+                        <tr><th>Nama</th><td id="accNama"></td></tr>
                         <tr><th>Barang</th><td id="accBarang"></td></tr>
                     </table>
 
@@ -157,15 +162,15 @@
 
                 <input type="hidden" name="status" value="Ditolak">
 
-                <div class="modal-header bg-danger text-white">
+                <div class="modal-header modal-header-grad-danger">
                     <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Tolak Permohonan</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
 
                 <div class="modal-body">
                     <p>Anda yakin ingin menolak permohonan ini?</p>
-                    <table class="table table-bordered mb-3">
-                        <tr><th style="width:130px">Nama</th><td id="tolakNama"></td></tr>
+                    <table class="table table-detail mb-3">
+                        <tr><th>Nama</th><td id="tolakNama"></td></tr>
                         <tr><th>Barang</th><td id="tolakBarang"></td></tr>
                     </table>
 

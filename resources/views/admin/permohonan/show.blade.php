@@ -11,133 +11,6 @@
     </div>
 @stop
 
-@section('css')
-<style>
-    .badge-soft { font-weight: 600; border-radius: 20px; padding: .4em .85em; font-size: .78rem; }
-    .detail-label {
-        font-size: .72rem; text-transform: uppercase; letter-spacing: .5px;
-        color: #6c757d; font-weight: 600;
-    }
-    .detail-value { font-size: .95rem; color: #1a1a2e; font-weight: 600; }
-    .card-flat {
-        border-radius: 14px; border: 1px solid #eef0f4;
-        box-shadow: 0 2px 12px rgba(0,0,0,.05);
-    }
-    .card-flat .card-header {
-        background: transparent; border-bottom: 1px solid #eef0f4;
-        border-radius: 14px 14px 0 0;
-    }
-    .card-flat .card-title { font-weight: 700; color: #1a1a2e; font-size: .95rem; }
-    .table-modern thead th {
-        background: #1a1a2e; color: #fff; font-weight: 600; font-size: .78rem;
-        text-transform: uppercase; letter-spacing: .4px; border: none; padding: .7rem .9rem;
-    }
-    .table-modern tbody td { padding: .65rem .9rem; font-size: .88rem; vertical-align: middle; }
-    .table-modern tbody tr { border-bottom: 1px solid #f1f3f7; }
-    .table-modern tbody tr:hover { background: rgba(13,110,253,.04); }
-    .lampiran-box {
-        border: 1px dashed #dee2e6; border-radius: 12px;
-        padding: 14px; text-align: center; background: #f8f9fc;
-        transition: all .2s ease; display: block; color: #495057;
-    }
-    .lampiran-box:hover { border-color: #6610f2; background: #f3f0ff; color: #6610f2; }
-    .lampiran-box i { font-size: 1.8rem; }
-
-    .ktp-thumb {
-        display: block;
-        width: 110px;
-        height: auto;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08);
-        cursor: zoom-in;
-        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-        background: #fff;
-    }
-    .ktp-thumb:hover {
-        transform: translateY(-2px);
-        border-color: #6610f2;
-        box-shadow: 0 6px 16px rgba(102,16,242,.18);
-    }
-
-    .lampiran-flex {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-    .lampiran-flex > div { min-width: 110px; }
-
-    .lightbox-overlay {
-        position: fixed;
-        inset: 0;
-        z-index: 10500;
-        background: rgba(0,0,0,.9);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        backdrop-filter: blur(3px);
-    }
-    .lightbox-overlay.active { display: flex; }
-    .lightbox-content {
-        max-width: 92vw;
-        max-height: 92vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .lightbox-content img {
-        max-width: 92vw;
-        max-height: 92vh;
-        object-fit: contain;
-        border-radius: 8px;
-        box-shadow: 0 10px 50px rgba(0,0,0,.6);
-    }
-    .lightbox-close {
-        position: absolute;
-        top: 18px;
-        right: 24px;
-        width: 44px;
-        height: 44px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(255,255,255,.15);
-        color: #fff;
-        font-size: 1.2rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all .2s;
-    }
-    .lightbox-close:hover { background: rgba(255,255,255,.35); transform: rotate(90deg); }
-    .timeline { position: relative; padding-left: 28px; }
-    .timeline::before {
-        content: ''; position: absolute; left: 9px; top: 6px; bottom: 6px;
-        width: 2px; background: #e9ecef;
-    }
-    .tl-item { position: relative; padding-bottom: 18px; }
-    .tl-item:last-child { padding-bottom: 0; }
-    .tl-dot {
-        position: absolute; left: -25px; top: 4px; width: 14px; height: 14px;
-        border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px #ced4da;
-        background: #fff;
-    }
-    .tl-item.active .tl-dot {
-        box-shadow: 0 0 0 2px #6610f2;
-        background: linear-gradient(135deg,#0d6efd,#6610f2);
-    }
-    .tl-item.rejected .tl-dot { box-shadow: 0 0 0 2px #dc3545; background: #dc3545; }
-    .tl-title { font-weight: 700; color: #1a1a2e; font-size: .92rem; }
-    .tl-desc { color: #6c757d; font-size: .82rem; }
-    .tl-who { font-size: .75rem; color: #adb5bd; }
-    .btn-gradient {
-        background: linear-gradient(90deg, #0d6efd, #6610f2);
-        border: none; color: #fff; box-shadow: 0 4px 12px rgba(102,16,242,.28); border-radius: 8px;
-    }
-    .btn-gradient:hover { color: #fff; filter: brightness(1.05); }
-</style>
-@stop
-
 @section('content')
 
 @php
@@ -183,7 +56,7 @@
             <h4 class="mb-1 fw-bold text-primary">{{ $permohonan->nomor_permohonan }}</h4>
             <span class="text-muted small">Diajukan {{ $permohonan->created_at->translatedFormat('d M Y H:i') }}</span>
         </div>
-        <span class="badge bg-{{ $statusColor[$permohonan->status] ?? 'secondary' }} badge-soft text-white">
+        <span class="badge badge-soft-{{ $statusColor[$permohonan->status] ?? 'secondary' }}">
             <i class="fas {{ $permohonan->status === 'Menunggu' ? 'fa-clock' : ($permohonan->status === 'Disetujui' ? 'fa-check-circle' : ($permohonan->status === 'Ditolak' ? 'fa-times-circle' : ($permohonan->status === 'Dipinjam' ? 'fa-box' : 'fa-undo'))) }} me-1"></i>
             {{ $permohonan->status }}
         </span>
@@ -330,7 +203,7 @@
                                 <small class="text-muted">{{ $d->inventaris->kode_barang ?? '' }}</small>
                             </td>
                             <td class="text-center">
-                                <span class="badge bg-primary badge-soft text-white">{{ $d->jumlah }}</span>
+                                <span class="badge badge-soft-primary">{{ $d->jumlah }}</span>
                             </td>
                         </tr>
                         @empty
@@ -410,14 +283,14 @@
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="status" value="Disetujui">
-                <div class="modal-header bg-success text-white">
+                <div class="modal-header modal-header-grad-success">
                     <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Setujui Permohonan</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <p>Anda yakin ingin menyetujui permohonan ini?</p>
-                    <table class="table table-bordered mb-3">
-                        <tr><th style="width:130px">Nama</th><td id="accNama"></td></tr>
+                    <table class="table table-detail mb-3">
+                        <tr><th>Nama</th><td id="accNama"></td></tr>
                         <tr><th>Barang</th><td id="accBarang"></td></tr>
                     </table>
                     <div class="form-group">
@@ -443,14 +316,14 @@
                 @csrf
                 @method('PATCH')
                 <input type="hidden" name="status" value="Ditolak">
-                <div class="modal-header bg-danger text-white">
+                <div class="modal-header modal-header-grad-danger">
                     <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Tolak Permohonan</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <p>Anda yakin ingin menolak permohonan ini?</p>
-                    <table class="table table-bordered mb-3">
-                        <tr><th style="width:130px">Nama</th><td id="tolakNama"></td></tr>
+                    <table class="table table-detail mb-3">
+                        <tr><th>Nama</th><td id="tolakNama"></td></tr>
                         <tr><th>Barang</th><td id="tolakBarang"></td></tr>
                     </table>
                     <div class="form-group">

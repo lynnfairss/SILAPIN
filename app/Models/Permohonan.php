@@ -14,6 +14,8 @@ class Permohonan extends Model
         'nik',
         'jabatan',
         'telepon',
+        'tempat_lahir',
+        'tanggal_lahir',
         'tanggal_pinjam',
         'tanggal_kembali',
         'keperluan',
