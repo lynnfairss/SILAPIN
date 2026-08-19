@@ -66,20 +66,8 @@ class PermohonanController extends Controller
             'nik'              => 'required|string|max:30',
             'jabatan'          => 'required|string|max:100',
             'telepon'          => 'required|string|max:15|regex:/^[0-9]+$/',
-            'tempat_lahir'     => ['nullable', 'string', 'max:100', 'regex:/^[A-Za-z][A-Za-z .\x27-]{0,99}$/'],
-            'tanggal_lahir'    => ['nullable', 'regex:/^\d{2}-\d{2}-\d{4}$/', function ($attribute, $value, $fail) {
-                $parts = explode('-', $value);
-                if (count($parts) !== 3 || !checkdate((int) $parts[1], (int) $parts[0], (int) $parts[2])) {
-                    $fail('Tanggal lahir tidak valid.');
-                    return;
-                }
-                $d = \DateTime::createFromFormat('!d-m-Y', $value);
-                if ($d && $d > new \DateTime('today')) {
-                    $fail('Tanggal lahir tidak boleh di masa depan.');
-                }
-            }],
-            'instansi_id'      => 'required',
-            'nama_instansi_lain' => 'nullable|required_if:instansi_id,lainnya|string|max:100',
+            'instansi_id'      => 'nullable',
+            'nama_instansi_lain' => 'nullable|string|max:100',
             'tanggal_pinjam'   => 'required|date',
             'tanggal_kembali'  => 'required|date|after_or_equal:tanggal_pinjam',
             'keperluan'        => 'required|string',
@@ -127,8 +115,6 @@ class PermohonanController extends Controller
                 'nik'                => $request->nik,
                 'jabatan'            => $request->jabatan,
                 'telepon'            => $request->telepon,
-                'tempat_lahir'       => $request->tempat_lahir,
-                'tanggal_lahir'      => $tanggalLahir,
                 'tanggal_pinjam'     => $request->tanggal_pinjam,
                 'tanggal_kembali'    => $request->tanggal_kembali,
                 'keperluan'          => $request->keperluan,

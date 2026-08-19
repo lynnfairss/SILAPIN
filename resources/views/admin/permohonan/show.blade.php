@@ -93,6 +93,14 @@
                         <div class="detail-value">{{ $permohonan->telepon }}</div>
                     </div>
                     <div class="col-md-6">
+                        <div class="detail-label">Tempat / Tgl Lahir</div>
+                        <div class="detail-value">{{ $permohonan->tempat_tanggal_lahir ?? '-' }}</div>
+                    </div>
+                    <div class="col-12">
+                        <div class="detail-label">Alamat</div>
+                        <div class="detail-value">{{ $permohonan->alamat ?? '-' }}</div>
+                    </div>
+                    <div class="col-md-6">
                         <div class="detail-label">Tanggal Pinjam</div>
                         <div class="detail-value">{{ \Carbon\Carbon::parse($permohonan->tanggal_pinjam)->translatedFormat('d M Y') }}</div>
                     </div>

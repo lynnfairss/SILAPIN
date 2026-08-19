@@ -9,6 +9,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('vendor/flatpickr/material_blue.css') }}" rel="stylesheet">
     <link href="{{ asset('css/peminjam.css') }}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
 
@@ -145,6 +146,14 @@
                                     <label class="form-label fw-medium">Nama Instansi <span class="text-danger">*</span></label>
                                     <input type="text" name="nama_instansi_lain" id="namaInstansiField" class="form-control" value="{{ old('nama_instansi_lain') }}" placeholder="Masukkan nama instansi">
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">Tempat / Tgl Lahir</label>
+                                    <input type="text" name="tempat_tanggal_lahir" id="ttlField" class="form-control" value="{{ old('tempat_tanggal_lahir') }}" placeholder="Contoh: Jakarta, 12-08-1990" maxlength="120">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-medium">Alamat</label>
+                                    <textarea name="alamat" id="alamatField" class="form-control" rows="2" placeholder="Masukkan alamat sesuai KTP" maxlength="255">{{ old('alamat') }}</textarea>
+                                </div>
                                 <div class="col-12">
                                     <hr>
                                     <h6 class="fw-bold text-primary"><i class="fas fa-upload me-2"></i>Upload Dokumen</h6>
@@ -152,17 +161,13 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Foto KTP <span class="text-danger">*</span> <small class="text-muted">(max 2MB, jpg/png)</small></label>
                                     <div class="input-group">
-                                        <input type="file" name="foto_ktp" id="fotoKtpField" class="form-control" accept="image/*" required>
-                                        <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Foto KTP pakai kamera">
-                                            <i class="fas fa-camera me-1"></i>Kamera
+                                        <input type="file" name="foto_ktp" class="form-control" accept="image/*">
+                                        <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Scan / foto KTP">
+                                            <i class="fas fa-camera me-1"></i>Scan
                                         </button>
                                     </div>
                                     <div class="scan-preview"></div>
-                                    <button type="button" class="btn btn-sm btn-outline-success mt-2" onclick="readKtpFromCurrentPhoto()" title="Baca Nama &amp; NIK dari foto KTP">
-                                        <i class="fas fa-id-card me-1"></i>Scan: Baca Nama &amp; NIK
-                                    </button>
-                                    <div class="ktp-ocr-status" id="ktpOcrStatus" style="display:none;"></div>
-                                    <div class="form-text">Upload atau scan/foto KTP sebagai bukti. Klik "Scan: Baca Nama &amp; NIK" untuk mengisi nama &amp; NIK otomatis.</div>
+                                    <div class="form-text">Upload atau scan/foto KTP sebagai bukti.</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Surat Tugas <small class="text-muted">(opsional, max 2MB)</small></label>
@@ -1059,7 +1064,6 @@
                     dt.items.add(file);
                     input.files = dt.files;
                     showScanPreview(field, URL.createObjectURL(file));
-                    if (field === 'foto_ktp') clearKtpStatus();
                 }
             }
             closeCamera();
@@ -1096,284 +1100,7 @@
         if (input) input.value = '';
         const preview = input ? input.closest('.col-md-6').querySelector('.scan-preview') : null;
         if (preview) preview.innerHTML = '';
-        if (field === 'foto_ktp') clearKtpStatus();
     }
-
-    // ===== OCR KTP (baca Nama & NIK otomatis) =====
-
-    let ocrRunning = false;
-    let ocrWorkerPromise = null;
-    let ocrToken = 0;
-
-    const OCR_CONFIG = {
-        langPath: '{{ asset('vendor/tesseract') }}/',
-        workerPath: '{{ asset('vendor/tesseract/worker.min.js') }}',
-        corePath: '{{ asset('vendor/tesseract') }}/',
-        minW: 1600,
-        maxW: 2560,
-    };
-
-    function ocrOnProgress(m) {
-        const msgEl = document.querySelector('.ktp-ocr-msg');
-        const pctEl = document.querySelector('.ktp-ocr-pct');
-        let msg = '';
-        let pct = null;
-        if (m.status === 'loading tesseract core') { msg = 'Memuat mesin OCR'; pct = m.progress; }
-        else if (m.status === 'loading language traineddata') { msg = 'Memuat model bahasa'; pct = m.progress; }
-        else if (m.status === 'recognizing text') { msg = 'Membaca KTP'; pct = m.progress; }
-        else if (m.status === 'initializing tesseract' || m.status === 'initializing api') { msg = 'Menyiapkan mesin OCR'; }
-        if (msgEl && msg) msgEl.textContent = msg;
-        if (pctEl && typeof pct === 'number') pctEl.textContent = ' ' + Math.round(pct * 100) + '%';
-    }
-
-    function withTimeout(promise, ms, label) {
-        return new Promise(function(resolve, reject) {
-            const t = setTimeout(function() { reject(new Error(label + ' memakan waktu terlalu lama')); }, ms);
-            promise.then(function(v) { clearTimeout(t); resolve(v); }, function(e) { clearTimeout(t); reject(e); });
-        });
-    }
-
-    function getOcrWorker() {
-        if (ocrWorkerPromise) return ocrWorkerPromise;
-        ocrWorkerPromise = Tesseract.createWorker('ind', 1, {
-            workerPath: OCR_CONFIG.workerPath,
-            corePath: OCR_CONFIG.corePath,
-            langPath: OCR_CONFIG.langPath,
-            logger: ocrOnProgress,
-        }).catch(function(err) {
-            ocrWorkerPromise = null;
-            throw err;
-        });
-        return ocrWorkerPromise;
-    }
-
-    function resetOcrWorker() {
-        if (ocrWorkerPromise) {
-            ocrWorkerPromise.then(function(w) { try { w.terminate(); } catch (e) {} });
-            ocrWorkerPromise = null;
-        }
-    }
-
-    function preprocessCanvas(src) {
-        const cw = src.width;
-        const ch = src.height;
-        let factor = 1;
-        if (cw < OCR_CONFIG.minW) factor = Math.min(2, OCR_CONFIG.minW / cw);
-        if (cw * factor > OCR_CONFIG.maxW) factor = OCR_CONFIG.maxW / cw;
-
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(cw * factor));
-        canvas.height = Math.max(1, Math.round(ch * factor));
-        const ctx = canvas.getContext('2d');
-        ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(src, 0, 0, canvas.width, canvas.height);
-
-        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const px = img.data;
-        const n = canvas.width * canvas.height;
-        let lo = 255, hi = 0;
-        for (let i = 0; i < n; i++) {
-            const g = 0.299 * px[i*4] + 0.587 * px[i*4+1] + 0.114 * px[i*4+2];
-            px[i*4] = px[i*4+1] = px[i*4+2] = g;
-            if (g < lo) lo = g;
-            if (g > hi) hi = g;
-        }
-        const range = (hi - lo) || 1;
-        for (let i = 0; i < n; i++) {
-            const g = (px[i*4] - lo) / range * 255;
-            px[i*4] = px[i*4+1] = px[i*4+2] = g;
-        }
-        ctx.putImageData(img, 0, 0);
-
-        const w = canvas.width, h = canvas.height;
-        const s = ctx.getImageData(0, 0, w, h).data;
-        const out = ctx.createImageData(w, h);
-        const d = out.data;
-        for (let y = 0; y < h; y++) {
-            for (let x = 0; x < w; x++) {
-                const idx = (y * w + x) * 4;
-                for (let c = 0; c < 3; c++) {
-                    let sum = 5 * s[idx + c];
-                    if (x > 0) sum -= s[idx + c - 4];
-                    if (x < w - 1) sum -= s[idx + c + 4];
-                    if (y > 0) sum -= s[idx + c - w * 4];
-                    if (y < h - 1) sum -= s[idx + c + w * 4];
-                    d[idx + c] = sum;
-                }
-                d[idx + 3] = 255;
-            }
-        }
-        ctx.putImageData(out, 0, 0);
-        return canvas;
-    }
-
-    function setKtpOcrHtml(html) {
-        const el = document.getElementById('ktpOcrStatus');
-        if (!el) return;
-        el.innerHTML = html;
-        el.style.display = 'block';
-    }
-
-    function clearKtpStatus() {
-        const el = document.getElementById('ktpOcrStatus');
-        if (el) { el.style.display = 'none'; el.innerHTML = ''; }
-    }
-
-    function ocrStatusBadge(cls, icon, text) {
-        return '<div class="ktp-ocr-' + cls + '"><i class="fas ' + icon + ' me-1"></i>' + text + '</div>';
-    }
-
-    function escapeHtml(s) {
-        return String(s).replace(/[&<>"']/g, function(c) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-        });
-    }
-
-    function loadImageFromFile(file) {
-        return new Promise(function(resolve, reject) {
-            const url = URL.createObjectURL(file);
-            const img = new Image();
-            img.onload = function() { resolve(img); };
-            img.onerror = function() { URL.revokeObjectURL(url); reject(new Error('gagal memuat gambar')); };
-            img.src = url;
-        });
-    }
-
-    function readKtp(file) {
-        if (ocrRunning || !file) return;
-        if (typeof Tesseract === 'undefined') {
-            setKtpOcrHtml(ocrStatusBadge('warn', 'fa-circle-exclamation', 'Mesin baca (OCR) tidak dimuat. Isi Nama &amp; NIK secara manual.'));
-            return;
-        }
-        const token = ++ocrToken;
-        ocrRunning = true;
-        setKtpOcrHtml(
-            '<div class="ktp-ocr-loading"><span class="spinner-border spinner-border-sm me-2"></span>' +
-            '<span class="ktp-ocr-msg">Menyiapkan mesin OCR</span><span class="ktp-ocr-pct"></span>…</div>'
-        );
-
-        loadImageFromFile(file).then(function(img) {
-            const src = document.createElement('canvas');
-            src.width = img.naturalWidth || 1;
-            src.height = img.naturalHeight || 1;
-            src.getContext('2d').drawImage(img, 0, 0);
-
-            const proc = preprocessCanvas(src);
-            return withTimeout(getOcrWorker(), 15000, 'Memuat mesin OCR').then(function(worker) {
-                return withTimeout(worker.recognize(proc), 120000, 'Membaca KTP');
-            }).then(function(result) {
-                if (token !== ocrToken) return;
-                const parsed = parseKtpText(result && result.data ? result.data.text : '');
-                fillKtpData(parsed);
-            });
-        }).catch(function(err) {
-            if (token !== ocrToken) return;
-            resetOcrWorker();
-            setKtpOcrHtml(ocrStatusBadge('warn', 'fa-triangle-exclamation', 'Gagal membaca KTP: ' + escapeHtml((err && err.message) ? err.message : 'kesalahan tidak diketahui')));
-        }).finally(function() {
-            if (token === ocrToken) ocrRunning = false;
-        });
-    }
-
-    function cleanNama(s) {
-        let v = String(s || '').replace(/[_|]/g, ' ').trim();
-        v = v.replace(/^[Nn]ama\s*:?\s*/, '');
-        v = v.replace(/^NAMA\s*/, '');
-        v = v.replace(/\s+(?:Tempat|TTL|Alamat|Jenis|Gol|Status|Perkawinan|Pekerjaan|Kewarganegaraan|Berlaku|Provinsi)[\s\S]*$/i, '');
-        v = v.replace(/[^\w\s.,'-]/g, ' ').trim();
-        if (!v) return '';
-        return v.split(/\s+/).filter(Boolean)
-            .map(function(w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); })
-            .join(' ');
-    }
-
-    function parseKtpText(raw) {
-        const lines = String(raw || '').split(/\r?\n/).map(function(l) { return l.trim(); }).filter(Boolean);
-        const result = { nik: '', nama: '' };
-
-        const joined = lines.join(' ');
-        const nikMatch = joined.match(/\b\d{16}\b/);
-        if (nikMatch) result.nik = nikMatch[0];
-
-        let namaFound = false;
-        for (let i = 0; i < lines.length; i++) {
-            const m = lines[i].match(/^[Nn]ama\s*:?\s*(.+)$/);
-            if (m) {
-                result.nama = cleanNama(m[1]);
-                namaFound = true;
-                break;
-            }
-        }
-
-        if (!namaFound) {
-            const m = joined.match(/[Nn]ama\s*:?\s*([A-Za-z][A-Za-z.\s'-]{2,60}?)(?=\s+(?:[Tt]empat|TTL|[Aa]lamat|[Jj]enis|[Gg]ol|[Ss]tatus|[Pp]erkawinan|[Pp]ekerjaan|[Kk]ewarganegaraan|[Bb]erlaku|[Pp]rovinsi)\b|$)/);
-            if (m) {
-                result.nama = cleanNama(m[1]);
-                namaFound = true;
-            }
-        }
-
-        if (!namaFound) {
-            for (let i = 0; i < lines.length; i++) {
-                if (/\b\d{16}\b/.test(lines[i])) {
-                    for (let j = i + 1; j < lines.length && j <= i + 4; j++) {
-                        const cand = cleanNama(lines[j]);
-                        if (cand && !/\d{4}/.test(cand) && !/NIK|Nama|Tempat|Alamat/i.test(cand)) {
-                            result.nama = cand;
-                            namaFound = true;
-                            break;
-                        }
-                    }
-                    break;
-                }
-            }
-        }
-
-        return result;
-    }
-
-    function fillKtpData(parsed) {
-        const nikField = document.getElementById('nikField');
-        const namaField = document.getElementById('namaField');
-        const labelIdentitas = document.getElementById('labelIdentitas');
-
-        const nikOk = /^\d{16}$/.test(parsed.nik || '');
-        const namaOk = (parsed.nama || '').length > 2;
-        const fieldIsNik = labelIdentitas && labelIdentitas.textContent.trim() === 'NIK';
-
-        if (nikOk && fieldIsNik && nikField) nikField.value = parsed.nik;
-        if (namaOk && namaField) namaField.value = parsed.nama;
-
-        if (typeof updatePreview === 'function') updatePreview();
-
-        let html = '';
-        if (namaOk) {
-            html += ocrStatusBadge('ok', 'fa-check-circle', 'Nama terisi: <strong>' + escapeHtml(parsed.nama) + '</strong>');
-        } else {
-            html += ocrStatusBadge('warn', 'fa-circle-info', 'Nama tidak terbaca. Isi manual.');
-        }
-        html += '<br>' + (nikOk
-            ? ocrStatusBadge('ok', 'fa-check-circle', 'NIK terisi: <strong>' + parsed.nik + '</strong>')
-            : ocrStatusBadge('warn', 'fa-circle-info', 'NIK tidak terbaca. Cek foto / isi manual.'));
-        html += '<div class="mt-1"><button type="button" class="btn btn-sm btn-link ktp-ocr-retry p-0" onclick="readKtpFromCurrentPhoto()">' +
-                '<i class="fas fa-rotate-right me-1"></i>Baca ulang</button></div>';
-        setKtpOcrHtml(html);
-    }
-
-    function readKtpFromCurrentPhoto() {
-        const input = document.querySelector('input[name="foto_ktp"]');
-        const f = input && input.files && input.files[0];
-        if (f) {
-            readKtp(f);
-            return;
-        }
-        setKtpOcrHtml(ocrStatusBadge('warn', 'fa-circle-info', 'Belum ada foto. Ambil foto lewat kamera atau pilih file KTP dulu.'));
-    }
-
-    document.querySelector('input[name="foto_ktp"]').addEventListener('change', function() {
-        clearKtpStatus();
-    });
 
     function closeCamera() {
         document.getElementById('cameraFlash').classList.remove('active');
@@ -1384,165 +1111,6 @@
         document.getElementById('cameraPreview').srcObject = null;
         document.getElementById('ktpFrame').classList.add('hidden');
         document.getElementById('cameraModal').classList.remove('active');
-    }
-
-    // ========== TEMPAT LAHIR: autocomplete kota ==========
-    (function () {
-        const KOTA_BY_PROVINSI = @json($daftarKota);
-        const input = document.getElementById('tempatLahirField');
-        const dropdown = document.getElementById('ttlDropdown');
-        const toggleBtn = document.getElementById('ttlToggleBtn');
-        const provinsiSelect = document.getElementById('provinsiSelect');
-        if (!input || !dropdown) return;
-
-        let activeIndex = -1;
-        let items = [];
-
-        function escapeHtml(s) {
-            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-
-        function highlight(name, q) {
-            if (!q) return escapeHtml(name);
-            const i = name.toLowerCase().indexOf(q);
-            if (i === -1) return escapeHtml(name);
-            return escapeHtml(name.slice(0, i)) + '<mark>' + escapeHtml(name.slice(i, i + q.length)) + '</mark>' + escapeHtml(name.slice(i + q.length));
-        }
-
-        function renderDropdown() {
-            const q = input.value.trim().toLowerCase();
-            const qLen = q.length;
-            const provFilter = provinsiSelect ? provinsiSelect.value : '';
-            const showProvLabel = !provFilter;
-            let html = '';
-            let total = 0;
-            items = [];
-
-            Object.keys(KOTA_BY_PROVINSI).forEach(function (provinsi) {
-                if (provFilter && provinsi !== provFilter) return;
-                let groupHtml = '';
-                let inGroup = 0;
-                KOTA_BY_PROVINSI[provinsi].forEach(function (kota) {
-                    const lower = kota.toLowerCase();
-                    const match = qLen === 0 || lower.indexOf(q) === 0 || lower.indexOf(' ' + q) > 0 || lower.indexOf(q) > 0;
-                    if (!match) return;
-                    if (inGroup === 0) {
-                        groupHtml += '<div class="ttl-group">' + escapeHtml(provinsi) + '</div>';
-                    }
-                    inGroup++;
-                    groupHtml += '<div class="ttl-item" data-value="' + escapeHtml(kota) + '">'
-                        + '<i class="fas fa-map-pin ttl-item-icon"></i>'
-                        + '<span>' + highlight(kota, q) + '</span>'
-                        + (showProvLabel ? '<span class="ms-auto small text-muted">' + escapeHtml(provinsi) + '</span>' : '')
-                        + '</div>';
-                    total++;
-                });
-                html += groupHtml;
-            });
-
-            if (total === 0) {
-                dropdown.innerHTML = '<div class="ttl-empty"><i class="fas fa-search me-1"></i>Kota tidak ditemukan untuk "<strong>' + escapeHtml(q) + '"</strong></div>';
-                dropdown.classList.add('open');
-                return;
-            }
-
-            dropdown.innerHTML = html;
-            dropdown.querySelectorAll('.ttl-item').forEach(function (el) {
-                items.push({ el: el, value: el.getAttribute('data-value') });
-                el.addEventListener('mousedown', function (e) {
-                    e.preventDefault();
-                    selectValue(el.getAttribute('data-value'));
-                });
-            });
-            dropdown.classList.add('open');
-            setActive(-1);
-        }
-
-        function setActive(idx) {
-            if (items.length === 0) return;
-            items.forEach(function (it, i) {
-                it.el.classList.toggle('active', i === idx);
-            });
-            activeIndex = idx;
-            if (idx >= 0 && items[idx]) {
-                items[idx].el.scrollIntoView({ block: 'nearest' });
-            }
-        }
-
-        function selectValue(v) {
-            input.value = v;
-            closeDropdown();
-            input.focus();
-        }
-
-        function closeDropdown() {
-            dropdown.classList.remove('open');
-            activeIndex = -1;
-        }
-
-        input.addEventListener('input', renderDropdown);
-        input.addEventListener('focus', renderDropdown);
-
-        input.addEventListener('keydown', function (e) {
-            if (!dropdown.classList.contains('open')) {
-                if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                    e.preventDefault();
-                    renderDropdown();
-                }
-                return;
-            }
-            if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                setActive(Math.min(activeIndex + 1, items.length - 1));
-            } else if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                setActive(Math.max(activeIndex - 1, 0));
-            } else if (e.key === 'Enter') {
-                if (activeIndex >= 0 && items[activeIndex]) {
-                    e.preventDefault();
-                    selectValue(items[activeIndex].value);
-                } else {
-                    closeDropdown();
-                }
-            } else if (e.key === 'Escape') {
-                closeDropdown();
-            } else if (e.key === 'Tab') {
-                closeDropdown();
-            }
-        });
-
-        toggleBtn.addEventListener('click', function () {
-            if (dropdown.classList.contains('open')) {
-                closeDropdown();
-            } else {
-                renderDropdown();
-            }
-        });
-
-        if (provinsiSelect) {
-            provinsiSelect.addEventListener('change', function () {
-                input.value = '';
-                renderDropdown();
-                input.focus();
-            });
-        }
-
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.ttl-wrapper')) closeDropdown();
-        });
-    })();
-
-    // ========== TANGGAL LAHIR: datepicker ==========
-    const tanggalLahirField = document.getElementById('tanggalLahirField');
-    if (tanggalLahirField && typeof flatpickr === 'function') {
-        flatpickr(tanggalLahirField, {
-            locale: (flatpickr.l10ns && flatpickr.l10ns.id) || undefined,
-            dateFormat: 'd-m-Y',
-            maxDate: 'today',
-            allowInput: true,
-            monthSelectorType: 'static',
-            positionElement: tanggalLahirField,
-        });
     }
 </script>
 
