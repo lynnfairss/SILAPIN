@@ -21,5 +21,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->is('peminjam/*')) {
+                return redirect()->route('peminjam.form')
+                    ->with('error', 'Sesi telah berakhir atau token keamanan tidak valid. Silakan isi form kembali.');
+            }
+            return response()->view('errors.419', [], 419);
+        });
     })->create();

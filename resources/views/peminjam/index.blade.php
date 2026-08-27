@@ -28,6 +28,13 @@
     <div class="row justify-content-center">
         <div class="col-lg-10">
 
+            @if (session('error'))
+            <div class="alert alert-warning alert-dismissible fade show">
+                <i class="fas fa-clock me-2"></i>{{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            @endif
+
             @if ($errors->any())
             <div class="alert alert-danger alert-dismissible fade show">
                 <i class="fas fa-exclamation-circle me-2"></i>
@@ -1146,6 +1153,33 @@
             }
         });
     }
+
+    // CSRF Token Refresh — refresh tiap 30 menit agar tidak expired
+    setInterval(function() {
+        fetch('/peminjam/form', { credentials: 'same-origin' })
+            .then(response => response.text())
+            .then(html => {
+                const match = html.match(/name="csrf-token"\s+content="([^"]+)"/);
+                if (match) {
+                    document.querySelector('meta[name="csrf-token"]').setAttribute('content', match[1]);
+                    document.querySelector('input[name="_token"]').value = match[1];
+                }
+            }).catch(() => {});
+    }, 30 * 60 * 1000);
+
+    // Tangkap error 419 dan tampilkan pesan yang jelas
+    window.addEventListener('pageshow', function(e) {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('error') === '419') {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-warning alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = '<i class="fas fa-clock me-2"></i>Sesi telah berakhir. Silakan refresh halaman dan isi form kembali.'
+                + ' <a href="' + window.location.pathname + '" class="alert-link">Klik di sini untuk refresh.</a>'
+                + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
+            document.body.appendChild(alert);
+        }
+    });
 </script>
 
 </body>
