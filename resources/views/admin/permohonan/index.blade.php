@@ -36,11 +36,11 @@
             @forelse($permohonan as $item)
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
-                <td>{{ $item->instansi->nama_instansi ?? '-' }}</td>
+                <td>{{ $item->instansi?->nama_instansi ?? '-' }}</td>
                 <td>{{ $item->nama_peminjam }}</td>
                 <td>
                     <div>{{ $item->nik }}</div>
-                    <small class="text-muted">({{ $item->instansi->effective_tipe_identitas }})</small>
+                    <small class="text-muted">({{ $item->instansi?->effective_tipe_identitas ?? 'NIK' }})</small>
                 </td>
                 <td>{{ $item->tanggal_pinjam }}</td>
                 <td>{{ $item->tanggal_kembali }}</td>

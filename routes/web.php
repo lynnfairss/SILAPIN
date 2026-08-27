@@ -31,6 +31,7 @@ Route::prefix('peminjam')->name('peminjam.')->group(function () {
     Route::get('form', [PermohonanController::class, 'form'])->name('form');
     Route::post('store', [PermohonanController::class, 'store'])->name('store');
     Route::get('cek-status', [PermohonanController::class, 'cekStatus'])->name('cek-status');
+    Route::get('download-surat/{permohonan}/docx', [PermohonanController::class, 'downloadDocx'])->name('download-surat.docx');
     Route::get('download-surat/{permohonan}', [PermohonanController::class, 'downloadSurat'])->name('download-surat');
 });
 
