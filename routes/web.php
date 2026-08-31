@@ -8,6 +8,7 @@ use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InstansiController;
 use App\Http\Controllers\Admin\KategoriController;
+use App\Http\Controllers\Admin\JenisController;
 use App\Http\Controllers\Admin\InventarisController;
 use App\Http\Controllers\Admin\PermohonanController as AdminPermohonanController;
 use App\Http\Controllers\Admin\SecurityController;
@@ -77,7 +78,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:super_admin')->group(function () {
         Route::resource('instansi', InstansiController::class)->except(['create', 'edit']);
         Route::resource('kategori', KategoriController::class)->except(['create', 'edit']);
-        Route::resource('inventaris', InventarisController::class)->except(['create', 'edit']);
+        Route::resource('jenis', JenisController::class)->except(['create', 'edit', 'show']);
+        Route::resource('inventaris', InventarisController::class)->except(['create', 'edit', 'show']);
         Route::delete('inventaris/foto/{foto}', [InventarisController::class, 'destroyFoto'])->name('inventaris.foto.destroy');
 
         // Manajemen User (hanya Super Admin)

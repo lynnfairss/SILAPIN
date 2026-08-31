@@ -328,6 +328,13 @@ return [
     ],
 
     [
+        'text' => 'Jenis',
+        'url'  => 'jenis',
+        'icon' => 'fas fa-layer-group',
+        'can'  => 'is-super-admin',
+    ],
+
+    [
         'text' => 'Inventaris',
         'url'  => 'inventaris',
         'icon' => 'fas fa-boxes',

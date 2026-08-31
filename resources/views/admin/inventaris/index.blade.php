@@ -72,11 +72,22 @@
                                placeholder="ELK-001" required>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="form-group">
                         <label>Nama Barang <span class="text-danger">*</span></label>
                         <input type="text" name="nama_barang" id="inputNama" class="form-control"
                                placeholder="Nama barang" required>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="form-group">
+                        <label>Jenis Barang <small class="text-muted">(detail)</small></label>
+                        <select name="jenis_id" id="inputJenis" class="form-control">
+                            <option value="">-- Pilih Jenis --</option>
+                            @foreach($jenisList as $j)
+                                <option value="{{ $j->id }}">{{ $j->nama_jenis }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-1">
@@ -86,7 +97,7 @@
                                min="1" value="1" required>
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-1">
                     <div class="form-group">
                         <label>Kondisi <span class="text-danger">*</span></label>
                         <select name="kondisi" id="inputKondisi" class="form-control" required>
@@ -139,6 +150,26 @@
         <h3 class="card-title">Daftar Inventaris</h3>
     </div>
     <div class="card-body">
+        <form method="GET" action="{{ route('inventaris.index') }}" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
+            <label class="fw-bold mb-0"><i class="fas fa-tags me-1"></i>Jenis:</label>
+            <select name="jenis" class="form-control" style="max-width:260px" onchange="this.form.submit()">
+                <option value="">Semua Jenis ({{ $inventaris->total() }})</option>
+                @foreach($jenisList as $j)
+                    <option value="{{ $j->id }}" {{ request('jenis')==$j->id ? 'selected' : '' }}>
+                        {{ $j->nama_jenis }} ({{ $jenisCount[$j->id] ?? 0 }})
+                    </option>
+                @endforeach
+            </select>
+            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter me-1"></i> Filter</button>
+            @if(request('jenis'))
+                <a href="{{ route('inventaris.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-times me-1"></i>Reset</a>
+            @endif
+        </form>
+        @if(request('jenis'))
+        <div class="alert alert-info py-2 mb-3">
+            <i class="fas fa-info-circle me-1"></i>Menampilkan barang dengan jenis: <strong>{{ optional($jenisList->firstWhere('id', request('jenis')))->nama_jenis }}</strong>
+        </div>
+        @endif
         <table class="table table-bordered table-striped">
             <thead class="text-center">
                 <tr>
@@ -146,6 +177,7 @@
                     <th>Kode</th>
                     <th>Nama Barang</th>
                     <th>Kategori</th>
+                    <th>Jenis</th>
                     <th>Stok</th>
                     <th>Kondisi</th>
                     <th>Foto</th>
@@ -159,6 +191,7 @@
                     <td><code>{{ $item->kode_barang }}</code></td>
                     <td>{{ $item->nama_barang }}</td>
                     <td>{{ $item->kategori->nama_kategori ?? '-' }}</td>
+                    <td>{{ $item->jenis?->nama_jenis ?? '-' }}</td>
                     <td class="text-center">{{ $item->stok }}</td>
                     <td>
                         @if($item->kondisi == 'Baik')
@@ -198,7 +231,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center text-muted">Belum ada data inventaris.</td>
+                    <td colspan="9" class="text-center text-muted">Belum ada data inventaris.</td>
                 </tr>
             @endforelse
             </tbody>
@@ -293,6 +326,7 @@
         document.getElementById('inputKategori').value = item.kategori_id;
         document.getElementById('inputKode').value = item.kode_barang;
         document.getElementById('inputNama').value = item.nama_barang;
+        document.getElementById('inputJenis').value = item.jenis_id || '';
         document.getElementById('inputStok').value = item.stok;
         document.getElementById('inputKondisi').value = item.kondisi;
         document.getElementById('inputDeskripsi').value = item.deskripsi || '';
@@ -329,6 +363,7 @@
         document.getElementById('inputKategori').value = '';
         document.getElementById('inputKode').value = '';
         document.getElementById('inputNama').value = '';
+        document.getElementById('inputJenis').value = '';
         document.getElementById('inputStok').value = '1';
         document.getElementById('inputKondisi').value = 'Baik';
         document.getElementById('inputDeskripsi').value = '';

@@ -12,6 +12,7 @@ class Inventaris extends Model
         'kategori_id',
         'kode_barang',
         'nama_barang',
+        'jenis_id',
         'stok',
         'kondisi',
         'deskripsi',
@@ -21,6 +22,11 @@ class Inventaris extends Model
     public function kategori()
     {
         return $this->belongsTo(Kategori::class);
+    }
+
+    public function jenis()
+    {
+        return $this->belongsTo(Jenis::class);
     }
 
     public function detailPermohonan()

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Permohonan;
 use App\Models\Instansi;
 use App\Models\Inventaris;
+use App\Models\Jenis;
 use App\Models\Kategori;
 use App\Models\DetailPermohonan;
 use Illuminate\Http\Request;
@@ -21,11 +22,13 @@ class PermohonanController extends Controller
     {
         $instansi = Instansi::all();
         $kategori = Kategori::all();
-        $inventaris = Inventaris::with('kategori', 'fotos')->where('stok', '>', 0)->get();
+        $inventaris = Inventaris::with('kategori', 'jenis', 'fotos')->where('stok', '>', 0)->get();
+
+        $jenisList = Jenis::orderBy('nama_jenis')->pluck('nama_jenis');
 
         $instansiTipe = $instansi->mapWithKeys(fn($item) => [$item->id => $item->effective_tipe_identitas]);
 
-        return view('peminjam.index', compact('instansi', 'kategori', 'inventaris', 'instansiTipe'));
+        return view('peminjam.index', compact('instansi', 'kategori', 'inventaris', 'instansiTipe', 'jenisList'));
     }
 
     public function store(Request $request)

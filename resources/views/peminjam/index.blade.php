@@ -190,20 +190,34 @@
                             {{-- Filter Search --}}
                             <div class="filter-search mb-3">
                                 <i class="fas fa-search filter-search-icon"></i>
-                                <input type="text" id="filterBarang" class="form-control" placeholder="Cari kategori atau nama barang..." oninput="filterBarang(this.value)">
+                                <input type="text" id="searchInput" class="form-control" placeholder="Cari kategori, jenis, atau nama barang..." oninput="filterBarang(this.value)">
                             </div>
 
-                            {{-- Kategori Chips --}}
-                            <div class="filter-chips mb-3" id="filterChips">
-                                <span class="filter-chip active" data-kategori="" onclick="filterByKategori(this, '')">Semua</span>
-                                @foreach($kategori as $kat)
-                                <span class="filter-chip" data-kategori="{{ $kat->nama_kategori }}" onclick="filterByKategori(this, '{{ $kat->nama_kategori }}')">{{ $kat->nama_kategori }}</span>
-                                @endforeach
+                            {{-- Filter Kategori --}}
+                            <div class="filter-group">
+                                <span class="filter-label"><i class="fas fa-tags me-1"></i>Kategori</span>
+                                <div class="filter-chips" id="filterChips">
+                                    <span class="filter-chip active" data-filter="" onclick="filterByKategori(this,'')">Semua</span>
+                                    @foreach($kategori as $kat)
+                                    <span class="filter-chip filter-chip-cat" data-filter="{{ $kat->nama_kategori }}" onclick="filterByKategori(this,'{{ $kat->nama_kategori }}')">{{ $kat->nama_kategori }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            {{-- Filter Jenis --}}
+                            <div class="filter-group">
+                                <span class="filter-label"><i class="fas fa-layer-group me-1"></i>Jenis</span>
+                                <div class="filter-chips" id="filterJenisChips">
+                                    <span class="filter-chip active" data-filter="" onclick="filterByJenis(this,'')">Semua</span>
+                                    @foreach($jenisList as $j)
+                                    <span class="filter-chip filter-chip-jenis" data-filter="{{ $j }}" onclick="filterByJenis(this,'{{ $j }}')">{{ $j }}</span>
+                                    @endforeach
+                                </div>
                             </div>
 
                             <div class="row g-3" id="barangContainer">
                                 @forelse($inventaris as $item)
-                                <div class="col-md-4 col-sm-6 barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
+                                 <div class="col-md-4 col-sm-6 barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-jenis="{{ $item->jenis?->nama_jenis ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
                                     <div class="product-card" onclick="toggleBarang(this, {{ $item->id }})">
                                         {{-- Image Slider --}}
                                         <div class="img-slider" id="slider_{{ $item->id }}">
@@ -236,6 +250,9 @@
                                             <div class="product-meta">
                                                 <span>Kode: <code>{{ $item->kode_barang }}</code></span>
                                                 <span class="product-kategori">{{ $item->kategori->nama_kategori ?? '-' }}</span>
+                                                @if($item->jenis?->nama_jenis)
+                                                <span class="product-jenis">{{ $item->jenis->nama_jenis }}</span>
+                                                @endif
                                             </div>
                                             <div class="product-stok">
                                                 <span class="badge bg-success">Stok: {{ $item->stok }}</span>
@@ -518,27 +535,50 @@
 
     // ========== FILTER ==========
 
-    function filterBarang(query) {
-        const q = query.toLowerCase().trim();
+    let activeKategori = '';
+    let activeJenis = '';
+    let activeQuery = '';
+
+    function applyFilter() {
         document.querySelectorAll('.barang-item').forEach(el => {
-            const kategori = el.dataset.kategori.toLowerCase();
-            const nama = el.dataset.nama;
-            el.style.display = (kategori.includes(q) || nama.includes(q)) ? '' : 'none';
+            const kategori = (el.dataset.kategori || '').toLowerCase();
+            const jenis = (el.dataset.jenis || '').toLowerCase();
+            const nama = el.dataset.nama || '';
+            const q = activeQuery.trim().toLowerCase();
+
+            let show = true;
+            if (activeKategori && kategori !== activeKategori.toLowerCase()) show = false;
+            if (show && activeJenis && jenis !== activeJenis.toLowerCase()) show = false;
+            if (show && q && !(kategori.includes(q) || nama.includes(q) || jenis.includes(q))) show = false;
+
+            el.style.display = show ? '' : 'none';
         });
-        // Deactivate chip filter when typing
-        if (q) {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-        }
+    }
+
+    function filterBarang(query) {
+        activeQuery = query;
+        document.querySelectorAll('#filterChips .filter-chip, #filterJenisChips .filter-chip').forEach(chip => {
+            chip.style.display = '';
+        });
+        applyFilter();
     }
 
     function filterByKategori(chip, kategori) {
-        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('#filterChips .filter-chip').forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        document.getElementById('filterBarang').value = '';
-        document.querySelectorAll('.barang-item').forEach(el => {
-            if (!kategori) { el.style.display = ''; return; }
-            el.style.display = el.dataset.kategori === kategori ? '' : 'none';
-        });
+        activeKategori = kategori;
+        activeJenis = '';
+        document.querySelectorAll('#filterJenisChips .filter-chip').forEach(c => c.classList.remove('active'));
+        const allJenis = document.querySelector('#filterJenisChips .filter-chip[data-filter=""]');
+        if (allJenis) allJenis.classList.add('active');
+        applyFilter();
+    }
+
+    function filterByJenis(chip, jenis) {
+        document.querySelectorAll('#filterJenisChips .filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeJenis = jenis;
+        applyFilter();
     }
 
     // ========== LIGHTBOX ==========

@@ -249,6 +249,36 @@ footer {
     color: #fff;
     border-color: #0d6efd;
 }
+.filter-chip-jenis {
+    background: #f3e8ff;
+    color: #7c3aed;
+}
+.filter-chip-jenis:hover {
+    background: #e9d5ff;
+}
+.filter-chip-jenis.active {
+    background: #7c3aed;
+    color: #fff;
+    border-color: #7c3aed;
+}
+
+.filter-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.filter-group .filter-chips {
+    flex: 1;
+}
+.filter-label {
+    font-weight: 600;
+    font-size: .82rem;
+    color: #6c757d;
+    padding: 6px 0;
+    white-space: nowrap;
+    min-width: 80px;
+}
 
 /* ===== PRODUCT CARD ===== */
 .product-card {
@@ -401,6 +431,13 @@ footer {
 }
 .product-stok .badge {
     font-size: .72rem;
+    font-weight: 500;
+}
+.product-jenis {
+    background: #f3e8ff;
+    color: #7c3aed;
+    padding: 1px 8px;
+    border-radius: 10px;
     font-weight: 500;
 }
 

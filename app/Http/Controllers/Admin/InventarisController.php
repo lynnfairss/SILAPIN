@@ -5,23 +5,38 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Inventaris;
 use App\Models\InventarisFoto;
+use App\Models\Jenis;
 use App\Models\Kategori;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class InventarisController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $inventaris = Inventaris::with('kategori', 'fotos')
-            ->latest()
-            ->paginate(10);
+        $query = Inventaris::with('kategori', 'jenis', 'fotos');
+
+        if ($request->filled('jenis')) {
+            $query->where('jenis_id', $request->jenis);
+        }
+
+        $inventaris = $query->latest()->paginate(10)->withQueryString();
+
+        $jenisList = Jenis::orderBy('nama_jenis')->get();
+
+        $jenisCount = Inventaris::select('jenis_id')
+            ->whereNotNull('jenis_id')
+            ->selectRaw('count(*) as total')
+            ->groupBy('jenis_id')
+            ->pluck('total', 'jenis_id');
 
         $kategori = Kategori::all();
 
         return view('admin.inventaris.index', compact(
             'inventaris',
-            'kategori'
+            'kategori',
+            'jenisList',
+            'jenisCount'
         ));
     }
 
@@ -31,6 +46,7 @@ class InventarisController extends Controller
             'kategori_id' => 'required',
             'kode_barang' => 'required|unique:inventaris,kode_barang',
             'nama_barang' => 'required',
+            'jenis_id' => 'nullable|integer|exists:jensis,id',
             'stok' => 'required|integer|min:1',
             'kondisi' => 'required',
             'deskripsi' => 'nullable',
@@ -42,6 +58,7 @@ class InventarisController extends Controller
             'kategori_id' => $request->kategori_id,
             'kode_barang' => $request->kode_barang,
             'nama_barang' => $request->nama_barang,
+            'jenis_id' => $request->jenis_id ?: null,
             'stok' => $request->stok,
             'kondisi' => $request->kondisi,
             'deskripsi' => $request->deskripsi,
@@ -60,6 +77,7 @@ class InventarisController extends Controller
             'kategori_id' => 'required',
             'kode_barang' => 'required|unique:inventaris,kode_barang,' . $inventari->id,
             'nama_barang' => 'required',
+            'jenis_id' => 'nullable|integer|exists:jensis,id',
             'stok' => 'required|integer|min:1',
             'kondisi' => 'required',
             'deskripsi' => 'nullable',
@@ -72,6 +90,7 @@ class InventarisController extends Controller
             'kategori_id' => $request->kategori_id,
             'kode_barang' => $request->kode_barang,
             'nama_barang' => $request->nama_barang,
+            'jenis_id' => $request->jenis_id ?: null,
             'stok' => $request->stok,
             'kondisi' => $request->kondisi,
             'deskripsi' => $request->deskripsi,
