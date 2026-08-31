@@ -366,6 +366,11 @@
                 <i class="fas fa-camera me-1"></i>Ambil Foto
             </button>
         </div>
+        <div class="text-center mt-3">
+            <button type="button" class="btn btn-link text-muted" id="btnSkipScan" onclick="skipScan()">
+                <i class="fas fa-edit me-1"></i>Lewati / Isi Manual
+            </button>
+        </div>
     </div>
 </div>
 
@@ -880,6 +885,16 @@
         }
     }
 
+    function skipScan() {
+        closeCamera();
+        setOcrStatus('', 'idle');
+        const btn = document.querySelector('[name="foto_ktp"]');
+        if (btn) btn.value = '';
+        const lbl = document.getElementById('labelIdentitas');
+        if (lbl) lbl.textContent = 'NIK';
+        showError('Silakan isi data diri secara manual.');
+    }
+
     function capturePhoto() {
         const video = document.getElementById('cameraPreview');
         const canvas = document.getElementById('cameraCanvas');
@@ -1166,6 +1181,19 @@
                 }
             }).catch(() => {});
     }, 30 * 60 * 1000);
+
+    // Buka modal scan KTP otomatis saat pertama kali halaman form dimuat,
+    // agar user memindai KTP terlebih dahulu sebelum mengisi form.
+    window.addEventListener('load', function() {
+        const scanBtn = document.querySelector('[data-scan="foto_ktp"]');
+        if (scanBtn) {
+            setTimeout(function() {
+                if (!document.getElementById('fotoKtpInput').files.length) {
+                    openCamera(scanBtn);
+                }
+            }, 400);
+        }
+    });
 
     // Tangkap error 419 dan tampilkan pesan yang jelas
     window.addEventListener('pageshow', function(e) {
