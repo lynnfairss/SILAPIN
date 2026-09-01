@@ -49,9 +49,13 @@ class KategoriController extends Controller
 
     public function destroy(Kategori $kategori)
     {
-        $kategori->delete();
-
-        return redirect()->route('kategori.index')
-            ->with('success', 'Data kategori berhasil dihapus.');
+        try {
+            $kategori->delete();
+            return redirect()->route('kategori.index')
+                ->with('success', 'Data kategori berhasil dihapus.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->route('kategori.index')
+                ->with('error', 'Kategori tidak bisa dihapus karena masih digunakan oleh data inventaris.');
+        }
     }
 }

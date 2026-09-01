@@ -74,7 +74,7 @@
                 {{-- STEP 1: Data Diri --}}
                 <div class="step-content active" data-step="1">
                     <div class="card form-card">
-                        <div class="card-header">
+                        <div class="card-header bg-white">
                             <i class="fas fa-user me-2 text-primary"></i>Data Diri Pemohon
                         </div>
                         <div class="card-body p-4">
@@ -148,9 +148,14 @@
                                     </div>
                                     <div class="scan-preview"></div>
                                     <div class="form-text">Upload atau scan surat tugas jika ada.</div>
-                                </div>
+                            </div>
+                            <div class="no-results" id="noResults">
+                                <i class="fas fa-search d-block"></i>
+                                <p>Barang tidak ditemukan</p>
+                                <small>Coba ubah filter atau kata kunci pencarian</small>
                             </div>
                         </div>
+                    </div>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3">
                         <a href="{{ route('website') }}" class="btn btn-outline-secondary">
@@ -165,7 +170,7 @@
                 {{-- STEP 2: Pilih Barang --}}
                 <div class="step-content" data-step="2">
                     <div class="card form-card">
-                        <div class="card-header">
+                        <div class="card-header bg-white">
                             <i class="fas fa-boxes me-2 text-primary"></i>Pilih Barang & Jadwal Peminjaman
                         </div>
                         <div class="card-body p-4">
@@ -219,7 +224,6 @@
                                 @forelse($inventaris as $item)
                                  <div class="col-md-4 col-sm-6 barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-jenis="{{ $item->jenis?->nama_jenis ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
                                     <div class="product-card" onclick="toggleBarang(this, {{ $item->id }})">
-                                        {{-- Image Slider --}}
                                         <div class="img-slider" id="slider_{{ $item->id }}">
                                             @php $fotos = $item->fotos; @endphp
                                             @if($fotos->count() > 0)
@@ -239,12 +243,12 @@
                                                 @endif
                                             @else
                                                 <div class="slider-img active no-foto">
-                                                    <i class="fas fa-box"></i>
+                                                    <i class="fas fa-box-open"></i>
+                                                    <span>Tidak ada foto</span>
                                                 </div>
                                             @endif
                                         </div>
 
-                                        {{-- Info --}}
                                         <div class="product-info">
                                             <div class="product-name">{{ $item->nama_barang }}</div>
                                             <div class="product-meta">
@@ -255,15 +259,20 @@
                                                 @endif
                                             </div>
                                             <div class="product-stok">
-                                                <span class="badge bg-success">Stok: {{ $item->stok }}</span>
+                                                @if($item->stok > 5)
+                                                    <span class="badge badge-stok-ample"><i class="fas fa-check-circle me-1"></i>Stok: {{ $item->stok }}</span>
+                                                @elseif($item->stok >= 2)
+                                                    <span class="badge badge-stok-moderate"><i class="fas fa-exclamation-circle me-1"></i>Stok: {{ $item->stok }}</span>
+                                                @else
+                                                    <span class="badge badge-stok-low"><i class="fas fa-times-circle me-1"></i>Stok: {{ $item->stok }}</span>
+                                                @endif
                                             </div>
                                         </div>
 
-                                        {{-- Checkbox + Stepper --}}
                                         <div class="product-action">
                                             <div class="form-check" onclick="event.stopPropagation()">
                                                 <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})">
-                                                <label class="form-check-label" for="barang_{{ $item->id }}">Pilih</label>
+                                                <label class="form-check-label" for="barang_{{ $item->id }}">Pilih Barang</label>
                                             </div>
                                             <div class="qty-stepper" onclick="event.stopPropagation()">
                                                 <button type="button" class="qty-btn qty-minus" onclick="changeQty(this, -1)" disabled>&minus;</button>
@@ -295,7 +304,7 @@
                 {{-- STEP 3: Preview & Submit --}}
                 <div class="step-content" data-step="3">
                     <div class="card form-card">
-                        <div class="card-header">
+                        <div class="card-header bg-white">
                             <i class="fas fa-eye me-2 text-primary"></i>Preview Data Permohonan
                         </div>
                         <div class="card-body p-4">
@@ -540,6 +549,7 @@
     let activeQuery = '';
 
     function applyFilter() {
+        let visibleCount = 0;
         document.querySelectorAll('.barang-item').forEach(el => {
             const kategori = (el.dataset.kategori || '').toLowerCase();
             const jenis = (el.dataset.jenis || '').toLowerCase();
@@ -552,7 +562,13 @@
             if (show && q && !(kategori.includes(q) || nama.includes(q) || jenis.includes(q))) show = false;
 
             el.style.display = show ? '' : 'none';
+            if (show) visibleCount++;
         });
+
+        const noResults = document.getElementById('noResults');
+        if (noResults) {
+            noResults.classList.toggle('visible', visibleCount === 0);
+        }
     }
 
     function filterBarang(query) {

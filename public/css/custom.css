@@ -21,7 +21,7 @@
 
 /* ===================== NAVBAR ===================== */
 .navbar-dark-custom {
-    background: rgba(33, 37, 41, .95) !important;
+    background: #1a1a2e !important;
     backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(255, 255, 255, .08);
 }
@@ -302,4 +302,63 @@
     .image-modal-overlay .modal-prev { left: 4px; }
     .image-modal-overlay .modal-next { right: 4px; }
     .image-modal-overlay .modal-nav { width: 36px; height: 36px; font-size: .9rem; }
+}
+
+/* ===================== FIXED SIDEBAR ===================== */
+body.sidebar-fixed .main-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1038;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+body.sidebar-fixed .content-wrapper {
+    margin-left: 250px;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+body.sidebar-fixed.sidebar-collapse .content-wrapper {
+    margin-left: 0;
+}
+
+body.sidebar-fixed .main-footer {
+    margin-left: 250px;
+}
+
+body.sidebar-fixed.sidebar-collapse .main-footer {
+    margin-left: 0;
+}
+
+/* ===================== FIXED NAVBAR ===================== */
+body.layout-fixed .main-header {
+    position: fixed;
+    top: 0;
+    left: 250px;
+    right: 0;
+    z-index: 1039;
+}
+
+body.layout-fixed .content-wrapper {
+    padding-top: 57px;
+}
+
+body.layout-fixed.sidebar-collapse .main-header {
+    left: 0;
+}
+
+@media (max-width: 991.98px) {
+    body.sidebar-fixed .content-wrapper,
+    body.sidebar-fixed .main-footer {
+        margin-left: 0;
+    }
+    body.layout-fixed .main-header {
+        left: 0;
+    }
+    body.layout-fixed .content-wrapper {
+        padding-top: 57px;
+    }
 }

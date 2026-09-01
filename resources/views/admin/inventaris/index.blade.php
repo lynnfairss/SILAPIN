@@ -3,7 +3,12 @@
 @section('title', 'Data Inventaris')
 
 @section('content_header')
-    <h1>Data Inventaris</h1>
+    <div class="d-flex flex-wrap justify-content-between align-items-end">
+        <div>
+            <h1>Data Inventaris</h1>
+            <p class="text-muted mb-0 small">Kelola data inventaris barang dalam sistem SILAPIN</p>
+        </div>
+    </div>
 @stop
 
 @section('css')
@@ -17,6 +22,38 @@
         font-size: .65rem;
         line-height: 1;
     }
+    .table-modern thead th {
+        background: #1a1a2e;
+        color: #fff;
+        font-weight: 600;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        border: none;
+        padding: .7rem .9rem;
+        white-space: nowrap;
+    }
+    .table-modern tbody td {
+        padding: .65rem .9rem;
+        font-size: .88rem;
+        vertical-align: middle;
+    }
+    .table-modern tbody tr { border-bottom: 1px solid #f1f3f7; }
+    .table-modern tbody tr:hover { background: rgba(13,110,253,.04); }
+    .foto-upload-table thead th {
+        background: #f8f9fa;
+        font-weight: 600;
+        font-size: .82rem;
+        color: #495057;
+        border-bottom: 2px solid #e9ecef;
+    }
+    .foto-upload-table tbody td {
+        vertical-align: middle;
+        padding: 8px 12px;
+    }
+    .foto-upload-table tbody tr:last-child td {
+        border-bottom: none;
+    }
 </style>
 @stop
 
@@ -25,6 +62,13 @@
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show">
     <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+</div>
+@endif
+
+@if(session('error'))
+<div class="alert alert-warning alert-dismissible fade show">
+    <i class="fas fa-exclamation-triangle me-2"></i>{{ session('error') }}
     <button type="button" class="close" data-dismiss="alert">&times;</button>
 </div>
 @endif
@@ -41,9 +85,9 @@
 </div>
 @endif
 
-<div class="card">
+<div class="card card-flat">
     <div class="card-header">
-        <h3 class="card-title" id="formTitle"><i class="fas fa-plus me-1"></i>Tambah Inventaris</h3>
+        <h3 class="card-title" id="formTitle"><i class="fas fa-plus-circle me-2 text-primary"></i>Tambah Inventaris</h3>
     </div>
 
     <form id="formInventaris" action="{{ route('inventaris.store') }}" method="POST" enctype="multipart/form-data">
@@ -56,7 +100,7 @@
             <div class="row g-3">
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label>Kategori <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Kategori <span class="text-danger">*</span></label>
                         <select name="kategori_id" id="inputKategori" class="form-control" required>
                             <option value="">-- Pilih --</option>
                             @foreach($kategori as $kat)
@@ -67,21 +111,21 @@
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label>Kode Barang <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Kode Barang <span class="text-danger">*</span></label>
                         <input type="text" name="kode_barang" id="inputKode" class="form-control"
                                placeholder="ELK-001" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label>Nama Barang <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Nama Barang <span class="text-danger">*</span></label>
                         <input type="text" name="nama_barang" id="inputNama" class="form-control"
                                placeholder="Nama barang" required>
                     </div>
                 </div>
                 <div class="col-md-2">
                     <div class="form-group">
-                        <label>Jenis Barang <small class="text-muted">(detail)</small></label>
+                        <label class="form-label fw-semibold">Jenis <small class="text-muted fw-normal">(detail)</small></label>
                         <select name="jenis_id" id="inputJenis" class="form-control">
                             <option value="">-- Pilih Jenis --</option>
                             @foreach($jenisList as $j)
@@ -92,14 +136,14 @@
                 </div>
                 <div class="col-md-1">
                     <div class="form-group">
-                        <label>Stok <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Stok <span class="text-danger">*</span></label>
                         <input type="number" name="stok" id="inputStok" class="form-control"
                                min="1" value="1" required>
                     </div>
                 </div>
-                <div class="col-md-1">
+                <div class="col-md-2">
                     <div class="form-group">
-                        <label>Kondisi <span class="text-danger">*</span></label>
+                        <label class="form-label fw-semibold">Kondisi <span class="text-danger">*</span></label>
                         <select name="kondisi" id="inputKondisi" class="form-control" required>
                             <option value="Baik">Baik</option>
                             <option value="Rusak Ringan">Rusak Ringan</option>
@@ -107,93 +151,114 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-1 d-flex align-items-end">
-                    <button type="submit" class="btn btn-success btn-block" id="btnSubmit">
-                        <i class="fas fa-save"></i> Simpan
-                    </button>
-                </div>
             </div>
+
             <div class="row g-3 mt-1">
-                <div class="col-md-6">
+                <div class="col-md-8">
                     <div class="form-group mb-0">
-                        <label>Deskripsi</label>
+                        <label class="form-label fw-semibold">Deskripsi</label>
                         <textarea name="deskripsi" id="inputDeskripsi" class="form-control" rows="2"
                                   placeholder="Deskripsi barang"></textarea>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-group mb-0">
-                        <label>Foto <small class="text-muted">(jpg/png, max 2MB per foto, max 5 foto)</small></label>
-                        <div id="fotoSlots">
-                            @for($i = 0; $i < 5; $i++)
-                            <div class="d-flex align-items-center mb-1">
-                                <input type="file" name="foto[]" id="inputFoto{{ $i }}" class="form-control form-control-sm" accept="image/*" onchange="previewFoto({{ $i }}, this)">
-                                <span class="badge bg-secondary ms-2" id="fotoLabel{{ $i }}">Foto {{ $i + 1 }}</span>
-                                <div id="fotoPreview{{ $i }}" class="ms-2"></div>
-                            </div>
-                            @endfor
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="button" class="btn btn-secondary" id="btnCancel" onclick="resetForm()" style="display:none;">
-                        <i class="fas fa-times"></i> Batal
+                <div class="col-md-4 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">
+                        <i class="fas fa-save me-1"></i> Simpan
                     </button>
+                    <button type="button" class="btn btn-outline-secondary" id="btnCancel" onclick="resetForm()" style="display:none;">
+                        <i class="fas fa-times me-1"></i> Batal
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-12">
+                    <label class="form-label fw-semibold"><i class="fas fa-camera me-1 text-muted"></i> Foto Barang</label>
+                    <div class="table-responsive">
+                        <table class="table table-bordered foto-upload-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="80" class="text-center">No</th>
+                                    <th>Upload Foto</th>
+                                    <th width="80" class="text-center">Preview</th>
+                                    <th width="200">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for($i = 0; $i < 5; $i++)
+                                <tr>
+                                    <td class="text-center fw-bold">Foto {{ $i + 1 }}</td>
+                                    <td>
+                                        <input type="file" name="foto[]" id="inputFoto{{ $i }}"
+                                            class="form-control form-control-sm" accept="image/*"
+                                            onchange="previewFoto({{ $i }}, this)">
+                                    </td>
+                                    <td class="text-center">
+                                        <div id="fotoPreview{{ $i }}"></div>
+                                    </td>
+                                    <td class="text-muted small">jpg/png, max 2MB</td>
+                                </tr>
+                                @endfor
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
 
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Daftar Inventaris</h3>
+<div class="card card-flat">
+    <div class="card-header d-flex align-items-center justify-content-between">
+        <h3 class="card-title mb-0"><i class="fas fa-boxes me-2 text-primary"></i>Daftar Inventaris</h3>
+        <div class="card-tools">
+            <form method="GET" action="{{ route('inventaris.index') }}" class="d-flex align-items-center gap-2">
+                <select name="jenis" class="form-control form-control-sm" style="max-width:200px" onchange="this.form.submit()">
+                    <option value="">Semua Jenis ({{ $inventaris->total() }})</option>
+                    @foreach($jenisList as $j)
+                        <option value="{{ $j->id }}" {{ request('jenis')==$j->id ? 'selected' : '' }}>
+                            {{ $j->nama_jenis }} ({{ $jenisCount[$j->id] ?? 0 }})
+                        </option>
+                    @endforeach
+                </select>
+                @if(request('jenis'))
+                    <a href="{{ route('inventaris.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-times"></i></a>
+                @endif
+            </form>
+        </div>
     </div>
-    <div class="card-body">
-        <form method="GET" action="{{ route('inventaris.index') }}" class="mb-3 d-flex align-items-center gap-2 flex-wrap">
-            <label class="fw-bold mb-0"><i class="fas fa-tags me-1"></i>Jenis:</label>
-            <select name="jenis" class="form-control" style="max-width:260px" onchange="this.form.submit()">
-                <option value="">Semua Jenis ({{ $inventaris->total() }})</option>
-                @foreach($jenisList as $j)
-                    <option value="{{ $j->id }}" {{ request('jenis')==$j->id ? 'selected' : '' }}>
-                        {{ $j->nama_jenis }} ({{ $jenisCount[$j->id] ?? 0 }})
-                    </option>
-                @endforeach
-            </select>
-            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-filter me-1"></i> Filter</button>
-            @if(request('jenis'))
-                <a href="{{ route('inventaris.index') }}" class="btn btn-outline-secondary btn-sm"><i class="fas fa-times me-1"></i>Reset</a>
-            @endif
-        </form>
-        @if(request('jenis'))
-        <div class="alert alert-info py-2 mb-3">
+    @if(request('jenis'))
+    <div class="card-body pb-0 pt-2">
+        <div class="alert alert-info py-2 mb-0">
             <i class="fas fa-info-circle me-1"></i>Menampilkan barang dengan jenis: <strong>{{ optional($jenisList->firstWhere('id', request('jenis')))->nama_jenis }}</strong>
         </div>
-        @endif
-        <table class="table table-bordered table-striped">
-            <thead class="text-center">
+    </div>
+    @endif
+    <div class="card-body table-responsive">
+        <table class="table table-modern mb-0">
+            <thead>
                 <tr>
-                    <th width="50">No</th>
+                    <th width="50" class="text-center">No</th>
                     <th>Kode</th>
                     <th>Nama Barang</th>
                     <th>Kategori</th>
                     <th>Jenis</th>
-                    <th>Stok</th>
-                    <th>Kondisi</th>
-                    <th>Foto</th>
-                    <th width="150" class="text-center">Aksi</th>
+                    <th class="text-center">Stok</th>
+                    <th class="text-center">Kondisi</th>
+                    <th class="text-center">Foto</th>
+                    <th class="text-center" width="130">Aksi</th>
                 </tr>
             </thead>
             <tbody>
             @forelse($inventaris as $item)
                 <tr>
-                    <td>{{ $loop->iteration }}</td>
+                    <td class="text-center">{{ $loop->iteration }}</td>
                     <td><code>{{ $item->kode_barang }}</code></td>
-                    <td>{{ $item->nama_barang }}</td>
+                    <td class="fw-bold">{{ $item->nama_barang }}</td>
                     <td>{{ $item->kategori->nama_kategori ?? '-' }}</td>
                     <td>{{ $item->jenis?->nama_jenis ?? '-' }}</td>
                     <td class="text-center">{{ $item->stok }}</td>
-                    <td>
+                    <td class="text-center">
                         @if($item->kondisi == 'Baik')
                             <span class="badge bg-success">{{ $item->kondisi }}</span>
                         @elseif($item->kondisi == 'Rusak Ringan')
@@ -202,11 +267,11 @@
                             <span class="badge bg-danger">{{ $item->kondisi }}</span>
                         @endif
                     </td>
-                    <td>
+                    <td class="text-center">
                         @php $ft = $item->fotos; @endphp
                         @if($ft->count() > 0)
                             <div class="foto-cell" onclick='openFoto({{ json_encode($ft->pluck("foto")->map(fn($p) => asset("storage/".$p))) }})' style="cursor:pointer;position:relative;display:inline-block;">
-                                <img src="{{ asset('storage/'.$ft->first()->foto) }}" width="56" height="56" class="rounded object-fit-cover border">
+                                <img src="{{ asset('storage/'.$ft->first()->foto) }}" width="50" height="50" class="rounded object-fit-cover border">
                                 @if($ft->count() > 1)
                                 <span class="foto-count-badge">+{{ $ft->count() - 1 }}</span>
                                 @endif
@@ -217,13 +282,13 @@
                         @endif
                     </td>
                     <td class="text-center">
-                        <button class="btn btn-warning btn-sm" title="Edit"
+                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
                             onclick='editItem({!! json_encode($item->load('fotos')) !!})'>
                             <i class="fas fa-edit"></i>
                         </button>
                         <form action="{{ route('inventaris.destroy', $item->id) }}" method="POST" style="display:inline;">
                             @csrf @method('DELETE')
-                            <button class="btn btn-danger btn-sm" onclick="return confirm('Hapus data ini?')">
+                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Hapus data ini?')">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </form>
@@ -231,7 +296,10 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9" class="text-center text-muted">Belum ada data inventaris.</td>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                        Belum ada data inventaris.
+                    </td>
                 </tr>
             @endforelse
             </tbody>
@@ -299,7 +367,6 @@
     function previewFoto(i, input) {
         const el = document.getElementById('fotoPreview' + i);
         if (input.files && input.files[0]) {
-            // Jika slot ini sebelumnya ditandai hapus, batal hapus (karena akan diganti file baru)
             if (fotoIdSlot[i]) {
                 fotoDihapus = fotoDihapus.filter(id => id !== fotoIdSlot[i]);
             }
@@ -320,7 +387,7 @@
     }
 
     function editItem(item) {
-        document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-1"></i>Edit Inventaris';
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2 text-primary"></i>Edit Inventaris';
         document.getElementById('formMethod').value = 'PUT';
         document.getElementById('editId').value = item.id;
         document.getElementById('inputKategori').value = item.kategori_id;
@@ -357,7 +424,7 @@
     }
 
     function resetForm() {
-        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus me-1"></i>Tambah Inventaris';
+        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle me-2 text-primary"></i>Tambah Inventaris';
         document.getElementById('formMethod').value = 'POST';
         document.getElementById('editId').value = '';
         document.getElementById('inputKategori').value = '';

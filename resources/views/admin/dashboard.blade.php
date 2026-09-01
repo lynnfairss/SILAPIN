@@ -30,45 +30,60 @@
     .kpi-card {
         background: #fff;
         border-radius: 14px;
-        padding: 18px 20px;
+        padding: 22px 26px;
         position: relative;
         overflow: hidden;
         box-shadow: 0 2px 12px rgba(0,0,0,.06);
-        transition: transform .25s ease, box-shadow .25s ease;
+        transition: transform .2s ease, box-shadow .2s ease;
         border: 1px solid #eef0f4;
         height: 100%;
+        min-height: 110px;
+        gap: 28px;
     }
     .kpi-card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 12px 28px rgba(13,110,253,.12);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,.08);
     }
     .kpi-card::before {
         content: '';
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 4px;
-        background: linear-gradient(90deg, #0d6efd, #6610f2);
+        background: var(--kpi-color, #0d6efd);
     }
     .kpi-icon {
-        width: 52px; height: 52px;
+        width: 50px; height: 50px;
         border-radius: 12px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.35rem;
+        font-size: 1.25rem;
         color: #fff;
-        box-shadow: 0 6px 14px rgba(102,16,242,.25);
+        flex-shrink: 0;
+        box-shadow: 0 4px 10px rgba(0,0,0,.1);
+    }
+    .kpi-body {
+        flex: 1;
+        min-width: 0;
     }
     .kpi-label {
-        font-size: .72rem;
+        font-size: .73rem;
         text-transform: uppercase;
-        letter-spacing: .5px;
+        letter-spacing: .4px;
         color: #6c757d;
         font-weight: 600;
+        margin-bottom: 2px;
     }
     .kpi-value {
-        font-size: 1.7rem;
+        font-size: 1.65rem;
         font-weight: 700;
-        color: #1a1a2e;
-        line-height: 1.1;
+        color: #212529;
+        line-height: 1.2;
+    }
+    .kpi-sub {
+        font-size: .75rem;
+        color: #6c757d;
+        margin-top: 4px;
+        padding-top: 4px;
+        border-top: 1px solid #eef0f4;
     }
 
     .card-flat {
@@ -88,41 +103,83 @@
     }
 
     .preset-btn {
-        border-radius: 20px;
-        font-size: .8rem;
-        padding: .3rem .85rem;
+        border-radius: 8px;
+        font-size: .82rem;
+        padding: .4rem 1rem;
+        border: 1px solid #dee2e6;
+        background: #fff;
+        color: #495057;
+        transition: all .15s ease;
+    }
+    .preset-btn:hover {
+        background: #f0f0f5;
+        border-color: #adb5bd;
     }
     .preset-btn.active {
-        background: linear-gradient(90deg, #0d6efd, #6610f2);
-        border-color: transparent;
+        background: #0d6efd;
+        border-color: #0d6efd;
         color: #fff;
-        box-shadow: 0 4px 12px rgba(102,16,242,.3);
-    }
-    .preset-btn:not(.active) {
-        color: #495057;
-        border-color: #dee2e6;
-        background: #fff;
-    }
-    .preset-btn:not(.active):hover {
-        background: #f0f0f5;
     }
 
     .btn-gradient {
-        background: linear-gradient(90deg, #0d6efd, #6610f2);
+        background: #0d6efd;
         border: none;
         color: #fff;
-        box-shadow: 0 4px 12px rgba(102,16,242,.28);
+        box-shadow: 0 2px 6px rgba(13,110,253,.2);
         border-radius: 8px;
     }
     .btn-gradient:hover { color: #fff; filter: brightness(1.05); }
 
-    .filter-box .form-control-sm, .filter-box .form-select-sm {
+    .filter-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .filter-table th {
+        background: #f1f3f5;
+        font-size: .82rem;
+        font-weight: 600;
+        color: #212529;
+        padding: 10px 14px;
+        white-space: nowrap;
+        width: 180px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+    .filter-table td {
+        padding: 8px 14px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+        color: #212529;
+    }
+    .filter-table tr:last-child th,
+    .filter-table tr:last-child td {
+        border-bottom: none;
+    }
+    .filter-table .filter-preset td {
+        background: #f1f3f5;
+    }
+    .filter-table tr:nth-child(even) td {
+        background: #f8f9fa;
+    }
+    .filter-table .filter-actions td {
+        background: #fff;
+        border-bottom: none;
+    }
+    .filter-box .form-control,
+    .filter-box .form-select {
         border-radius: 8px;
         border-color: #dee2e6;
+        height: 38px;
+        font-size: .85rem;
     }
-    .filter-box .form-control-sm:focus, .filter-box .form-select-sm:focus {
-        border-color: #6610f2;
-        box-shadow: 0 0 0 3px rgba(102,16,242,.1);
+    .filter-box .form-control:focus,
+    .filter-box .form-select:focus {
+        border-color: #86b7fe;
+        box-shadow: 0 0 0 3px rgba(13,110,253,.12);
     }
 
     .status-bar-row {
@@ -132,7 +189,8 @@
         margin-bottom: 10px;
     }
     .status-bar-label {
-        width: 120px;
+        width: 130px;
+        min-width: 130px;
         font-size: .8rem;
         font-weight: 600;
         color: #495057;
@@ -158,7 +216,7 @@
         font-size: .9rem;
     }
 
-    .chart-wrap { position: relative; height: 300px; }
+    .chart-wrap { position: relative; height: 280px; }
     .chart-wrap-sm { position: relative; height: 240px; }
 
     .table-modern thead th {
@@ -170,6 +228,7 @@
         letter-spacing: .4px;
         border: none;
         padding: .7rem .9rem;
+        white-space: nowrap;
     }
     .table-modern tbody td {
         padding: .65rem .9rem;
@@ -185,10 +244,10 @@
         font-size: .75rem;
     }
 
-    .total-row td { font-weight: 700; background: #f7f8fc !important; }
+    .total-row td { font-weight: 700; background: #f0f2f7 !important; }
 
     @media (max-width: 576px) {
-        .status-bar-label { width: 100px; }
+        .status-bar-label { width: 100px; min-width: 100px; }
         .kpi-value { font-size: 1.4rem; }
     }
 </style>
@@ -216,11 +275,11 @@
 @endphp
 
 {{-- Filter Panel --}}
-<div class="row mb-3">
+<div class="row mb-4">
     <div class="col-12">
         <div class="card card-flat filter-box">
             <div class="card-header d-flex align-items-center justify-content-between py-3">
-                <h3 class="card-title mb-0"><i class="fas fa-filter me-2 text-primary"></i>Filter Recap</h3>
+                <h3 class="card-title mb-0"><i class="fas fa-sliders-h me-2 text-primary"></i>Filter Recap</h3>
                 <button class="btn btn-tool" type="button" data-toggle="collapse" data-target="#filterBody" aria-expanded="true" aria-controls="filterBody">
                     <i class="fas fa-minus" id="filterToggleIcon"></i>
                 </button>
@@ -228,87 +287,93 @@
             <div id="filterBody" class="collapse show">
                 <div class="card-body">
                     <form method="GET" action="{{ route('dashboard') }}" id="filterForm">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-muted mb-2">Preset Cepat</label>
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach($presets as $key => [$name])
-                                <button type="submit" name="preset" value="{{ $key }}"
-                                    class="btn preset-btn {{ $preset === $key ? 'active' : '' }}">
-                                    {{ $name }}
-                                </button>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div class="row g-2 mb-3">
-                            <div class="col-md-3">
-                                <label class="form-label small mb-1">Dari Tanggal</label>
-                                <input type="date" name="dari" value="{{ old('dari', $filters['dari'] ?? '') }}"
-                                    class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small mb-1">Sampai Tanggal</label>
-                                <input type="date" name="sampai" value="{{ old('sampai', $filters['sampai'] ?? '') }}"
-                                    class="form-control form-control-sm">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small mb-1">Bulan</label>
-                                <select name="bulan" class="form-select form-select-sm">
-                                    <option value="">Semua Bulan</option>
-                                    @for($m = 1; $m <= 12; $m++)
-                                    <option value="{{ $m }}" {{ $filters['bulan'] == $m ? 'selected' : '' }}>
-                                        {{ Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
-                                    </option>
-                                    @endfor
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small mb-1">Tahun</label>
-                                <select name="tahun" class="form-select form-select-sm">
-                                    <option value="">Semua Tahun</option>
-                                    @foreach($tahunList as $t)
-                                    <option value="{{ $t }}" {{ $filters['tahun'] == $t ? 'selected' : '' }}>{{ $t }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end gap-2">
-                                <button type="submit" class="btn btn-sm btn-gradient w-100"><i class="fas fa-search me-1"></i>Terapkan</button>
-                            </div>
-                        </div>
-
-                        <div class="row g-2">
-                            <div class="col-md-4">
-                                <label class="form-label small mb-1">Status</label>
-                                <select name="status" class="form-select form-select-sm"
-                                    onchange="document.getElementById('filterForm').submit()">
-                                    <option value="">Semua Status</option>
-                                    @foreach($statusList as $st)
-                                    <option value="{{ $st }}" {{ $filters['status'] === $st ? 'selected' : '' }}>{{ $st }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small mb-1">Instansi</label>
-                                <select name="instansi_id" class="form-select form-select-sm"
-                                    onchange="document.getElementById('filterForm').submit()">
-                                    <option value="">Semua Instansi</option>
-                                    @foreach($instansiList as $ins)
-                                    <option value="{{ $ins->id }}" {{ $filters['instansi_id'] == $ins->id ? 'selected' : '' }}>
-                                        {{ $ins->nama_instansi }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small mb-1">Granularitas Recap</label>
-                                <select name="per" class="form-select form-select-sm"
-                                    onchange="document.getElementById('filterForm').submit()">
-                                    <option value="auto" {{ $per === 'auto' ? 'selected' : '' }}>Otomatis</option>
-                                    <option value="hari" {{ $per === 'hari' ? 'selected' : '' }}>Per Hari</option>
-                                    <option value="bulan" {{ $per === 'bulan' ? 'selected' : '' }}>Per Bulan</option>
-                                </select>
-                            </div>
-                        </div>
+                        <table class="filter-table">
+                            <tr class="filter-preset">
+                                <th><i class="fas fa-clock me-1 text-muted"></i> Pilih Rentang Waktu</th>
+                                <td colspan="3">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach($presets as $key => [$name])
+                                        <button type="submit" name="preset" value="{{ $key }}"
+                                            class="btn preset-btn {{ $preset === $key ? 'active' : '' }}">
+                                            {{ $name }}
+                                        </button>
+                                        @endforeach
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th><i class="fas fa-calendar me-1 text-muted"></i> Dari Tanggal</th>
+                                <td>
+                                    <input type="date" name="dari" value="{{ old('dari', $filters['dari'] ?? '') }}" class="form-control">
+                                </td>
+                                <th><i class="fas fa-calendar me-1 text-muted"></i> Sampai Tanggal</th>
+                                <td>
+                                    <input type="date" name="sampai" value="{{ old('sampai', $filters['sampai'] ?? '') }}" class="form-control">
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Bulan</th>
+                                <td>
+                                    <select name="bulan" class="form-select">
+                                        <option value="">Semua Bulan</option>
+                                        @for($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" {{ $filters['bulan'] == $m ? 'selected' : '' }}>
+                                            {{ Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
+                                        </option>
+                                        @endfor
+                                    </select>
+                                </td>
+                                <th>Tahun</th>
+                                <td>
+                                    <select name="tahun" class="form-select">
+                                        <option value="">Semua Tahun</option>
+                                        @foreach($tahunList as $t)
+                                        <option value="{{ $t }}" {{ $filters['tahun'] == $t ? 'selected' : '' }}>{{ $t }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Status</th>
+                                <td>
+                                    <select name="status" class="form-select" onchange="this.form.submit()">
+                                        <option value="">Semua Status</option>
+                                        @foreach($statusList as $st)
+                                        <option value="{{ $st }}" {{ $filters['status'] === $st ? 'selected' : '' }}>{{ $st }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <th>Instansi</th>
+                                <td>
+                                    <select name="instansi_id" class="form-select" onchange="this.form.submit()">
+                                        <option value="">Semua Instansi</option>
+                                        @foreach($instansiList as $ins)
+                                        <option value="{{ $ins->id }}" {{ $filters['instansi_id'] == $ins->id ? 'selected' : '' }}>
+                                            {{ $ins->nama_instansi }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Granularitas Recap</th>
+                                <td colspan="3">
+                                    <select name="per" class="form-select" style="max-width: 250px;" onchange="this.form.submit()">
+                                        <option value="auto" {{ $per === 'auto' ? 'selected' : '' }}>Otomatis</option>
+                                        <option value="hari" {{ $per === 'hari' ? 'selected' : '' }}>Per Hari</option>
+                                        <option value="bulan" {{ $per === 'bulan' ? 'selected' : '' }}>Per Bulan</option>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr class="filter-actions">
+                                <th></th>
+                                <td colspan="3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search me-1"></i> Terapkan Filter
+                                    </button>
+                                </td>
+                            </tr>
+                        </table>
                     </form>
                 </div>
             </div>
@@ -317,56 +382,35 @@
 </div>
 
 {{-- KPI Cards --}}
-<div class="row g-3 mb-3">
+@php
+$kpiCards = [
+    ['icon' => 'fa-box', 'label' => 'Total Inventaris', 'value' => $totalInventaris, 'color' => '#0d6efd'],
+    ['icon' => 'fa-file-alt', 'label' => 'Permohonan', 'value' => $totalPermohonan, 'color' => '#6610f2', 'sub' => 'Item Dipinjam: ' . number_format($totalItemDipinjam, 0, ',', '.')],
+    ['icon' => 'fa-building', 'label' => 'Instansi', 'value' => $totalInstansi, 'color' => '#d63384'],
+    ['icon' => 'fa-tags', 'label' => 'Kategori', 'value' => $totalKategori, 'color' => '#20c997'],
+];
+@endphp
+<div class="row g-3 mb-4">
+    @foreach($kpiCards as $kpi)
     <div class="col-lg-3 col-md-6">
-        <div class="kpi-card d-flex align-items-center gap-3">
-            <div class="kpi-icon" style="background: linear-gradient(135deg,#0d6efd,#0dcaf0);">
-                <i class="fas fa-box"></i>
+        <div class="kpi-card d-flex align-items-center gap-4" style="--kpi-color: {{ $kpi['color'] }}">
+            <div class="kpi-icon" style="background: {{ $kpi['color'] }};">
+                <i class="fas {{ $kpi['icon'] }}"></i>
             </div>
-            <div>
-                <div class="kpi-label">Total Inventaris</div>
-                <div class="kpi-value">{{ number_format($totalInventaris, 0, ',', '.') }}</div>
+            <div class="kpi-body">
+                <div class="kpi-label">{{ $kpi['label'] }}</div>
+                <div class="kpi-value">{{ number_format($kpi['value'], 0, ',', '.') }}</div>
+                @if(isset($kpi['sub']))
+                <div class="kpi-sub">{{ $kpi['sub'] }}</div>
+                @endif
             </div>
         </div>
     </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="kpi-card d-flex align-items-center gap-3">
-            <div class="kpi-icon" style="background: linear-gradient(135deg,#0d6efd,#6610f2);">
-                <i class="fas fa-file-alt"></i>
-            </div>
-            <div>
-                <div class="kpi-label">Permohonan (Filter)</div>
-                <div class="kpi-value">{{ number_format($totalPermohonan, 0, ',', '.') }}</div>
-                <div class="kpi-sub text-muted small">Item Dipinjam: {{ number_format($totalItemDipinjam, 0, ',', '.') }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="kpi-card d-flex align-items-center gap-3">
-            <div class="kpi-icon" style="background: linear-gradient(135deg,#6610f2,#d63384);">
-                <i class="fas fa-building"></i>
-            </div>
-            <div>
-                <div class="kpi-label">Instansi</div>
-                <div class="kpi-value">{{ number_format($totalInstansi, 0, ',', '.') }}</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-lg-3 col-md-6">
-        <div class="kpi-card d-flex align-items-center gap-3">
-            <div class="kpi-icon" style="background: linear-gradient(135deg,#20c997,#0dcaf0);">
-                <i class="fas fa-tags"></i>
-            </div>
-            <div>
-                <div class="kpi-label">Kategori</div>
-                <div class="kpi-value">{{ number_format($totalKategori, 0, ',', '.') }}</div>
-            </div>
-        </div>
-    </div>
+    @endforeach
 </div>
 
 {{-- Status breakdown (progress bars) --}}
-<div class="row mb-3">
+<div class="row mb-4">
     <div class="col-12">
         <div class="card card-flat">
             <div class="card-header">
@@ -395,7 +439,7 @@
 </div>
 
 {{-- Charts row 1 --}}
-<div class="row g-3 mb-3">
+<div class="row g-3 mb-4">
     <div class="col-lg-7">
         <div class="card card-flat">
             <div class="card-header">
@@ -423,7 +467,7 @@
 </div>
 
 {{-- Charts row 2 --}}
-<div class="row g-3 mb-3">
+<div class="row g-3 mb-4">
     <div class="col-lg-6">
         <div class="card card-flat">
             <div class="card-header">
@@ -451,13 +495,13 @@
 </div>
 
 {{-- Recap tabel --}}
-<div class="row mb-3">
+<div class="row mb-4">
     <div class="col-12">
         <div class="card card-flat">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-table me-2 text-primary"></i>Recap Permohonan per {{ ucfirst($per) }}</h3>
             </div>
-            <div class="card-body table-responsive p-0">
+            <div class="card-body table-responsive">
                 <table class="table table-modern mb-0">
                     <thead>
                         <tr>
@@ -509,7 +553,7 @@
 </div>
 
 {{-- Permohonan terbaru --}}
-<div class="row mb-3">
+<div class="row mb-4">
     <div class="col-12">
         <div class="card card-flat">
             <div class="card-header">
@@ -518,7 +562,7 @@
                     <a href="{{ route('permohonan.index') }}" class="btn btn-tool btn-sm">Lihat Semua <i class="fas fa-arrow-right ms-1"></i></a>
                 </div>
             </div>
-            <div class="card-body table-responsive p-0">
+            <div class="card-body table-responsive">
                 <table class="table table-modern mb-0">
                     <thead>
                         <tr>
