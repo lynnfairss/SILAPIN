@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\JenisController;
 use App\Http\Controllers\Admin\InventarisController;
 use App\Http\Controllers\Admin\PermohonanController as AdminPermohonanController;
+use App\Http\Controllers\Admin\SuratController;
 use App\Http\Controllers\Admin\SecurityController;
 use App\Http\Controllers\Admin\UserController;
 
@@ -33,6 +34,7 @@ Route::prefix('peminjam')->name('peminjam.')->group(function () {
     Route::post('store', [PermohonanController::class, 'store'])->name('store');
     Route::get('cek-status', [PermohonanController::class, 'cekStatus'])->name('cek-status');
     Route::get('download-surat/{permohonan}/docx', [PermohonanController::class, 'downloadDocx'])->name('download-surat.docx');
+    Route::get('download-surat/{permohonan}/pdf', [\App\Http\Controllers\PdfController::class, 'download'])->name('download-surat.pdf');
     Route::get('download-surat/{permohonan}', [PermohonanController::class, 'downloadSurat'])->name('download-surat');
 });
 
@@ -91,6 +93,16 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('permohonan', AdminPermohonanController::class);
         Route::patch('permohonan/{permohonan}/status', [AdminPermohonanController::class, 'updateStatus'])
             ->name('permohonan.status');
+
+        // Surat Permohonan (Super Admin + Admin)
+        Route::get('surat', [SuratController::class, 'index'])->name('surat.index');
+        Route::get('surat/{permohonan}/edit', [SuratController::class, 'edit'])->name('surat.edit');
+        Route::put('surat/{permohonan}', [SuratController::class, 'update'])->name('surat.update');
+        Route::get('surat/{permohonan}/preview', [SuratController::class, 'preview'])->name('surat.preview');
+
+        // Template Surat Global (Super Admin + Admin)
+        Route::get('surat-template', [\App\Http\Controllers\Admin\SuratTemplateController::class, 'edit'])->name('surat-template.edit');
+        Route::put('surat-template', [\App\Http\Controllers\Admin\SuratTemplateController::class, 'update'])->name('surat-template.update');
     });
 
 });

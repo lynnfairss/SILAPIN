@@ -64,6 +64,10 @@
                         <i class="fas fa-eye"></i>
                     </a>
 
+                    <a href="{{ route('permohonan.edit', $item->id) }}" class="btn btn-warning btn-sm" title="Edit Surat">
+                        <i class="fas fa-pen"></i>
+                    </a>
+
                     @if($item->status == 'Menunggu')
                         <button type="button" class="btn btn-success btn-sm"
                             data-toggle="modal" data-target="#modalACC"

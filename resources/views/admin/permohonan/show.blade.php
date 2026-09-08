@@ -5,9 +5,14 @@
 @section('content_header')
     <div class="d-flex flex-wrap justify-content-between align-items-center">
         <h1>Detail Permohonan</h1>
-        <a href="{{ route('permohonan.index') }}" class="btn btn-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i>Kembali
-        </a>
+        <div class="d-flex gap-2">
+            <a href="{{ route('permohonan.edit', $permohonan->id) }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-pen me-1"></i>Edit Surat
+            </a>
+            <a href="{{ route('permohonan.index') }}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Kembali
+            </a>
+        </div>
     </div>
 @stop
 

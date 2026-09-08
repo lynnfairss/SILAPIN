@@ -1,141 +1,237 @@
 @extends('adminlte::page')
 
-@section('title', 'Edit Permohonan')
+@section('title', 'Edit Surat Permohonan')
 
 @section('content_header')
-<h1>Edit Permohonan</h1>
+    <h1>Edit Surat Permohonan</h1>
 @stop
 
 @section('content')
 
-<div class="card">
+@php
+    $oldInv = old('inventaris');
+    if (is_array($oldInv)) {
+        $selectedIds = array_flip($oldInv);
+    } else {
+        $selectedIds = $itemSelected->toArray();
+    }
+    $oldQty = old('jumlah');
+@endphp
 
-    <div class="card-body">
+<style>
+    .inventaris-card {
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all .2s ease;
+        background: #fff;
+    }
+    .inventaris-card:hover {
+        border-color: #0d6efd;
+        box-shadow: 0 4px 15px rgba(13,110,253,.12);
+    }
+    .inventaris-card.selected {
+        border-color: #0d6efd;
+        background: #f0f7ff;
+        box-shadow: 0 4px 15px rgba(13,110,253,.15);
+    }
+</style>
 
-        <form action="{{ route('permohonan.update',$permohonan->id) }}"
-            method="POST">
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show">
+    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+</div>
+@endif
 
-            @csrf
-            @method('PUT')
+@if($errors->any())
+<div class="alert alert-danger alert-dismissible fade show">
+    <i class="fas fa-exclamation-circle me-2"></i>
+    <ul class="mb-0">
+        @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+    <button type="button" class="close" data-dismiss="alert">&times;</button>
+</div>
+@endif
 
-            <div class="form-group">
+<form action="{{ route('permohonan.update', $permohonan->id) }}" method="POST">
+    @csrf
+    @method('PUT')
 
-                <label>Instansi</label>
-
-                <select name="instansi_id"
-                    class="form-control">
-
-                    @foreach($instansi as $item)
-
-                    <option value="{{ $item->id }}"
-                        {{ $permohonan->instansi_id==$item->id ? 'selected':'' }}>
-
-                        {{ $item->nama_instansi }}
-
-                    </option>
-
-                    @endforeach
-
-                </select>
-
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-user me-2"></i>Data Peminjam</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="nama_peminjam">Nama Peminjam <span class="text-danger">*</span></label>
+                        <input type="text" name="nama_peminjam" id="nama_peminjam" class="form-control"
+                               value="{{ old('nama_peminjam', $permohonan->nama_peminjam) }}" required placeholder="Masukkan nama lengkap">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="nik">NIK <span class="text-danger">*</span></label>
+                        <input type="text" name="nik" id="nik" class="form-control"
+                               value="{{ old('nik', $permohonan->nik) }}" required placeholder="Nomor Induk Kependudukan" maxlength="20">
+                    </div>
+                </div>
             </div>
-
-            <div class="form-group">
-
-                <label>Nama Peminjam</label>
-
-                <input type="text"
-                    name="nama_peminjam"
-                    value="{{ $permohonan->nama_peminjam }}"
-                    class="form-control">
-
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="jabatan">Jabatan</label>
+                        <input type="text" name="jabatan" id="jabatan" class="form-control"
+                               value="{{ old('jabatan', $permohonan->jabatan) }}" placeholder="Contoh: Kepala Subbag, Staf">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="telepon">Telepon <span class="text-danger">*</span></label>
+                        <input type="text" name="telepon" id="telepon" class="form-control"
+                               value="{{ old('telepon', $permohonan->telepon) }}" required placeholder="08xxxxxxxxxx">
+                    </div>
+                </div>
             </div>
-
-            <div class="form-group">
-
-                <label>NIK</label>
-
-                <input type="text"
-                    name="nik"
-                    value="{{ $permohonan->nik }}"
-                    class="form-control">
-
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="instansi_id">Instansi <span class="text-danger">*</span></label>
+                        <select name="instansi_id" id="instansi_id" class="form-control" required>
+                            <option value="">-- Pilih Instansi --</option>
+                            @foreach($instansi as $item)
+                                <option value="{{ $item->id }}" {{ old('instansi_id', $permohonan->instansi_id) == $item->id ? 'selected' : '' }}>
+                                    {{ $item->nama_instansi }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="tanggal_pinjam">Tanggal Pinjam <span class="text-danger">*</span></label>
+                        <input type="date" name="tanggal_pinjam" id="tanggal_pinjam" class="form-control"
+                               value="{{ old('tanggal_pinjam', $permohonan->tanggal_pinjam) }}" required>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="tanggal_kembali">Tanggal Kembali <span class="text-danger">*</span></label>
+                        <input type="date" name="tanggal_kembali" id="tanggal_kembali" class="form-control"
+                               value="{{ old('tanggal_kembali', $permohonan->tanggal_kembali) }}" required>
+                    </div>
+                </div>
             </div>
-
             <div class="form-group">
-
-                <label>Jabatan</label>
-
-                <input type="text"
-                    name="jabatan"
-                    value="{{ $permohonan->jabatan }}"
-                    class="form-control">
-
+                <label for="keperluan">Keperluan <span class="text-danger">*</span></label>
+                <textarea name="keperluan" id="keperluan" class="form-control" rows="3" required
+                          placeholder="Tuliskan keperluan peminjaman...">{{ old('keperluan', $permohonan->keperluan) }}</textarea>
             </div>
-
-            <div class="form-group">
-
-                <label>Telepon</label>
-
-                <input type="text"
-                    name="telepon"
-                    value="{{ $permohonan->telepon }}"
-                    class="form-control">
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Tanggal Pinjam</label>
-
-                <input type="date"
-                    name="tanggal_pinjam"
-                    value="{{ $permohonan->tanggal_pinjam }}"
-                    class="form-control">
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Tanggal Kembali</label>
-
-                <input type="date"
-                    name="tanggal_kembali"
-                    value="{{ $permohonan->tanggal_kembali }}"
-                    class="form-control">
-
-            </div>
-
-            <div class="form-group">
-
-                <label>Keperluan</label>
-
-                <textarea
-                    name="keperluan"
-                    class="form-control"
-                    rows="4">{{ $permohonan->keperluan }}</textarea>
-
-            </div>
-
-            <button class="btn btn-success">
-
-                <i class="fas fa-save"></i>
-
-                Update
-
-            </button>
-
-            <a href="{{ route('permohonan.index') }}"
-                class="btn btn-secondary">
-
-                Kembali
-
-            </a>
-
-        </form>
-
+        </div>
     </div>
 
-</div>
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-boxes me-2"></i>Daftar Barang Dipinjam</h3>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                @forelse($inventaris as $item)
+                @php
+                    $checked = isset($selectedIds[$item->id]);
+                    $qtyVal = $oldQty[$item->id] ?? $itemSelected[$item->id] ?? 1;
+                @endphp
+                <div class="col-md-4 col-sm-6">
+                    <div class="inventaris-card p-3" onclick="toggleBarang(this, {{ $item->id }})">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}"
+                                   {{ $checked ? 'checked' : '' }} onchange="toggleSelect(this, {{ $item->id }})">
+                            <label class="form-check-label fw-semibold" for="barang_{{ $item->id }}">{{ $item->nama_barang }}</label>
+                        </div>
+                        <div class="ms-1 small text-muted">
+                            <div>Kode: <code>{{ $item->kode_barang }}</code></div>
+                            <div>Kategori: {{ $item->kategori->nama_kategori ?? '-' }}</div>
+                            <div>Stok: <span class="badge bg-success">{{ $item->stok }}</span></div>
+                            <div class="mt-2">
+                                <label class="form-label" style="font-size:.8rem;">Jumlah</label>
+                                <input type="number" name="jumlah[{{ $item->id }}]" class="form-control form-control-sm qty-input"
+                                       min="1" max="{{ $item->stok }}" value="{{ $qtyVal }}" {{ $checked ? '' : 'disabled' }}
+                                       onclick="event.stopPropagation()">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="col-12 text-center py-5 text-muted">
+                    <i class="fas fa-inbox fa-3x d-block mb-2"></i>
+                    Belum ada barang tersedia.
+                </div>
+                @endforelse
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <a href="{{ route('permohonan.show', $permohonan->id) }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Kembali
+        </a>
+        <button type="submit" class="btn btn-primary" onclick="return validateForm()">
+            <i class="fas fa-save me-1"></i>Update Surat
+        </button>
+    </div>
+</form>
+
+<script>
+    function toggleSelect(chk, id) {
+        const card = chk.closest('.inventaris-card');
+        card.classList.toggle('selected', chk.checked);
+        const jumlahInput = card.querySelector('[name^="jumlah"]');
+        if (jumlahInput) jumlahInput.disabled = !chk.checked;
+    }
+
+    function toggleBarang(el, id) {
+        const chk = el.querySelector('.form-check-input');
+        chk.checked = !chk.checked;
+        toggleSelect(chk, id);
+    }
+
+    function validateForm() {
+        const checked = document.querySelectorAll('[name="inventaris[]"]:checked');
+        if (checked.length === 0) {
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
+            alert.style.zIndex = '9999';
+            alert.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Pilih minimal 1 barang.
+                <button type="button" class="btn-close" data-dismiss="alert"></button>`;
+            document.body.appendChild(alert);
+            setTimeout(() => alert.remove(), 4000);
+            return false;
+        }
+
+        for (const chk of checked) {
+            const card = chk.closest('.inventaris-card');
+            const jumlah = card.querySelector('[name^="jumlah"]');
+            const maxStok = parseInt(jumlah.getAttribute('max'));
+            const val = parseInt(jumlah.value);
+            if (val > maxStok) {
+                const nama = card.querySelector('.form-check-label')?.textContent || 'Barang';
+                const alert = document.createElement('div');
+                alert.className = 'alert alert-danger alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-4';
+                alert.style.zIndex = '9999';
+                alert.innerHTML = `<i class="fas fa-exclamation-circle me-2"></i>Jumlah "${nama}" melebihi stok tersedia (${maxStok}).
+                    <button type="button" class="btn-close" data-dismiss="alert"></button>`;
+                document.body.appendChild(alert);
+                setTimeout(() => alert.remove(), 4000);
+                return false;
+            }
+        }
+
+        return true;
+    }
+</script>
 
 @stop

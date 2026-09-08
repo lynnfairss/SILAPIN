@@ -23,6 +23,11 @@ class Permohonan extends Model
         'catatan_admin',
         'foto_ktp',
         'surat_tugas',
+        'surat_content',
+    ];
+
+    protected $casts = [
+        'surat_content' => 'array',
     ];
 
     public function instansi()

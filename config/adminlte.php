@@ -350,6 +350,18 @@ return [
     ],
 
     [
+        'text' => 'Surat Permohonan',
+        'url'  => 'surat',
+        'icon' => 'fas fa-file-alt',
+    ],
+
+    [
+        'text' => 'Template Surat Global',
+        'url'  => 'surat-template',
+        'icon' => 'fas fa-cogs',
+    ],
+
+    [
         'text' => 'Keamanan',
         'url'  => 'security',
         'icon' => 'fas fa-shield-alt',
