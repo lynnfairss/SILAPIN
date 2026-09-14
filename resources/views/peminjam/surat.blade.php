@@ -5,46 +5,46 @@
     <title>Surat Permohonan - {{ $permohonan->nomor_permohonan }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Times New Roman', Times, serif; padding: 20mm 25mm; color: #000; font-size: 12pt; line-height: 1.4; }
-        p { margin: 0; padding: 0; }
+        body { font-family: 'Times New Roman', Times, serif; padding: 25mm 20mm; color: #000; font-size: 12pt; line-height: 1.5; }
+        p { margin: 0 0 10px 0; padding: 0; }
         .header-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
         .header-table td { border-bottom: 4px double #000; vertical-align: top; padding: 0; }
-        .header-table .logo-cell { width: 2.1cm; padding: 0 6px 8px 0; }
-        .header-table .logo-cell img { width: 2.07cm; height: auto; display: block; }
-        .header-table .logo-kanan-cell { width: 2.1cm; padding: 0 0 8px 6px; }
-        .header-table .logo-kanan-cell img { width: 2.07cm; height: auto; display: block; margin-left: auto; }
-        .header-table .text-cell { padding: 0 0 8px 12px; }
+        .header-table .logo-cell { width: 2.5cm; padding: 0 8px 10px 0; }
+        .header-table .logo-cell img { width: 2.3cm; height: auto; display: block; }
+        .header-table .logo-kanan-cell { width: 2.5cm; padding: 0 0 10px 8px; }
+        .header-table .logo-kanan-cell img { width: 2.3cm; height: auto; display: block; margin-left: auto; }
+        .header-table .text-cell { padding: 0 0 10px 14px; }
         .header-table .text-cell p { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        .header-table .text-cell .title-small { font-size: 15px; font-weight: bold; text-align: center; line-height: 1.4; }
-        .header-table .text-cell .title-medium { font-size: 16px; font-weight: bold; text-align: center; line-height: 1.5; margin-top: 1px; }
-        .header-table .text-cell .info { font-size: 12px; text-align: center; line-height: 1.2; }
-        .header-table .text-cell .info-italic { font-size: 12px; font-style: italic; text-align: center; line-height: 1.2; }
-        .header-table .text-cell .kota { font-size: 18px; font-weight: bold; text-align: center; line-height: 1.4; margin-top: 3px; }
-        .info-line { width: 100%; overflow: hidden; margin-top: 12px; margin-bottom: 8px; }
-        .info-line .hal-text { float: left; font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
-        .info-line .date-text { float: right; font-family: 'Times New Roman', Times, serif; font-size: 12pt; }
-        .identitas td { padding: 1px 0; }
-        .item-table { width: 100%; border-collapse: collapse; margin: 8px 0; }
-        .item-table th, .item-table td { border: 1px solid #000; padding: 4px 8px; font-size: 12px; }
-        .item-table th { background-color: #D9D9D9; font-weight: bold; font-family: Arial, sans-serif; font-size: 10px; }
-        .item-table td { font-family: Arial, sans-serif; font-size: 10px; }
+        .header-table .text-cell .title-small { font-size: 14px; font-weight: bold; text-align: center; line-height: 1.4; }
+        .header-table .text-cell .title-medium { font-size: 15px; font-weight: bold; text-align: center; line-height: 1.5; margin-top: 2px; }
+        .header-table .text-cell .info { font-size: 11px; text-align: center; line-height: 1.2; }
+        .header-table .text-cell .info-italic { font-size: 11px; font-style: italic; text-align: center; line-height: 1.2; }
+        .header-table .text-cell .kota { font-size: 18px; font-weight: bold; text-align: center; line-height: 1.4; margin-top: 4px; }
+        .info-line { width: 100%; overflow: hidden; margin: 10px 0 6px 0; }
+        .info-line .hal-text { float: left; font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
+        .info-line .date-text { float: right; font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
+        .identitas td { padding: 2px 0; }
+        .item-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+        .item-table th, .item-table td { border: 1px solid #000; padding: 3px 6px; font-size: 11px; }
+        .item-table th { background-color: #D9D9D9; font-weight: bold; font-family: Arial, sans-serif; font-size: 9px; }
+        .item-table td { font-family: Arial, sans-serif; font-size: 9px; }
         .item-table .text-center { text-align: center; }
         .jadwal-table td { padding: 1px 0; }
-        .ttd-table { width: 100%; border-collapse: collapse; margin-top: 30px; }
-        .ttd-table td { vertical-align: top; padding: 0 10px; text-align: center; }
-        .keperluan-bold { font-weight: bold; }
-        .btn { display: inline-block; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 14px; font-family: Arial, sans-serif; }
+        .ttd-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .ttd-table td { vertical-align: top; padding: 0 12px; text-align: center; }
+        .keperluan-bold { font-weight: bold; display: block; margin: 4px 0; }
+        .btn { display: inline-block; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-family: Arial, sans-serif; }
         .btn-danger { background-color: #dc3545; color: #fff; border: none; }
         .btn-success { background-color: #28a745; color: #fff; border: none; }
         .btn-primary { background-color: #0d6efd; color: #fff; border: none; cursor: pointer; }
         .btn-secondary { background-color: #6c757d; color: #fff; border: none; }
-        .no-print { text-align: right; margin-bottom: 12px; }
+        .no-print { text-align: right; margin-bottom: 8px; }
         @page { margin: 0; size: A4; }
         @media print {
             .no-print { display: none !important; }
-            body { padding: 15mm 20mm; font-size: 12pt; }
+            body { padding: 15mm 15mm; font-size: 11pt; }
             p { margin: 0 !important; padding: 0 !important; }
-            .ttd-table { margin-top: 25px !important; }
+            .ttd-table { margin-top: 20px !important; }
         }
     </style>
 </head>
@@ -57,18 +57,38 @@
 
     @php
         $template = \App\Models\SuratTemplate::find(1);
-        $logoKiriPath = $template->logo_kiri ?? null;
-        $logoKananPath = $template->logo_kanan ?? null;
+        $logoKiriPath = $template?->logo_kiri ?? null;
+        $logoKananPath = $template?->logo_kanan ?? null;
+
+        $forPdf = $forPdf ?? false;
+
+        $kiriFile = ($logoKiriPath && file_exists(public_path($logoKiriPath))) ? $logoKiriPath : 'images/logo-kominfo.png';
+        $kiriFull = public_path($kiriFile);
+        if ($forPdf && file_exists($kiriFull)) {
+            $ext = strtolower(pathinfo($kiriFull, PATHINFO_EXTENSION));
+            $kiriMime = in_array($ext, ['jpg','jpeg']) ? 'image/jpeg' : 'image/png';
+            $imgLogoKiri = 'data:' . $kiriMime . ';base64,' . base64_encode(file_get_contents($kiriFull));
+        } else {
+            $imgLogoKiri = asset($kiriFile);
+        }
+
+        $imgLogoKanan = null;
+        if ($logoKananPath && file_exists(public_path($logoKananPath))) {
+            $kananFull = public_path($logoKananPath);
+            if ($forPdf) {
+                $ext2 = strtolower(pathinfo($kananFull, PATHINFO_EXTENSION));
+                $kananMime = in_array($ext2, ['jpg','jpeg']) ? 'image/jpeg' : 'image/png';
+                $imgLogoKanan = 'data:' . $kananMime . ';base64,' . base64_encode(file_get_contents($kananFull));
+            } else {
+                $imgLogoKanan = asset($logoKananPath);
+            }
+        }
     @endphp
 
     <table class="header-table">
         <tr>
             <td class="logo-cell">
-                @if($logoKiriPath && file_exists(public_path($logoKiriPath)))
-                    <img src="{{ asset($logoKiriPath) }}" alt="Logo Kiri">
-                @else
-                    <img src="{{ asset('images/logo-kominfo.png') }}" alt="Logo Kominfo">
-                @endif
+                <img src="{{ $imgLogoKiri }}" alt="Logo Kiri">
             </td>
             <td class="text-cell">
                 <p class="title-small">PEMERINTAH KABUPATEN PONOROGO</p>
@@ -77,9 +97,9 @@
                 <p class="info-italic">Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id</p>
                 <p class="kota">P O N O R O G O</p>
             </td>
-            @if($logoKananPath && file_exists(public_path($logoKananPath)))
+            @if($imgLogoKanan)
             <td class="logo-kanan-cell">
-                <img src="{{ asset($logoKananPath) }}" alt="Logo Kanan">
+                <img src="{{ $imgLogoKanan }}" alt="Logo Kanan">
             </td>
             @endif
         </tr>

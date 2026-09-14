@@ -99,9 +99,9 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Kategori <span class="text-danger">*</span></label>
-                        <select name="kategori_id" id="inputKategori" class="form-control" required>
+<div class="form-group">
+                        <label class="form-label fw-semibold">Kategori</label>
+                        <select name="kategori_id" id="inputKategori" class="form-control">
                             <option value="">-- Pilih --</option>
                             @foreach($kategori as $kat)
                                 <option value="{{ $kat->id }}">{{ $kat->nama_kategori }}</option>
@@ -124,9 +124,9 @@
                     </div>
                 </div>
                 <div class="col-md-2">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Jenis <small class="text-muted fw-normal">(detail)</small></label>
-                        <select name="jenis_id" id="inputJenis" class="form-control">
+<div class="form-group">
+                        <label class="form-label fw-semibold">Jenis <span class="text-danger">*</span></label>
+                        <select name="jenis_id" id="inputJenis" class="form-control" required>
                             <option value="">-- Pilih Jenis --</option>
                             @foreach($jenisList as $j)
                                 <option value="{{ $j->id }}">{{ $j->nama_jenis }}</option>

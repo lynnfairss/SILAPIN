@@ -40,7 +40,7 @@ class PermohonanController extends Controller
             'telepon'          => 'required|string|max:15|regex:/^[0-9]+$/',
             'alamat'           => 'nullable|string|max:255',
             'tempat_tanggal_lahir' => 'nullable|string|max:120',
-            'instansi_id'      => 'nullable',
+            'instansi_id'      => 'nullable|string|max:150',
             'nama_instansi_lain' => 'nullable|string|max:100',
             'tanggal_pinjam'   => 'required|date',
             'tanggal_kembali'  => 'required|date|after_or_equal:tanggal_pinjam',
@@ -66,10 +66,28 @@ class PermohonanController extends Controller
         $nomor = 'SP-' . strtoupper(date('dmy')) . '-' . strtoupper(substr(uniqid(), -6));
 
         DB::transaction(function () use ($request, $nomor, $fotoKtp, $suratTugas) {
+            $instansiId = null;
+            $namaInstansiLain = null;
+
+            $instansiVal = $request->input('instansi_id');
+            if (!empty($instansiVal)) {
+                if (is_numeric($instansiVal)) {
+                    $instansiId = (int) $instansiVal;
+                } else {
+                    $namaBaru = trim($instansiVal);
+                    $existing = \App\Models\Instansi::whereRaw('LOWER(nama_instansi) = ?', [strtolower($namaBaru)])->first();
+                    if ($existing) {
+                        $instansiId = $existing->id;
+                    } else {
+                        $instansiId = \App\Models\Instansi::create(['nama_instansi' => $namaBaru])->id;
+                    }
+                }
+            }
+
             $permohonan = Permohonan::create([
                 'nomor_permohonan'   => $nomor,
-                'instansi_id'        => is_numeric($request->instansi_id) ? $request->instansi_id : null,
-                'nama_instansi_lain' => $request->instansi_id === 'lainnya' ? $request->nama_instansi_lain : null,
+                'instansi_id'        => $instansiId,
+                'nama_instansi_lain' => $namaInstansiLain,
                 'nama_peminjam'      => $request->nama_peminjam,
                 'nik'                => $request->nik,
                 'jabatan'            => $request->jabatan,
@@ -183,7 +201,7 @@ class PermohonanController extends Controller
         $right = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::RIGHT];
         $justify = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH];
         $center = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER];
-        $singleLine = ['spacing' => ['after' => 0, 'line' => 240]];
+        $singleLine = ['spacing' => ['after' => 120, 'line' => 300]];
 
         $fontTNR = ['name' => 'Times New Roman', 'size' => 12];
 
@@ -200,13 +218,34 @@ class PermohonanController extends Controller
             'borderRight' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
         ];
 
-        $logoPath = public_path('images/logo-kominfo.png');
         $template = \App\Models\SuratTemplate::find(1);
-        $logoKiriPath = ($template && $template->logo_kiri && file_exists(public_path($template->logo_kiri)))
-            ? public_path($template->logo_kiri) : $logoPath;
-        $logoKananPath = ($template && $template->logo_kanan && file_exists(public_path($template->logo_kanan)))
-            ? public_path($template->logo_kanan) : null;
 
+        $logoKiriPath = null;
+        $candidates = [
+            $template?->logo_kiri ? public_path($template->logo_kiri) : null,
+            public_path('images/surat/logo-kiri.jpg'),
+            public_path('images/logo-kominfo.png'),
+        ];
+        foreach ($candidates as $path) {
+            if ($path && file_exists($path)) {
+                $logoKiriPath = $path;
+                break;
+            }
+        }
+
+        $logoKananPath = null;
+        $kananCandidates = [
+            $template?->logo_kanan ? public_path($template->logo_kanan) : null,
+            public_path('images/surat/logo-kanan.png'),
+        ];
+        foreach ($kananCandidates as $path) {
+            if ($path && file_exists($path)) {
+                $logoKananPath = $path;
+                break;
+            }
+        }
+
+        $hasLogoKiri = $logoKiriPath !== null;
         $hasLogoKanan = $logoKananPath !== null;
         $textCellWidth = $hasLogoKanan ? 6800 : 9000;
 
@@ -219,10 +258,12 @@ class PermohonanController extends Controller
             'borderBottom' => ['val' => 'double', 'sz' => 12, 'color' => '000000'],
             'valign' => 'center',
         ]);
-        $logoCell->addImage($logoKiriPath, [
-            'width' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
-            'height' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
-        ]);
+        if ($hasLogoKiri) {
+            $logoCell->addImage($logoKiriPath, [
+                'width' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
+                'height' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
+            ]);
+        }
 
         $textCell = $headerTable->addCell($textCellWidth, [
             'borderBottom' => ['val' => 'double', 'sz' => 12, 'color' => '000000'],
@@ -265,7 +306,7 @@ class PermohonanController extends Controller
             ]);
         }
 
-        $section->addText('', null, ['spacing' => ['after' => 120]]);
+        $section->addText('', null, ['spacing' => ['after' => 160]]);
 
         $halItems = $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->filter()->implode(', ');
         $halText = $sc['hal'] ?: 'Permohonan Peminjaman ' . ($halItems ?: 'Barang Inventaris');
@@ -286,6 +327,7 @@ class PermohonanController extends Controller
         $section->addText('', null, ['spacing' => ['after' => 80]]);
         $section->addText($sc['pembuka'], $fontTNR, $singleLine);
 
+        $section->addText('', null, ['spacing' => ['after' => 60]]);
         $section->addText($sc['saya_yang'], $fontTNR, $singleLine);
 
         $vNama = $sc['nama_peminjam'] ?: $permohonan->nama_peminjam ?? '-';
@@ -314,6 +356,7 @@ class PermohonanController extends Controller
         $section->addText('', null, ['spacing' => ['after' => 80]]);
         $section->addText($sc['bermaksud'], $fontTNR, $singleLine);
 
+        $section->addText('', null, ['spacing' => ['after' => 80]]);
         $phpWord->addTableStyle('ItemTable', [
             'borderSize' => 4,
             'borderColor' => '000000',
@@ -413,33 +456,32 @@ class PermohonanController extends Controller
 
         $ttdTable->addRow();
         $leftCell = $ttdTable->addCell(5000, $noBorderCell);
-        for ($i = 0; $i < 6; $i++) {
-            $leftCell->addTextBreak();
-        }
-        $leftCell->addText($ttdKiriNama, ['name' => 'Times New Roman', 'size' => 12, 'bold' => true, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240]]);
-        $leftCell->addText('NRP. ' . $ttdKiriNrp, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240]]);
+        // Ganti 6x addTextBreak dengan spacing yang lebih besar
+        $leftCell->addText($ttdKiriNama, ['name' => 'Times New Roman', 'size' => 12, 'bold' => true, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 360]]);
+        $leftCell->addText('NRP. ' . $ttdKiriNrp, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
         if ($ttdKiriJab) {
-            $leftCell->addText($ttdKiriJab, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240]]);
+            $leftCell->addText($ttdKiriJab, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
         }
 
         $rightCell = $ttdTable->addCell(5000, $noBorderCell);
-        for ($i = 0; $i < 6; $i++) {
-            $rightCell->addTextBreak();
-        }
-        $rightCell->addText($ttdKananNama, ['name' => 'Times New Roman', 'size' => 12, 'bold' => true, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240]]);
-        $rightCell->addText('NRP. ' . $ttdKananNrp, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240]]);
+        // Ganti 6x addTextBreak dengan spacing yang lebih besar
+        $rightCell->addText($ttdKananNama, ['name' => 'Times New Roman', 'size' => 12, 'bold' => true, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 360]]);
+        $rightCell->addText('NRP. ' . $ttdKananNrp, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
         if ($ttdKananJab) {
-            $rightCell->addText($ttdKananJab, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240]]);
+            $rightCell->addText($ttdKananJab, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
         }
 
         $filename = 'Surat_Peminjaman_' . preg_replace('/[^a-zA-Z0-9]/', '_', $permohonan->nomor_permohonan) . '.docx';
 
-        $tempFile = tempnam(sys_get_temp_dir(), 'silapin_') . '.docx';
+        $tempFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'silapin_' . uniqid() . '.docx';
         $writer = IOFactory::createWriter($phpWord, 'Word2007');
         $writer->save($tempFile);
 
-        return response()->download($tempFile, $filename, [
+        return response()->streamDownload(function () use ($tempFile) {
+            readfile($tempFile);
+            @unlink($tempFile);
+        }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        ])->deleteFileAfterSend(true);
+        ]);
     }
 }

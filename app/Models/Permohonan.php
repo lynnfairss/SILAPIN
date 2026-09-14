@@ -24,6 +24,8 @@ class Permohonan extends Model
         'foto_ktp',
         'surat_tugas',
         'surat_content',
+        'bukti_pengembalian',
+        'tanggal_pengembalian',
     ];
 
     protected $casts = [

@@ -350,9 +350,9 @@ return [
     ],
 
     [
-        'text' => 'Surat Permohonan',
-        'url'  => 'surat',
-        'icon' => 'fas fa-file-alt',
+        'text' => 'Pengembalian Barang',
+        'url'  => 'pengembalian',
+        'icon' => 'fas fa-undo',
     ],
 
     [

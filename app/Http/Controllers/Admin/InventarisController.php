@@ -43,10 +43,10 @@ class InventarisController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'kategori_id' => 'required',
+            'kategori_id' => 'nullable|integer|exists:kategoris,id',
             'kode_barang' => 'required|unique:inventaris,kode_barang',
             'nama_barang' => 'required',
-            'jenis_id' => 'nullable|integer|exists:jensis,id',
+            'jenis_id' => 'required|integer|exists:jensis,id',
             'stok' => 'required|integer|min:1',
             'kondisi' => 'required',
             'deskripsi' => 'nullable',
@@ -55,7 +55,7 @@ class InventarisController extends Controller
         ]);
 
         $inventaris = Inventaris::create([
-            'kategori_id' => $request->kategori_id,
+            'kategori_id' => $request->kategori_id ?: null,
             'kode_barang' => $request->kode_barang,
             'nama_barang' => $request->nama_barang,
             'jenis_id' => $request->jenis_id ?: null,
@@ -74,10 +74,10 @@ class InventarisController extends Controller
     public function update(Request $request, Inventaris $inventari)
     {
         $request->validate([
-            'kategori_id' => 'required',
+            'kategori_id' => 'nullable|integer|exists:kategoris,id',
             'kode_barang' => 'required|unique:inventaris,kode_barang,' . $inventari->id,
             'nama_barang' => 'required',
-            'jenis_id' => 'nullable|integer|exists:jensis,id',
+            'jenis_id' => 'required|integer|exists:jensis,id',
             'stok' => 'required|integer|min:1',
             'kondisi' => 'required',
             'deskripsi' => 'nullable',

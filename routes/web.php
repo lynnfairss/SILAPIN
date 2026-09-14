@@ -103,6 +103,13 @@ Route::middleware(['auth'])->group(function () {
         // Template Surat Global (Super Admin + Admin)
         Route::get('surat-template', [\App\Http\Controllers\Admin\SuratTemplateController::class, 'edit'])->name('surat-template.edit');
         Route::put('surat-template', [\App\Http\Controllers\Admin\SuratTemplateController::class, 'update'])->name('surat-template.update');
+
+        // Pengembalian Barang (Super Admin + Admin)
+        Route::middleware('role:super_admin,admin')->group(function () {
+            Route::get('pengembalian', [App\Http\Controllers\Admin\PengembalianController::class, 'index'])->name('pengembalian.index');
+            Route::post('pengembalian/proses', [App\Http\Controllers\Admin\PengembalianController::class, 'proses'])->name('pengembalian.proses');
+            Route::get('permohonan/cek-nomor', [App\Http\Controllers\Admin\PermohonanController::class, 'cekNomor'])->name('permohonan.cek-nomor');
+        });
     });
 
 });

@@ -173,7 +173,7 @@ class PermohonanController extends Controller
     public function updateStatus(Request $request, Permohonan $permohonan)
     {
         $request->validate([
-            'status' => 'required|in:Disetujui,Ditolak',
+            'status' => 'required|in:Disetujui,Ditolak,Dikembalikan',
             'catatan_admin' => $request->status === 'Ditolak' ? 'required|string' : 'nullable|string',
         ]);
 
@@ -196,10 +196,34 @@ class PermohonanController extends Controller
 
         $pesan = $request->status === 'Disetujui'
             ? 'Permohonan berhasil disetujui.'
-            : 'Permohonan berhasil ditolak.';
+            : ($request->status === 'Ditolak' ? 'Permohonan berhasil ditolak.' : 'Permohonan berhasil dikembalikan.');
 
         return redirect()->route('permohonan.index')
             ->with('success', $pesan);
+    }
+
+    public function cekNomor(Request $request)
+    {
+        $nomor = $request->nomor_permohonan;
+        $permohonan = Permohonan::with('detailPermohonan.inventaris')
+            ->where('nomor_permohonan', $nomor)
+            ->first();
+
+        if (!$permohonan) {
+            return response()->json(['exists' => false]);
+        }
+
+        $barang = $permohonan->detailPermohonan->map(function ($d) {
+            return ($d->inventaris->nama_barang ?? 'Barang #' . $d->inventaris_id) . ' (' . $d->jumlah . ')';
+        })->implode(', ');
+
+        return response()->json([
+            'exists'         => true,
+            'nama_peminjam'  => $permohonan->nama_peminjam,
+            'status'         => $permohonan->status,
+            'barang'         => $barang ?: '-',
+            'total_jumlah'   => $permohonan->detailPermohonan->sum('jumlah'),
+        ]);
     }
 
     public function destroy(Permohonan $permohonan)

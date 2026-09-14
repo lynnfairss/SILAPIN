@@ -494,28 +494,50 @@ $kpiCards = [
     </div>
 </div>
 
+{{-- Recap summary cards --}}
+<div class="row mb-3">
+    @foreach($statusList as $st)
+    <div class="col">
+        <div class="card card-flat text-center py-2">
+            <div class="card-body py-2">
+                <div class="text-muted small fw-semibold mb-1">{{ $st }}</div>
+                <div class="fs-4 fw-bold" style="color: {{ $statusColor[$st] ?? '#6c757d' }}">{{ $statusCounts[$st] ?? 0 }}</div>
+            </div>
+        </div>
+    </div>
+    @endforeach
+    <div class="col">
+        <div class="card card-flat text-center py-2" style="border-left: 3px solid #4361ee;">
+            <div class="card-body py-2">
+                <div class="text-muted small fw-semibold mb-1">Grand Total</div>
+                <div class="fs-4 fw-bold text-primary">{{ $recapGrandTotal }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Recap tabel --}}
 <div class="row mb-4">
     <div class="col-12">
         <div class="card card-flat">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-table me-2 text-primary"></i>Recap Permohonan per {{ ucfirst($per) }}</h3>
+                <h3 class="card-title"><i class="fas fa-table me-2 text-primary"></i>Rekap Permohonan per {{ ucfirst($per) }}</h3>
             </div>
             <div class="card-body table-responsive">
                 <table class="table table-modern mb-0">
                     <thead>
                         <tr>
-                            <th>{{ $recapColumns[0] }}</th>
+                            <th style="min-width:140px">{{ $recapColumns[0] }}</th>
                             @foreach($statusList as $st)
-                            <th class="text-center">{{ $st }}</th>
+                            <th class="text-center" style="min-width:80px">{{ $st }}</th>
                             @endforeach
-                            <th class="text-center">Total</th>
+                            <th class="text-center" style="min-width:70px">Total</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($recapRows as $row)
                         <tr>
-                            <td class="fw-bold">{{ $row['periode'] }}</td>
+                            <td class="fw-semibold">{{ $row['periode'] }}</td>
                             @foreach($statusList as $st)
                             <td class="text-center">
                                 @if($row['status'][$st] > 0)
@@ -523,7 +545,7 @@ $kpiCards = [
                                     {{ $row['status'][$st] }}
                                 </span>
                                 @else
-                                <span class="text-muted">0</span>
+                                <span class="text-muted">—</span>
                                 @endif
                             </td>
                             @endforeach
@@ -531,18 +553,21 @@ $kpiCards = [
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-3">Tidak ada data untuk rentang ini.</td>
+                            <td colspan="{{ count($statusList) + 2 }}" class="text-center text-muted py-4">
+                                <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
+                                Tidak ada data untuk rentang ini.
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
                     @if(count($recapRows))
                     <tfoot>
-                        <tr class="total-row">
-                            <td>Total</td>
+                        <tr style="background: linear-gradient(90deg, #f0f4ff 0%, #fff 100%);">
+                            <td class="fw-bold text-primary">Total</td>
                             @foreach($statusList as $st)
-                            <td class="text-center">{{ $recapTotals[$st] }}</td>
+                            <td class="text-center fw-bold" style="color: {{ $statusColor[$st] ?? '#1a1a2e' }}">{{ $recapTotals[$st] }}</td>
                             @endforeach
-                            <td class="text-center">{{ $recapGrandTotal }}</td>
+                            <td class="text-center fw-bold text-primary fs-6">{{ $recapGrandTotal }}</td>
                         </tr>
                     </tfoot>
                     @endif

@@ -60,41 +60,62 @@
                 </td>
 
                 <td class="text-center">
-                    <a href="{{ route('permohonan.show', $item->id) }}" class="btn btn-info btn-sm" title="Lihat Detail">
-                        <i class="fas fa-eye"></i>
-                    </a>
+                    <div class="d-flex flex-wrap justify-content-center gap-1">
+                        <a href="{{ route('permohonan.show', $item->id) }}" class="btn btn-outline-info btn-sm" title="Lihat Detail">
+                            <i class="fas fa-eye"></i>
+                        </a>
 
-                    <a href="{{ route('permohonan.edit', $item->id) }}" class="btn btn-warning btn-sm" title="Edit Surat">
-                        <i class="fas fa-pen"></i>
-                    </a>
+                        <a href="{{ route('permohonan.edit', $item->id) }}" class="btn btn-outline-warning btn-sm" title="Edit Surat">
+                            <i class="fas fa-pen"></i>
+                        </a>
 
-                    @if($item->status == 'Menunggu')
-                        <button type="button" class="btn btn-success btn-sm"
-                            data-toggle="modal" data-target="#modalACC"
-                            data-id="{{ $item->id }}"
-                            data-nama="{{ $item->nama_peminjam }}"
-                            data-barang="{{ $item->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
-                            <i class="fas fa-check"></i> ACC
-                        </button>
+                        {{-- Surat: Preview + Download --}}
+                        <a href="{{ route('surat.preview', $item->id) }}" target="_blank" class="btn btn-outline-secondary btn-sm" title="Lihat Surat">
+                            <i class="fas fa-file-alt"></i>
+                        </a>
 
-                        <button type="button" class="btn btn-danger btn-sm"
-                            data-toggle="modal" data-target="#modalTolak"
-                            data-id="{{ $item->id }}"
-                            data-nama="{{ $item->nama_peminjam }}"
-                            data-barang="{{ $item->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
-                            <i class="fas fa-times"></i> Tolak
-                        </button>
-                    @endif
+                        <div class="dropdown d-inline">
+                            <button class="btn btn-outline-success btn-sm dropdown-toggle" data-toggle="dropdown" title="Download Surat">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right">
+                                <a class="dropdown-item" href="{{ route('peminjam.download-surat.docx', $item->id) }}" target="_blank">
+                                    <i class="fas fa-file-word me-2 text-primary"></i>Download DOCX
+                                </a>
+                                <a class="dropdown-item" href="{{ route('peminjam.download-surat.pdf', $item->id) }}" target="_blank">
+                                    <i class="fas fa-file-pdf me-2 text-danger"></i>Download PDF
+                                </a>
+                            </div>
+                        </div>
 
-                    <form action="{{ route('permohonan.destroy', $item->id) }}"
-                        method="POST" style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-danger btn-sm"
-                            onclick="return confirm('Yakin ingin menghapus data ini?')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </form>
+                        @if($item->status == 'Menunggu')
+                            <button type="button" class="btn btn-outline-success btn-sm"
+                                data-toggle="modal" data-target="#modalACC"
+                                data-id="{{ $item->id }}"
+                                data-nama="{{ $item->nama_peminjam }}"
+                                data-barang="{{ $item->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
+                                <i class="fas fa-check"></i>
+                            </button>
+
+                            <button type="button" class="btn btn-outline-danger btn-sm"
+                                data-toggle="modal" data-target="#modalTolak"
+                                data-id="{{ $item->id }}"
+                                data-nama="{{ $item->nama_peminjam }}"
+                                data-barang="{{ $item->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        @endif
+
+                        <form action="{{ route('permohonan.destroy', $item->id) }}"
+                            method="POST" style="display:inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-outline-danger btn-sm"
+                                onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </div>
                 </td>
 
             </tr>

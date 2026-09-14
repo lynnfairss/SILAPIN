@@ -98,16 +98,17 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Instansi</label>
                                     <select name="instansi_id" class="form-control" id="instansiSelect">
-                                        <option value="">-- Pilih Instansi --</option>
+                                        <option value="">-- Pilih atau ketik instansi --</option>
                                         @foreach($instansi as $item)
                                             <option value="{{ $item->id }}" {{ old('instansi_id')==$item->id ? 'selected' : '' }}>{{ $item->nama_instansi }}</option>
                                         @endforeach
-                                        <option value="lainnya" {{ old('instansi_id')=='lainnya' ? 'selected' : '' }}>Lainnya (isi manual)</option>
                                     </select>
+                                    <small class="text-muted">Jika instansi belum ada, silahkan tambahkan manual</small>
                                 </div>
-                                <div class="col-md-6" id="instansiLainWrapper" style="{{ old('instansi_id')=='lainnya' ? '' : 'display:none' }}">
+                                <div class="col-md-6" id="instansiLainWrapper" style="display:none">
                                     <label class="form-label fw-medium">Nama Instansi <span class="text-danger">*</span></label>
                                     <input type="text" name="nama_instansi_lain" class="form-control" value="{{ old('nama_instansi_lain') }}" placeholder="Masukkan nama instansi">
+                                    <input type="hidden" name="instansi_nama_text" id="instansiNamaText">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Tempat / Tgl Lahir</label>
@@ -693,30 +694,34 @@
     }
 
     document.getElementById('instansiSelect').addEventListener('change', function() {
-        const wrapper = document.getElementById('instansiLainWrapper');
-        if (this.value === 'lainnya') {
-            wrapper.style.display = 'block';
-            wrapper.querySelector('input').required = true;
+        const val = this.value;
+        if (val && !isNaN(val)) {
+            const nama = this.options[this.selectedIndex]?.text || '';
+            updateIdentitasField(val, nama);
+        } else if (val) {
+            const detected = detectTipeFromNama(val);
+            const tipe = detected || 'NIK';
+            const cfg = tipeConfig[tipe] || tipeConfig['NIK'];
+            document.getElementById('labelIdentitas').textContent = tipe;
+            document.getElementById('nikField').placeholder = cfg.placeholder;
+            document.getElementById('nikField').maxLength = cfg.maxlength;
+        } else {
             document.getElementById('labelIdentitas').textContent = 'NIK';
             document.getElementById('nikField').placeholder = 'Nomor Induk Kependudukan';
             document.getElementById('nikField').maxLength = 30;
-        } else {
-            wrapper.style.display = 'none';
-            wrapper.querySelector('input').required = false;
-            const nama = this.options[this.selectedIndex]?.text || '';
-            updateIdentitasField(this.value, nama);
         }
     });
 
     const firstOption = document.getElementById('instansiSelect').options[document.getElementById('instansiSelect').selectedIndex];
     updateIdentitasField(document.getElementById('instansiSelect').value, firstOption?.text || '');
 
-    // Instansi: dropdown searchable (Select2)
+    // Instansi: dropdown searchable dengan tags (bisa ketik instansi baru)
     if (window.jQuery && jQuery.fn.select2 && document.getElementById('instansiSelect')) {
         jQuery('#instansiSelect').select2({
             width: '100%',
-            placeholder: '-- Pilih Instansi --',
-            allowClear: false,
+            placeholder: '-- Pilih atau ketik instansi --',
+            allowClear: true,
+            tags: true,
         });
     }
 
@@ -730,8 +735,11 @@
             { label: 'Telepon', value: document.querySelector('[name="telepon"]').value },
             { label: 'Instansi', value: (() => {
                 const sel = document.getElementById('instansiSelect');
-                if (sel.value && sel.value !== 'lainnya') return sel.options[sel.selectedIndex].text;
-                return document.querySelector('[name="nama_instansi_lain"]').value || '-';
+                if (sel.value) {
+                    if (!isNaN(sel.value)) return sel.options[sel.selectedIndex]?.text || '-';
+                    return sel.value;
+                }
+                return '-';
             })() },
         ];
 
