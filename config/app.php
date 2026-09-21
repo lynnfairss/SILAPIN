@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'onedrive_surat_path' => env('ONEDRIVE_SURAT_PATH', 'C:/Users/massi/OneDrive/SILAPIN/surat'),
+
 ];

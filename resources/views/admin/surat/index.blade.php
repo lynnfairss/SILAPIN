@@ -4,6 +4,11 @@
 
 @section('content_header')
     <h1>Surat Permohonan</h1>
+    <div class="float-right">
+        <a href="{{ route('surat.sync-status') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-sync-alt"></i> Status Sync Word
+        </a>
+    </div>
 @stop
 
 @section('content')
@@ -26,7 +31,8 @@
                     <th>Instansi</th>
                     <th>Tanggal</th>
                     <th>Status</th>
-                    <th>Kustomisasi</th>
+                    <th>Word</th>
+                    <th>PDF</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -52,27 +58,37 @@
                     @endif
                 </td>
                 <td class="text-center">
-                    @if(!empty($item->surat_content) && count(array_filter($item->surat_content ?? [])) > 0)
-                        <span class="badge badge-primary">Custom</span>
+                    @if($item->word_path)
+                        <span class="badge badge-success"><i class="fas fa-check"></i></span>
                     @else
-                        <span class="badge badge-secondary">Global</span>
+                        <span class="badge badge-secondary"><i class="fas fa-minus"></i></span>
+                    @endif
+                </td>
+                <td class="text-center">
+                    @if($item->pdf_path)
+                        <span class="badge badge-success"><i class="fas fa-check"></i></span>
+                    @else
+                        <span class="badge badge-secondary"><i class="fas fa-minus"></i></span>
                     @endif
                 </td>
                 <td class="text-center">
                     <a href="{{ route('surat.preview', $item->id) }}" class="btn btn-info btn-sm" title="Preview Surat" target="_blank">
                         <i class="fas fa-eye"></i>
                     </a>
-                    <a href="{{ route('surat.edit', $item->id) }}" class="btn btn-warning btn-sm" title="Edit Surat">
-                        <i class="fas fa-pen"></i>
-                    </a>
                     <a href="{{ route('peminjam.download-surat.docx', $item->id) }}" class="btn btn-success btn-sm" title="Download .docx">
                         <i class="fas fa-file-word"></i>
                     </a>
+                    <form action="{{ route('surat.generate-word', $item->id) }}" method="POST" style="display:inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm" title="Kirim ke Word (OneDrive)">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </button>
+                    </form>
                 </td>
             </tr>
             @empty
             <tr>
-                <td colspan="8" class="text-center text-muted">
+                <td colspan="9" class="text-center text-muted">
                     Belum ada data permohonan.
                 </td>
             </tr>

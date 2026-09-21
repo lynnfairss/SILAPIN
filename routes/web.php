@@ -96,13 +96,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Surat Permohonan (Super Admin + Admin)
         Route::get('surat', [SuratController::class, 'index'])->name('surat.index');
-        Route::get('surat/{permohonan}/edit', [SuratController::class, 'edit'])->name('surat.edit');
-        Route::put('surat/{permohonan}', [SuratController::class, 'update'])->name('surat.update');
-        Route::get('surat/{permohonan}/preview', [SuratController::class, 'preview'])->name('surat.preview');
 
-        // Template Surat Global (Super Admin + Admin)
-        Route::get('surat-template', [\App\Http\Controllers\Admin\SuratTemplateController::class, 'edit'])->name('surat-template.edit');
-        Route::put('surat-template', [\App\Http\Controllers\Admin\SuratTemplateController::class, 'update'])->name('surat-template.update');
+        Route::get('surat/{permohonan}/preview', [SuratController::class, 'preview'])->name('surat.preview');
+        Route::post('surat/{permohonan}/generate-word', [SuratController::class, 'generateWord'])->name('surat.generate-word');
+        Route::post('surat/sync-now', [SuratController::class, 'syncNow'])->name('surat.sync-now');
+        Route::get('surat/sync-status', [SuratController::class, 'syncStatus'])->name('surat.sync-status');
+
 
         // Pengembalian Barang (Super Admin + Admin)
         Route::middleware('role:super_admin,admin')->group(function () {

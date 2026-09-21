@@ -26,10 +26,14 @@ class Permohonan extends Model
         'surat_content',
         'bukti_pengembalian',
         'tanggal_pengembalian',
+        'last_sync_at',
+        'word_path',
+        'pdf_path',
     ];
 
     protected $casts = [
         'surat_content' => 'array',
+        'last_sync_at' => 'datetime',
     ];
 
     public function instansi()

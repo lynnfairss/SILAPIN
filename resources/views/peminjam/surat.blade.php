@@ -5,64 +5,19 @@
     <title>Surat Permohonan - {{ $permohonan->nomor_permohonan }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Times New Roman', Times, serif; padding: 25mm 20mm; color: #000; font-size: 12pt; line-height: 1.5; }
-        p { margin: 0 0 10px 0; padding: 0; }
-        .header-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
-        .header-table td { border-bottom: 4px double #000; vertical-align: top; padding: 0; }
-        .header-table .logo-cell { width: 2.5cm; padding: 0 8px 10px 0; }
-        .header-table .logo-cell img { width: 2.3cm; height: auto; display: block; }
-        .header-table .logo-kanan-cell { width: 2.5cm; padding: 0 0 10px 8px; }
-        .header-table .logo-kanan-cell img { width: 2.3cm; height: auto; display: block; margin-left: auto; }
-        .header-table .text-cell { padding: 0 0 10px 14px; }
-        .header-table .text-cell p { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-        .header-table .text-cell .title-small { font-size: 14px; font-weight: bold; text-align: center; line-height: 1.4; }
-        .header-table .text-cell .title-medium { font-size: 15px; font-weight: bold; text-align: center; line-height: 1.5; margin-top: 2px; }
-        .header-table .text-cell .info { font-size: 11px; text-align: center; line-height: 1.2; }
-        .header-table .text-cell .info-italic { font-size: 11px; font-style: italic; text-align: center; line-height: 1.2; }
-        .header-table .text-cell .kota { font-size: 18px; font-weight: bold; text-align: center; line-height: 1.4; margin-top: 4px; }
-        .info-line { width: 100%; overflow: hidden; margin: 10px 0 6px 0; }
-        .info-line .hal-text { float: left; font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
-        .info-line .date-text { float: right; font-family: 'Times New Roman', Times, serif; font-size: 11pt; }
-        .identitas td { padding: 2px 0; }
-        .item-table { width: 100%; border-collapse: collapse; margin: 6px 0; }
-        .item-table th, .item-table td { border: 1px solid #000; padding: 3px 6px; font-size: 11px; }
-        .item-table th { background-color: #D9D9D9; font-weight: bold; font-family: Arial, sans-serif; font-size: 9px; }
-        .item-table td { font-family: Arial, sans-serif; font-size: 9px; }
-        .item-table .text-center { text-align: center; }
-        .jadwal-table td { padding: 1px 0; }
-        .ttd-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        .ttd-table td { vertical-align: top; padding: 0 12px; text-align: center; }
-        .keperluan-bold { font-weight: bold; display: block; margin: 4px 0; }
-        .btn { display: inline-block; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 12px; font-family: Arial, sans-serif; }
-        .btn-danger { background-color: #dc3545; color: #fff; border: none; }
-        .btn-success { background-color: #28a745; color: #fff; border: none; }
-        .btn-primary { background-color: #0d6efd; color: #fff; border: none; cursor: pointer; }
-        .btn-secondary { background-color: #6c757d; color: #fff; border: none; }
-        .no-print { text-align: right; margin-bottom: 8px; }
+        body { font-family: 'Times New Roman', Times, serif; padding: 25mm; color: #000; font-size: 12pt; line-height: 1.5; }
         @page { margin: 0; size: A4; }
         @media print {
             .no-print { display: none !important; }
-            body { padding: 15mm 15mm; font-size: 11pt; }
-            p { margin: 0 !important; padding: 0 !important; }
-            .ttd-table { margin-top: 20px !important; }
+            body { padding: 25mm; }
         }
     </style>
 </head>
 <body>
-    <div class="no-print">
-        <a href="{{ route('peminjam.download-surat.docx', $permohonan) }}" class="btn btn-success">Download .docx</a>
-        <button class="btn btn-primary" onclick="window.print()">Cetak / Simpan PDF</button>
-        <a href="{{ route('peminjam.cek-status', ['nomor' => $permohonan->nomor_permohonan]) }}" class="btn btn-secondary">Kembali</a>
-    </div>
-
     @php
-        $template = \App\Models\SuratTemplate::find(1);
-        $logoKiriPath = $template?->logo_kiri ?? null;
-        $logoKananPath = $template?->logo_kanan ?? null;
-
         $forPdf = $forPdf ?? false;
 
-        $kiriFile = ($logoKiriPath && file_exists(public_path($logoKiriPath))) ? $logoKiriPath : 'images/logo-kominfo.png';
+        $kiriFile = file_exists(public_path('images/surat/logo-kiri.jpg')) ? 'images/surat/logo-kiri.jpg' : 'images/logo-kominfo.png';
         $kiriFull = public_path($kiriFile);
         if ($forPdf && file_exists($kiriFull)) {
             $ext = strtolower(pathinfo($kiriFull, PATHINFO_EXTENSION));
@@ -73,46 +28,15 @@
         }
 
         $imgLogoKanan = null;
-        if ($logoKananPath && file_exists(public_path($logoKananPath))) {
-            $kananFull = public_path($logoKananPath);
-            if ($forPdf) {
-                $ext2 = strtolower(pathinfo($kananFull, PATHINFO_EXTENSION));
-                $kananMime = in_array($ext2, ['jpg','jpeg']) ? 'image/jpeg' : 'image/png';
-                $imgLogoKanan = 'data:' . $kananMime . ';base64,' . base64_encode(file_get_contents($kananFull));
-            } else {
-                $imgLogoKanan = asset($logoKananPath);
-            }
-        }
-    @endphp
 
-    <table class="header-table">
-        <tr>
-            <td class="logo-cell">
-                <img src="{{ $imgLogoKiri }}" alt="Logo Kiri">
-            </td>
-            <td class="text-cell">
-                <p class="title-small">PEMERINTAH KABUPATEN PONOROGO</p>
-                <p class="title-medium">DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK</p>
-                <p class="info">Jl. Ir. Juanda Nomor 198 Telp. (0352) 3592999 Kode Pos 63418</p>
-                <p class="info-italic">Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id</p>
-                <p class="kota">P O N O R O G O</p>
-            </td>
-            @if($imgLogoKanan)
-            <td class="logo-kanan-cell">
-                <img src="{{ $imgLogoKanan }}" alt="Logo Kanan">
-            </td>
-            @endif
-        </tr>
-    </table>
-
-    @php
         $sc = \App\Http\Controllers\Admin\SuratController::getContent($permohonan);
         $halItems = $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->filter()->implode(', ');
         $halText = $sc['hal'] ?: 'Permohonan Peminjaman ' . ($halItems ?: 'Barang Inventaris');
+        $dateText = 'Ponorogo, ' . $permohonan->created_at->format('d F Y');
 
         $vNama  = $sc['nama_peminjam'] ?: $permohonan->nama_peminjam ?? '-';
         $vNrp   = $sc['nik']           ?: $permohonan->nik ?? '';
-        $vJab   = $sc['jabatan']       ?: $permohonan->jabatan ?? '';
+        $vJab   = $sc['jabatan']       ?: $permohonan->jabatan ?? '-';
         $vInst  = $sc['instansi']      ?: ($permohonan->instansi?->nama_instansi ?? $permohonan->nama_instansi_lain ?? '-');
 
         $ttdKiriNama = $sc['ttd_kiri_nama']  ?: $permohonan->nama_peminjam ?? '-';
@@ -121,61 +45,7 @@
         $ttdKananNama = $sc['ttd_kanan_nama'] ?: $permohonan->nama_peminjam ?? '-';
         $ttdKananNrp  = $sc['ttd_kanan_nrp']  ?: $permohonan->nik ?? '';
         $ttdKananJab  = $sc['ttd_kanan_jabatan']?: $permohonan->jabatan ?? '';
-    @endphp
 
-    <div class="info-line">
-        <span class="hal-text">Hal &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $halText }}</span>
-        <span class="date-text">Ponorogo, {{ $permohonan->created_at->format('d F Y') }}</span>
-    </div>
-
-    <p>Kepada</p>
-    <p>{{ $sc['kepada_yth'] }}</p>
-    <p>{{ $sc['kepada_kab'] }}</p>
-    <p style="text-align: justify;">{{ $sc['kepada_tempat'] }}</p>
-
-    <p>{{ $sc['pembuka'] }}</p>
-
-    <p style="padding-left: 20px;">{{ $sc['saya_yang'] }}</p>
-
-    <table class="identitas" style="margin-left: 35px;">
-        <tr><td style="width:140px">Nama</td><td style="width:40px">:</td><td>{{ $vNama }}</td></tr>
-        <tr><td>NRP</td><td>:</td><td>{{ $vNrp }}</td></tr>
-        <tr><td>Pangkat</td><td>:</td><td>{{ $vJab ?: '-' }}</td></tr>
-        <tr><td>No. Telepon/HP</td><td>:</td><td>{{ $permohonan->telepon }}</td></tr>
-    </table>
-
-    <p style="padding-left: 40px;">{{ $sc['bermaksud'] }}</p>
-
-    <table class="item-table">
-        <thead>
-            <tr>
-                <th style="width:40px">No</th>
-                <th>Nama alat</th>
-                <th style="width:60px">Jumlah</th>
-                <th style="width:120px">Keterangan</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($permohonan->detailPermohonan as $i => $detail)
-            <tr>
-                <td>{{ $i + 1 }}</td>
-                <td>{{ $detail->inventaris->nama_barang ?? '-' }}</td>
-                <td class="text-center">{{ $detail->jumlah }}</td>
-                <td class="text-center">{{ $detail->inventaris->kondisi ?? '-' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
-
-    <p style="text-indent: 25px; text-align: justify;">{{ $sc['untuk_keperluan'] }} <span class="keperluan-bold">{{ $permohonan->keperluan }}</span>.</p>
-
-    @if(!empty($sc['isi']))
-    <p style="text-indent: 25px; text-align: justify; margin-top: 6px;">{!! nl2br(e($sc['isi'])) !!}</p>
-    @endif
-
-    <p style="text-indent: 25px; text-align: justify; margin-top: 6px;">{{ $sc['rencana'] }}</p>
-
-    @php
         $datePinjam = \Carbon\Carbon::parse($permohonan->tanggal_pinjam);
         $hariNames = [
             'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu',
@@ -185,27 +55,195 @@
         $hari = $hariNames[$datePinjam->format('l')] ?? $datePinjam->format('l');
     @endphp
 
-    <table style="margin-left: 35px; border: none;">
-        <tr><td style="width:25px">&nbsp;</td><td style="width:70px">{{ $sc['hari_label'] }}</td><td style="width:20px">&nbsp;</td><td>:&nbsp;&nbsp;{{ $hari }}</td></tr>
-        <tr><td>&nbsp;</td><td>{{ $sc['tanggal_label'] }}</td><td>&nbsp;</td><td>:&nbsp;&nbsp;{{ $datePinjam->format('d F Y') }}</td></tr>
-        <tr><td>&nbsp;</td><td>{{ $sc['tempat_label'] }}</td><td>&nbsp;</td><td>:&nbsp;&nbsp;{{ $vInst }}</td></tr>
+    @if(!$forPdf)
+    <div class="no-print" style="text-align: right; margin-bottom: 8px;">
+        <a href="{{ route('peminjam.download-surat.docx', $permohonan) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
+        <button style="display:inline-block;padding:6px 12px;border-radius:4px;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;border:none;cursor:pointer;" onclick="window.print()">Cetak / Simpan PDF</button>
+        <a href="{{ route('peminjam.cek-status', ['nomor' => $permohonan->nomor_permohonan]) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#6c757d;color:#fff;">Kembali</a>
+    </div>
+    @endif
+
+    {{-- HEADER TABLE: logo kiri + text center + logo kanan, double border bawah --}}
+    <table style="width:100%; border-collapse:collapse;">
+        <tr>
+            <td style="width:16%; border-bottom:6px double #000; vertical-align:center; padding:0;">
+                <img src="{{ $imgLogoKiri }}" style="width:2.1cm; height:2.1cm; display:block;">
+            </td>
+            <td style="width:68%; border-bottom:6px double #000; vertical-align:center; padding:0 0 10px 14px;">
+                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:13pt; font-weight:bold; text-align:center; line-height:1.3;">PEMERINTAH KABUPATEN PONOROGO</p>
+                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:13pt; font-weight:bold; text-align:center; line-height:1.3;">DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK</p>
+                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:10pt; text-align:center; line-height:1.2;">Jl. Ir. Juanda Nomor 198 Telp. (0352) 3592999 Kode Pos 63418</p>
+                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:10pt; font-style:italic; text-align:center; line-height:1.2;">Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id</p>
+                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:14pt; font-weight:bold; text-align:center; line-height:1.3; margin-top:4px;">P O N O R O G O</p>
+            </td>
+            @if($imgLogoKanan)
+            <td style="width:16%; border-bottom:6px double #000; vertical-align:center; padding:0;">
+                <img src="{{ $imgLogoKanan }}" style="width:2.1cm; height:2.1cm; display:block; margin-left:auto;">
+            </td>
+            @endif
+        </tr>
     </table>
 
-    <p style="text-indent: 25px; text-align: justify; margin-top: 6px;">{!! nl2br(e($sc['penutup'])) !!} {!! nl2br(e($sc['terima_kasih'])) !!}</p>
+    {{-- SPACER: 8pt (after=160) --}}
+    <p style="margin:0; padding:0; height:8pt;">&nbsp;</p>
 
-    <table class="ttd-table">
+    {{-- HAL/TANGGAL TABLE: double border bawah --}}
+    <table style="width:100%; border-collapse:collapse;">
         <tr>
-            <td style="width:50%">
-                {{ $sc['ttd_kiri_label'] }}<br><br><br><br><br><br>
-                <strong>{{ $ttdKiriNama }}</strong><br>
-                NRP. {{ $ttdKiriNrp }}
-                @if($ttdKiriJab)<br>{{ $ttdKiriJab }}@endif
+            <td style="width:65%; padding:0;">
+                <p style="margin:0; padding:0; font-size:12pt;">Hal &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $halText }}</p>
             </td>
-            <td style="width:50%">
-                {{ $sc['ttd_kanan_label'] }}<br><br><br><br><br><br>
-                <strong>{{ $ttdKananNama }}</strong><br>
-                NRP. {{ $ttdKananNrp }}
-                @if($ttdKananJab)<br>{{ $ttdKananJab }}@endif
+            <td style="width:35%; padding:0; text-align:right;">
+                <p style="margin:0; padding:0; font-size:12pt;">{{ $dateText }}</p>
+            </td>
+        </tr>
+    </table>
+
+    {{-- SPACER: 4pt (after=80) --}}
+    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+
+    {{-- KEPADA --}}
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">Kepada</p>
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['kepada_yth'] }}</p>
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['kepada_kab'] }}</p>
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['kepada_tempat'] }}</p>
+
+    {{-- SPACER: 6pt (after=120) --}}
+    <p style="margin:0; padding:0; height:6pt;">&nbsp;</p>
+
+    {{-- PEMBUKA --}}
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['pembuka'] }}</p>
+
+    {{-- SPACER: 4pt (after=80) --}}
+    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+
+    {{-- SAYA YANG BERTANDA TANGAN --}}
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-indent:24pt;">{{ $sc['saya_yang'] }}</p>
+
+    {{-- IDENTITAS TABLE --}}
+    <table style="width:80%; border-collapse:collapse; margin-left:24pt;">
+        <tr>
+            <td style="width:100pt; padding:0; font-size:12pt; line-height:1.5;">Nama</td>
+            <td style="width:20pt; padding:0; font-size:12pt; line-height:1.5;">:</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $vNama }}</td>
+        </tr>
+        <tr>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">NRP</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">:</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $vNrp }}</td>
+        </tr>
+        <tr>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">Pangkat</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">:</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $vJab }}</td>
+        </tr>
+        <tr>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">No. Telepon/HP</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">:</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $permohonan->telepon }}</td>
+        </tr>
+    </table>
+
+    {{-- SPACER: 4pt (after=80) --}}
+    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+
+    {{-- BERMAKSUD --}}
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['bermaksud'] }}</p>
+
+    {{-- SPACER: 4pt (after=80) --}}
+    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+
+    {{-- ITEM TABLE --}}
+    <table style="width:100%; border-collapse:collapse; border:1.5px solid #000;">
+        <thead>
+            <tr>
+                <th style="width:40px; border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif; font-weight:bold; background:#D9D9D9; text-align:center;">No</th>
+                <th style="border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif; font-weight:bold; background:#D9D9D9; text-align:center;">Nama alat</th>
+                <th style="width:60px; border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif; font-weight:bold; background:#D9D9D9; text-align:center;">Jumlah</th>
+                <th style="width:120px; border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif; font-weight:bold; background:#D9D9D9; text-align:center;">Keterangan</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($permohonan->detailPermohonan as $i => $detail)
+            <tr>
+                <td style="border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif; text-align:center;">{{ $i + 1 }}.</td>
+                <td style="border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif;">{{ $detail->inventaris->nama_barang ?? '-' }}</td>
+                <td style="border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif; text-align:center;">{{ $detail->jumlah }}</td>
+                <td style="border:1.5px solid #000; padding:0 6pt; font-size:10pt; font-family:Arial,sans-serif; text-align:center;">{{ $detail->inventaris->kondisi ?? '-' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    {{-- SPACER: 4pt (after=80) --}}
+    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+
+    {{-- UNTUK KEPERLUAN --}}
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-indent:24pt; text-align:justify;">{{ $sc['untuk_keperluan'] }} <strong>{{ $permohonan->keperluan }}</strong>.</p>
+
+    {{-- ISI --}}
+    @if(!empty($sc['isi']))
+        @foreach(explode("\n", $sc['isi']) as $isiLine)
+            @if(trim($isiLine) !== '')
+            <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-indent:24pt; text-align:justify;">{{ $isiLine }}</p>
+            @endif
+        @endforeach
+    @endif
+
+    {{-- RENCANA --}}
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-indent:24pt; text-align:justify;">{{ $sc['rencana'] }}</p>
+
+    {{-- JADWAL TABLE --}}
+    <table style="width:80%; border-collapse:collapse;">
+        <tr>
+            <td style="width:36pt; padding:0; font-size:12pt; line-height:1.5;">&nbsp;</td>
+            <td style="width:70pt; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['hari_label'] }}</td>
+            <td style="width:15pt; padding:0; font-size:12pt; line-height:1.5;">&nbsp;</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">:&nbsp;&nbsp;{{ $hari }}</td>
+        </tr>
+        <tr>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">&nbsp;</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $sc['tanggal_label'] }}</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">&nbsp;</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">:&nbsp;&nbsp;{{ $datePinjam->format('d F Y') }}</td>
+        </tr>
+        <tr>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">&nbsp;</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $sc['tempat_label'] }}</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">&nbsp;</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">:&nbsp;&nbsp;{{ $vInst }}</td>
+        </tr>
+    </table>
+
+    {{-- SPACER: 4pt (after=80) --}}
+    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+
+    {{-- PENUTUP + TERIMA KASIH --}}
+    <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-align:justify;">{{ str_replace("\n", " ", $sc['penutup']) }} {{ str_replace("\n", " ", $sc['terima_kasih']) }}</p>
+
+    {{-- TTD TABLE: 4-column --}}
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="5%" style="padding:0;">&nbsp;</td>
+            <td width="45%" valign="top" style="padding:0;"><p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['ttd_kiri_label'] }}</p></td>
+            <td width="5%" style="padding:0;">&nbsp;</td>
+            <td width="45%" valign="top" style="padding:0;"><p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['ttd_kanan_label'] }}</p></td>
+        </tr>
+        <tr>
+            <td colspan="4" height="72" style="padding:0;">&nbsp;</td>
+        </tr>
+        <tr>
+            <td width="5%" style="padding:0;">&nbsp;</td>
+            <td width="45%" valign="top" align="center" style="padding:0;">
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;"><strong>{{ $ttdKiriNama }}</strong></p>
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">NRP. {{ $ttdKiriNrp }}</p>
+                @if($ttdKiriJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">{{ $ttdKiriJab }}</p>@endif
+            </td>
+            <td width="5%" style="padding:0;">&nbsp;</td>
+            <td width="45%" valign="top" align="center" style="padding:0;">
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;"><strong>{{ $ttdKananNama }}</strong></p>
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">NRP. {{ $ttdKananNrp }}</p>
+                @if($ttdKananJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">{{ $ttdKananJab }}</p>@endif
             </td>
         </tr>
     </table>

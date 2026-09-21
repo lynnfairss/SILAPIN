@@ -418,9 +418,6 @@
                             </a>
                         </div>
                     </div>
-                    <a href="{{ route('surat.edit', $permohonan->id) }}" class="btn btn-outline-warning">
-                        <i class="fas fa-pen me-1"></i>Ubah Isi Surat
-                    </a>
                 </div>
             </div>
         </div>

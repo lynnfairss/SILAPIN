@@ -356,10 +356,12 @@ return [
     ],
 
     [
-        'text' => 'Template Surat Global',
-        'url'  => 'surat-template',
-        'icon' => 'fas fa-cogs',
+        'text' => 'Status Sync Word',
+        'url'  => 'surat/sync-status',
+        'icon' => 'fas fa-sync-alt',
     ],
+
+
 
     [
         'text' => 'Keamanan',

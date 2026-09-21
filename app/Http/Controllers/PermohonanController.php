@@ -187,224 +187,15 @@ class PermohonanController extends Controller
 
         $sc = \App\Http\Controllers\Admin\SuratController::getContent($permohonan);
 
-        $phpWord = new PhpWord();
-
-        $section = $phpWord->addSection([
-            'pageSizeW' => 11906,
-            'pageSizeH' => 16838,
-            'marginTop' => 1440,
-            'marginRight' => 1440,
-            'marginBottom' => 1440,
-            'marginLeft' => 1440,
-        ]);
-
-        $right = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::RIGHT];
-        $justify = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::BOTH];
-        $center = ['alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER];
-        $singleLine = ['spacing' => ['after' => 120, 'line' => 300]];
-
-        $fontTNR = ['name' => 'Times New Roman', 'size' => 12];
-
-        $noBorderTable = [
-            'borderTop' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderBottom' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderLeft' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderRight' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-        ];
-        $noBorderCell = [
-            'borderTop' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderBottom' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderLeft' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderRight' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-        ];
-
-        $template = \App\Models\SuratTemplate::find(1);
-
-        $logoKiriPath = null;
-        $candidates = [
-            $template?->logo_kiri ? public_path($template->logo_kiri) : null,
-            public_path('images/surat/logo-kiri.jpg'),
-            public_path('images/logo-kominfo.png'),
-        ];
-        foreach ($candidates as $path) {
-            if ($path && file_exists($path)) {
-                $logoKiriPath = $path;
-                break;
-            }
-        }
-
-        $logoKananPath = null;
-        $kananCandidates = [
-            $template?->logo_kanan ? public_path($template->logo_kanan) : null,
-            public_path('images/surat/logo-kanan.png'),
-        ];
-        foreach ($kananCandidates as $path) {
-            if ($path && file_exists($path)) {
-                $logoKananPath = $path;
-                break;
-            }
-        }
-
-        $hasLogoKiri = $logoKiriPath !== null;
-        $hasLogoKanan = $logoKananPath !== null;
-        $textCellWidth = $hasLogoKanan ? 6800 : 9000;
-
-        $headerTable = $section->addTable([
-            'width' => 10000,
-            'layout' => 'fixed',
-        ]);
-        $headerTable->addRow(1700);
-        $logoCell = $headerTable->addCell(1600, [
-            'borderBottom' => ['val' => 'double', 'sz' => 12, 'color' => '000000'],
-            'valign' => 'center',
-        ]);
-        if ($hasLogoKiri) {
-            $logoCell->addImage($logoKiriPath, [
-                'width' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
-                'height' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
-            ]);
-        }
-
-        $textCell = $headerTable->addCell($textCellWidth, [
-            'borderBottom' => ['val' => 'double', 'sz' => 12, 'color' => '000000'],
-            'valign' => 'center',
-        ]);
-        $textCell->addText('PEMERINTAH KABUPATEN PONOROGO', [
-            'name' => 'Arial', 'size' => 13, 'bold' => true,
-            'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER,
-            'spacing' => ['after' => 0, 'line' => 260],
-        ]);
-        $textCell->addText('DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK', [
-            'name' => 'Arial', 'size' => 13, 'bold' => true,
-            'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER,
-            'spacing' => ['after' => 0, 'line' => 260],
-        ]);
-        $textCell->addText('Jl. Ir. Juanda Nomor 198 Telp. (0352) 3592999 Kode Pos 63418', [
-            'name' => 'Arial', 'size' => 10,
-            'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER,
-            'spacing' => ['after' => 0, 'line' => 240],
-        ]);
-        $textCell->addText('Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id', [
-            'name' => 'Arial', 'size' => 10, 'italic' => true,
-            'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER,
-            'spacing' => ['after' => 0, 'line' => 240],
-        ]);
-        $textCell->addText('P O N O R O G O', [
-            'name' => 'Arial', 'size' => 14, 'bold' => true,
-            'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER,
-            'spacing' => ['after' => 0, 'line' => 260],
-        ]);
-
-        if ($hasLogoKanan) {
-            $logoKananCell = $headerTable->addCell(1600, [
-                'borderBottom' => ['val' => 'double', 'sz' => 12, 'color' => '000000'],
-                'valign' => 'center',
-            ]);
-            $logoKananCell->addImage($logoKananPath, [
-                'width' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
-                'height' => \PhpOffice\PhpWord\Shared\Converter::cmToPoint(2.1),
-            ]);
-        }
-
-        $section->addText('', null, ['spacing' => ['after' => 160]]);
-
+        // --- Resolve all values ---
         $halItems = $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->filter()->implode(', ');
         $halText = $sc['hal'] ?: 'Permohonan Peminjaman ' . ($halItems ?: 'Barang Inventaris');
         $dateText = 'Ponorogo, ' . $permohonan->created_at->format('d F Y');
-
-        $infoTable = $section->addTable(array_merge(['width' => 10000, 'layout' => 'fixed'], $noBorderTable));
-        $infoTable->addRow();
-        $infoTable->addCell(6500, $noBorderCell)->addText('Hal        : ' . $halText, $fontTNR + $singleLine);
-        $infoTable->addCell(3500, $noBorderCell)->addText($dateText, $fontTNR + $right + $singleLine);
-
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
-
-        $section->addText('Kepada', $fontTNR, $singleLine);
-        $section->addText($sc['kepada_yth'], $fontTNR, $singleLine);
-        $section->addText($sc['kepada_kab'], $fontTNR, $singleLine);
-        $section->addText($sc['kepada_tempat'], $fontTNR, $singleLine);
-
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
-        $section->addText($sc['pembuka'], $fontTNR, $singleLine);
-
-        $section->addText('', null, ['spacing' => ['after' => 60]]);
-        $section->addText($sc['saya_yang'], $fontTNR, $singleLine);
 
         $vNama = $sc['nama_peminjam'] ?: $permohonan->nama_peminjam ?? '-';
         $vNrp  = $sc['nik']           ?: $permohonan->nik ?? '';
         $vJab  = $sc['jabatan']       ?: ($permohonan->jabatan ?? '-');
         $vInst = $sc['instansi']      ?: ($permohonan->instansi?->nama_instansi ?? $permohonan->nama_instansi_lain ?? '-');
-
-        $identitasTable = $section->addTable(array_merge(['width' => 7000, 'layout' => 'fixed'], $noBorderTable));
-        $identitasTable->addRow();
-        $identitasTable->addCell(2400, $noBorderCell)->addText('Nama', $fontTNR + $singleLine);
-        $identitasTable->addCell(300, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(4300, $noBorderCell)->addText($vNama, $fontTNR + $singleLine);
-        $identitasTable->addRow();
-        $identitasTable->addCell(2400, $noBorderCell)->addText('NRP', $fontTNR + $singleLine);
-        $identitasTable->addCell(300, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(4300, $noBorderCell)->addText($vNrp, $fontTNR + $singleLine);
-        $identitasTable->addRow();
-        $identitasTable->addCell(2400, $noBorderCell)->addText('Pangkat', $fontTNR + $singleLine);
-        $identitasTable->addCell(300, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(4300, $noBorderCell)->addText($vJab, $fontTNR + $singleLine);
-        $identitasTable->addRow();
-        $identitasTable->addCell(2400, $noBorderCell)->addText('No. Telepon/HP', $fontTNR + $singleLine);
-        $identitasTable->addCell(300, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(4300, $noBorderCell)->addText($permohonan->telepon, $fontTNR + $singleLine);
-
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
-        $section->addText($sc['bermaksud'], $fontTNR, $singleLine);
-
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
-        $phpWord->addTableStyle('ItemTable', [
-            'borderSize' => 4,
-            'borderColor' => '000000',
-            'cellMarginTop' => 0,
-            'cellMarginBottom' => 0,
-            'cellMarginLeft' => 60,
-            'cellMarginRight' => 60,
-        ]);
-        $itemTable = $section->addTable('ItemTable');
-
-        $itemTable->addRow();
-        $itemTable->addCell(532, ['shading' => ['fill' => 'D9D9D9']])->addText('No', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        $itemTable->addCell(3689, ['shading' => ['fill' => 'D9D9D9']])->addText('Nama alat', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        $itemTable->addCell(992, ['shading' => ['fill' => 'D9D9D9']])->addText('Jumlah', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-        $itemTable->addCell(3083, ['shading' => ['fill' => 'D9D9D9']])->addText('Keterangan', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-
-        foreach ($permohonan->detailPermohonan as $i => $detail) {
-            $itemTable->addRow();
-            $itemTable->addCell(532)->addText((string) ($i + 1), ['name' => 'Arial', 'size' => 10, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER]);
-            $itemTable->addCell(3689)->addText($detail->inventaris?->nama_barang ?? '-', ['name' => 'Arial', 'size' => 10]);
-            $numCell = $itemTable->addCell(992);
-            $numCell->addText((string) $detail->jumlah, [
-                'name' => 'Arial', 'size' => 10,
-                'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER,
-            ]);
-            $ketCell = $itemTable->addCell(3083);
-            $ketText = $detail->inventaris?->kondisi ?? '-';
-            $ketCell->addText($ketText, [
-                'name' => 'Arial', 'size' => 10,
-                'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER,
-            ]);
-        }
-
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
-
-        $pKeperluan = $section->addTextRun($justify + ['indentation' => ['firstLine' => 480]] + $singleLine);
-        $pKeperluan->addText($sc['untuk_keperluan'] . ' ', $fontTNR);
-        $pKeperluan->addText($permohonan->keperluan, $fontTNR + ['bold' => true]);
-        $pKeperluan->addText('.', $fontTNR);
-
-        if (!empty($sc['isi'])) {
-            $section->addText('', null, ['spacing' => ['after' => 80]]);
-            foreach (explode("\n", $sc['isi']) as $line) {
-                $section->addText($line, $fontTNR, $justify + ['indentation' => ['firstLine' => 480]] + $singleLine);
-            }
-        }
-
-        $section->addText($sc['rencana'], $fontTNR, $justify + ['indentation' => ['firstLine' => 480]] + $singleLine);
 
         $datePinjam = \Carbon\Carbon::parse($permohonan->tanggal_pinjam);
         $hariNames = [
@@ -414,68 +205,105 @@ class PermohonanController extends Controller
         ];
         $hari = $hariNames[$datePinjam->format('l')] ?? $datePinjam->format('l');
 
-        $jadwalTable = $section->addTable(array_merge(['width' => 8000, 'layout' => 'fixed'], $noBorderTable));
-        $jadwalTable->addRow();
-        $jadwalTable->addCell(720, $noBorderCell);
-        $jadwalTable->addCell(1400, $noBorderCell)->addText($sc['hari_label'], $fontTNR + $singleLine);
-        $jadwalTable->addCell(300, $noBorderCell);
-        $jadwalTable->addCell(5500, $noBorderCell)->addText(':  ' . $hari, $fontTNR + $singleLine);
-        $jadwalTable->addRow();
-        $jadwalTable->addCell(720, $noBorderCell);
-        $jadwalTable->addCell(1400, $noBorderCell)->addText($sc['tanggal_label'], $fontTNR + $singleLine);
-        $jadwalTable->addCell(300, $noBorderCell);
-        $jadwalTable->addCell(5500, $noBorderCell)->addText(':  ' . $datePinjam->format('d F Y'), $fontTNR + $singleLine);
-        $jadwalTable->addRow();
-        $jadwalTable->addCell(720, $noBorderCell);
-        $jadwalTable->addCell(1400, $noBorderCell)->addText($sc['tempat_label'], $fontTNR + $singleLine);
-        $jadwalTable->addCell(300, $noBorderCell);
-        $jadwalTable->addCell(5500, $noBorderCell)->addText(':  ' . $vInst, $fontTNR + $singleLine);
-
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
-
-        $pDemikian = $section->addTextRun($justify + ['indentation' => ['firstLine' => 480]] + $singleLine);
-        foreach (explode("\n", $sc['penutup']) as $line) {
-            $pDemikian->addText($line . ' ', $fontTNR);
-        }
-        $pDemikian->addText(' ', $fontTNR);
-        foreach (explode("\n", $sc['terima_kasih']) as $line) {
-            $pDemikian->addText($line . ' ', $fontTNR);
-        }
-
-        $ttdKiriNama = $sc['ttd_kiri_nama']  ?: $permohonan->nama_peminjam ?? '-';
-        $ttdKiriNrp  = $sc['ttd_kiri_nrp']   ?: $permohonan->nik ?? '';
-        $ttdKiriJab  = $sc['ttd_kiri_jabatan']?: $permohonan->jabatan ?? '';
-        $ttdKananNama = $sc['ttd_kanan_nama'] ?: $permohonan->nama_peminjam ?? '-';
-        $ttdKananNrp  = $sc['ttd_kanan_nrp']  ?: $permohonan->nik ?? '';
+        $ttdKiriNama  = $sc['ttd_kiri_nama']   ?: $permohonan->nama_peminjam ?? '-';
+        $ttdKiriNrp   = $sc['ttd_kiri_nrp']    ?: $permohonan->nik ?? '';
+        $ttdKiriJab   = $sc['ttd_kiri_jabatan'] ?: $permohonan->jabatan ?? '';
+        $ttdKananNama = $sc['ttd_kanan_nama']  ?: $permohonan->nama_peminjam ?? '-';
+        $ttdKananNrp  = $sc['ttd_kanan_nrp']   ?: $permohonan->nik ?? '';
         $ttdKananJab  = $sc['ttd_kanan_jabatan']?: $permohonan->jabatan ?? '';
 
-        $ttdTable = $section->addTable(array_merge(['width' => 10000, 'layout' => 'fixed'], $noBorderTable));
-        $ttdTable->addRow();
-        $ttdTable->addCell(5000, $noBorderCell)->addText($sc['ttd_kiri_label'], $fontTNR + $center + $singleLine);
-        $ttdTable->addCell(5000, $noBorderCell)->addText($sc['ttd_kanan_label'], $fontTNR + $center + $singleLine);
-
-        $ttdTable->addRow();
-        $leftCell = $ttdTable->addCell(5000, $noBorderCell);
-        // Ganti 6x addTextBreak dengan spacing yang lebih besar
-        $leftCell->addText($ttdKiriNama, ['name' => 'Times New Roman', 'size' => 12, 'bold' => true, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 360]]);
-        $leftCell->addText('NRP. ' . $ttdKiriNrp, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
-        if ($ttdKiriJab) {
-            $leftCell->addText($ttdKiriJab, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
+        $isiText = '';
+        if (!empty($sc['isi'])) {
+            $isiText = str_replace("\n", ' ', $sc['isi']);
         }
 
-        $rightCell = $ttdTable->addCell(5000, $noBorderCell);
-        // Ganti 6x addTextBreak dengan spacing yang lebih besar
-        $rightCell->addText($ttdKananNama, ['name' => 'Times New Roman', 'size' => 12, 'bold' => true, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 360]]);
-        $rightCell->addText('NRP. ' . $ttdKananNrp, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
-        if ($ttdKananJab) {
-            $rightCell->addText($ttdKananJab, ['name' => 'Times New Roman', 'size' => 12, 'alignment' => \PhpOffice\PhpWord\SimpleType\Jc::CENTER, 'spacing' => ['after' => 300]]);
+        $penutupText = str_replace("\n", ' ', $sc['penutup']);
+        $terimaKasihText = str_replace("\n", ' ', $sc['terima_kasih']);
+
+        // --- Load template ---
+        $templatePath = public_path('templates/template_peminjaman.docx');
+        if (!file_exists($templatePath)) {
+            return response()->json(['error' => 'Template surat tidak ditemukan.'], 500);
         }
 
+        $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+        // Helper: escape XML entities to prevent broken DOCX (& < > etc.)
+        $xv = fn(string $val) => htmlspecialchars($val, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+
+        // --- Logo handling — hardcode fallback ---
+        $logoKiriPath = null;
+        $candidates = [
+            public_path('images/surat/logo-kiri.jpg'),
+            public_path('images/logo-kominfo.png'),
+        ];
+        foreach ($candidates as $path) {
+            if (file_exists($path)) {
+                $logoKiriPath = $path;
+                break;
+            }
+        }
+        if ($logoKiriPath) {
+            $template->setImageValue('LOGO', $logoKiriPath);
+        }
+
+        // --- Simple placeholder replacements (escape XML entities) ---
+        $template->setValue('hal', $xv($halText));
+        $template->setValue('tanggal', $xv($dateText));
+        $template->setValue('kepada_yth', $xv($sc['kepada_yth']));
+        $template->setValue('kepada_kab', $xv($sc['kepada_kab']));
+        $template->setValue('kepada_tempat', $xv($sc['kepada_tempat']));
+        $template->setValue('pembuka', $xv($sc['pembuka']));
+        $template->setValue('saya_yang', $xv($sc['saya_yang']));
+        $template->setValue('nama_peminjam', $xv($vNama));
+        $template->setValue('nrp', $xv($vNrp));
+        $template->setValue('pangkat', $xv($vJab));
+        $template->setValue('telepon', $xv($permohonan->telepon));
+        $template->setValue('bermaksud', $xv($sc['bermaksud']));
+        $template->setValue('keperluan', $xv($permohonan->keperluan));
+        $template->setValue('isi', $xv($isiText));
+        $template->setValue('rencana', $xv($sc['rencana']));
+        $template->setValue('hari_label', $xv($sc['hari_label']));
+        $template->setValue('hari', $xv($hari));
+        $template->setValue('tanggal_label', $xv($sc['tanggal_label']));
+        $template->setValue('tanggal_pinjam', $xv($datePinjam->format('d F Y')));
+        $template->setValue('tempat_label', $xv($sc['tempat_label']));
+        $template->setValue('instansi', $xv($vInst));
+        $template->setValue('penutup', $xv($penutupText));
+        $template->setValue('terima_kasih', $xv($terimaKasihText));
+        $template->setValue('ttd_kiri_label', $xv($sc['ttd_kiri_label']));
+        $template->setValue('ttd_kiri_nama', $xv($ttdKiriNama));
+        $template->setValue('ttd_kiri_nrp', $xv($ttdKiriNrp));
+        $template->setValue('ttd_kiri_jabatan', $xv($ttdKiriJab));
+        $template->setValue('ttd_kanan_label', $xv($sc['ttd_kanan_label']));
+        $template->setValue('ttd_kanan_nama', $xv($ttdKananNama));
+        $template->setValue('ttd_kanan_nrp', $xv($ttdKananNrp));
+        $template->setValue('ttd_kanan_jabatan', $xv($ttdKananJab));
+
+        // --- Item table: cloneRow + indexed setValue (PhpWord uses #N notation) ---
+        $items = $permohonan->detailPermohonan;
+        $itemCount = $items->count();
+        if ($itemCount > 0) {
+            $template->cloneRow('item_no', $itemCount);
+            foreach ($items as $i => $detail) {
+                $idx = $i + 1;
+                $template->setValue('item_no#' . $idx, ($i + 1) . '.');
+                $template->setValue('item_nama#' . $idx, $xv($detail->inventaris?->nama_barang ?? '-'));
+                $template->setValue('item_jumlah#' . $idx, (string) $detail->jumlah);
+                $template->setValue('item_keterangan#' . $idx, $xv($detail->inventaris?->kondisi ?? '-'));
+            }
+        } else {
+            $template->cloneRow('item_no', 1);
+            $template->setValue('item_no#1', '1.');
+            $template->setValue('item_nama#1', '-');
+            $template->setValue('item_jumlah#1', '1');
+            $template->setValue('item_keterangan#1', '-');
+        }
+
+        // --- Save & download ---
         $filename = 'Surat_Peminjaman_' . preg_replace('/[^a-zA-Z0-9]/', '_', $permohonan->nomor_permohonan) . '.docx';
-
         $tempFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'silapin_' . uniqid() . '.docx';
-        $writer = IOFactory::createWriter($phpWord, 'Word2007');
-        $writer->save($tempFile);
+        $template->saveAs($tempFile);
 
         return response()->streamDownload(function () use ($tempFile) {
             readfile($tempFile);
