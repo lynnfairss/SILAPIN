@@ -16,8 +16,40 @@ class PermohonanController extends Controller
     public function index()
     {
         $permohonan = Permohonan::with('instansi', 'detailPermohonan.inventaris')->get();
+        $pageTitle = 'Data Permohonan';
+        $activeStatus = 'Semua';
 
-        return view('admin.permohonan.index', compact('permohonan'));
+        return view('admin.permohonan.index', compact('permohonan', 'pageTitle', 'activeStatus'));
+    }
+
+    public function byStatus(string $status)
+    {
+        $allowed = [
+            'Menunggu'      => 'Permohonan Menunggu',
+            'Disetujui'     => 'Permohonan Disetujui',
+            'Ditolak'       => 'Permohonan Ditolak',
+            'Dikembalikan'  => 'Permohonan Dikembalikan',
+        ];
+
+        if (!isset($allowed[$status])) {
+            abort(404);
+        }
+
+        $query = Permohonan::with('instansi', 'detailPermohonan.inventaris')
+            ->orderByDesc('tanggal_pinjam')
+            ->latest();
+
+        if ($status === 'Disetujui') {
+            $query->whereIn('status', ['Disetujui', 'Dipinjam']);
+        } else {
+            $query->where('status', $status);
+        }
+
+        $permohonan = $query->get();
+        $pageTitle = $allowed[$status];
+        $activeStatus = $status;
+
+        return view('admin.permohonan.index', compact('permohonan', 'pageTitle', 'activeStatus'));
     }
 
     public function show(Permohonan $permohonan)

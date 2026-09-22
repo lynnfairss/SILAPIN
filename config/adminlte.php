@@ -345,8 +345,29 @@ return [
 
     [
         'text' => 'Permohonan',
-        'url'  => 'permohonan',
         'icon' => 'fas fa-file-signature',
+        'submenu' => [
+            [
+                'text'  => 'Permohonan Menunggu',
+                'route' => ['permohonan.byStatus', ['status' => 'Menunggu']],
+                'icon'  => 'fas fa-hourglass-half',
+            ],
+            [
+                'text'  => 'Disetujui',
+                'route' => ['permohonan.byStatus', ['status' => 'Disetujui']],
+                'icon'  => 'fas fa-check-circle',
+            ],
+            [
+                'text'  => 'Ditolak',
+                'route' => ['permohonan.byStatus', ['status' => 'Ditolak']],
+                'icon'  => 'fas fa-times-circle',
+            ],
+            [
+                'text'  => 'Dikembalikan',
+                'route' => ['permohonan.byStatus', ['status' => 'Dikembalikan']],
+                'icon'  => 'fas fa-undo',
+            ],
+        ],
     ],
 
     [

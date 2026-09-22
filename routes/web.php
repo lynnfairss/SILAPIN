@@ -49,6 +49,10 @@ Route::middleware(['auth'])->group(function () {
     // Dashboard (semua role)
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+    // Detail peminjaman per instansi dari dashboard
+    Route::get('/dashboard/instansi/{instansi_id}', [DashboardController::class, 'instansiDetail'])
+        ->name('dashboard.instansi.detail')
+        ->where('instansi_id', '[0-9]+');
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])
@@ -90,6 +94,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Permohonan (Super Admin + Admin)
     Route::middleware('role:super_admin,admin')->group(function () {
+        Route::get('permohonan/status/{status}', [AdminPermohonanController::class, 'byStatus'])
+            ->name('permohonan.byStatus');
         Route::resource('permohonan', AdminPermohonanController::class);
         Route::patch('permohonan/{permohonan}/status', [AdminPermohonanController::class, 'updateStatus'])
             ->name('permohonan.status');

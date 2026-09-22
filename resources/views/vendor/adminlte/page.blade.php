@@ -62,6 +62,38 @@
     <script>
         $(document).ready(function () {
 
+            // ===== Sidebar treeview: buka dengan klik saja, animasi via CSS =====
+            function openTreeview($item) {
+                if ($item.hasClass('menu-open')) return;
+                $item.siblings('.has-treeview.menu-open').removeClass('menu-open');
+                $item.addClass('menu-open');
+            }
+
+            function closeTreeview($item) {
+                if (!$item.hasClass('menu-open')) return;
+                $item.removeClass('menu-open');
+            }
+
+            function toggleTreeview($item) {
+                if ($item.hasClass('menu-open')) {
+                    closeTreeview($item);
+                } else {
+                    openTreeview($item);
+                }
+            }
+
+            function bindSidebarClick() {
+                $('.nav-sidebar .has-treeview > .nav-link')
+                    .off('click.sidebarToggle')
+                    .on('click.sidebarToggle', function (e) {
+                        e.preventDefault();
+                        e.stopImmediatePropagation();
+                        toggleTreeview($(this).parent('.has-treeview'));
+                    });
+            }
+
+            bindSidebarClick();
+
             $(document).pjax(
                 'a:not([target="_blank"]):not([data-toggle="modal"]):not([href^="#"])',
                 '#pjax-container',
@@ -105,6 +137,8 @@
                         }
                     }
                 });
+
+                bindSidebarClick();
 
                 // Re-init Bootstrap komponen di konten baru
                 $('[data-toggle="tooltip"]').tooltip('dispose').tooltip();

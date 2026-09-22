@@ -21,14 +21,12 @@ class InstansiController extends Controller
             'nama_instansi'   => 'required|max:100',
             'alamat'          => 'nullable',
             'telepon'         => 'nullable|max:20|regex:/^[0-9]+$/',
-            'tipe_identitas'  => 'required|in:NIK,NRP,NIP,NDP/NRP',
         ]);
 
         Instansi::create([
             'nama_instansi'   => $request->nama_instansi,
             'alamat'          => $request->alamat,
             'telepon'         => $request->telepon,
-            'tipe_identitas'  => $request->tipe_identitas,
         ]);
 
         return redirect()->route('instansi.index')
@@ -41,14 +39,12 @@ class InstansiController extends Controller
             'nama_instansi'   => 'required|max:100',
             'alamat'          => 'nullable',
             'telepon'         => 'nullable|max:20|regex:/^[0-9]+$/',
-            'tipe_identitas'  => 'required|in:NIK,NRP,NIP,NDP/NRP',
         ]);
 
         $instansi->update([
             'nama_instansi'   => $request->nama_instansi,
             'alamat'          => $request->alamat,
             'telepon'         => $request->telepon,
-            'tipe_identitas'  => $request->tipe_identitas,
         ]);
 
         return redirect()->route('instansi.index')

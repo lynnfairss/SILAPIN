@@ -213,7 +213,7 @@
                         <div class="detail-value">{{ $permohonan->instansi?->nama_instansi ?? $permohonan->nama_instansi_lain ?? '-' }}</div>
                     </div>
                     <div class="col-md-6">
-                        <div class="detail-label">{{ $permohonan->instansi?->effective_tipe_identitas ?? 'NIK' }}</div>
+                        <div class="detail-label">NIK</div>
                         <div class="detail-value">{{ $permohonan->nik }}</div>
                     </div>
                     <div class="col-md-6">

@@ -657,63 +657,16 @@
         }
     });
 
-    // ========== IDENTITAS (NIK/NRP/NIP) ==========
-
-    const instansiTipe = @json($instansiTipe);
-
-    const keywordMap = [
-        { keywords: ['polres','polsek','polresta','poltabes','polda'],     label: 'NRP' },
-        { keywords: ['kodim','korem','koramil','mabes','tni','denma'],    label: 'NDP/NRP' },
-        { keywords: ['dinas','pemkot','pemkab','kecamatan','sekretariat','pemerintah','sma','smk','sdn','smp','sd'], label: 'NIP' },
-    ];
-
-    const tipeConfig = {
-        'NIK':     { placeholder: 'Nomor Induk Kependudukan', maxlength: 30 },
-        'NRP':     { placeholder: 'Masukkan NRP',            maxlength: 30 },
-        'NIP':     { placeholder: 'Masukkan NIP',            maxlength: 30 },
-        'NDP/NRP': { placeholder: 'Masukkan NDP/NRP',        maxlength: 30 },
-    };
-
-    function detectTipeFromNama(namaInstansi) {
-        const text = (namaInstansi || '').toLowerCase();
-        const match = keywordMap.find(m => m.keywords.some(k => text.includes(k)));
-        return match ? match.label : null;
-    }
-
-    function updateIdentitasField(instansiId, instansiNama) {
-        let tipe = instansiTipe[instansiId] || null;
-        if (!tipe || tipe === 'NIK') {
-            const detected = detectTipeFromNama(instansiNama);
-            if (detected) tipe = detected;
-            else tipe = 'NIK';
+    // ========== IDENTITAS: selalu NIK ==========
+    (function initIdentitasNik() {
+        const label = document.getElementById('labelIdentitas');
+        const field = document.getElementById('nikField');
+        if (label) label.textContent = 'NIK';
+        if (field) {
+            field.placeholder = 'Nomor Induk Kependudukan';
+            field.maxLength = 30;
         }
-        const cfg = tipeConfig[tipe] || tipeConfig['NIK'];
-        document.getElementById('labelIdentitas').textContent = tipe;
-        document.getElementById('nikField').placeholder = cfg.placeholder;
-        document.getElementById('nikField').maxLength = cfg.maxlength;
-    }
-
-    document.getElementById('instansiSelect').addEventListener('change', function() {
-        const val = this.value;
-        if (val && !isNaN(val)) {
-            const nama = this.options[this.selectedIndex]?.text || '';
-            updateIdentitasField(val, nama);
-        } else if (val) {
-            const detected = detectTipeFromNama(val);
-            const tipe = detected || 'NIK';
-            const cfg = tipeConfig[tipe] || tipeConfig['NIK'];
-            document.getElementById('labelIdentitas').textContent = tipe;
-            document.getElementById('nikField').placeholder = cfg.placeholder;
-            document.getElementById('nikField').maxLength = cfg.maxlength;
-        } else {
-            document.getElementById('labelIdentitas').textContent = 'NIK';
-            document.getElementById('nikField').placeholder = 'Nomor Induk Kependudukan';
-            document.getElementById('nikField').maxLength = 30;
-        }
-    });
-
-    const firstOption = document.getElementById('instansiSelect').options[document.getElementById('instansiSelect').selectedIndex];
-    updateIdentitasField(document.getElementById('instansiSelect').value, firstOption?.text || '');
+    })();
 
     // Instansi: dropdown searchable dengan tags (bisa ketik instansi baru)
     if (window.jQuery && jQuery.fn.select2 && document.getElementById('instansiSelect')) {

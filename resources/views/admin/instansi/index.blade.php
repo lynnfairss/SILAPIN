@@ -13,24 +13,7 @@
 
 @section('css')
 <style>
-    .table-modern thead th {
-        background: #1a1a2e;
-        color: #fff;
-        font-weight: 600;
-        font-size: .78rem;
-        text-transform: uppercase;
-        letter-spacing: .4px;
-        border: none;
-        padding: .7rem .9rem;
-        white-space: nowrap;
-    }
-    .table-modern tbody td {
-        padding: .65rem .9rem;
-        font-size: .88rem;
-        vertical-align: middle;
-    }
-    .table-modern tbody tr { border-bottom: 1px solid #f1f3f7; }
-    .table-modern tbody tr:hover { background: rgba(13,110,253,.04); }
+    .table-modern thead th { background: #0f172a; }
 </style>
 @stop
 
@@ -55,7 +38,7 @@
 </div>
 @endif
 
-<div class="card card-flat">
+<div class="card card-flat mb-4">
     <div class="card-header">
         <h3 class="card-title" id="formTitle"><i class="fas fa-plus-circle me-2 text-primary"></i>Tambah Instansi</h3>
     </div>
@@ -67,41 +50,24 @@
 
         <div class="card-body">
             <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Nama Instansi <span class="text-danger">*</span></label>
-                        <input type="text" name="nama_instansi" id="inputNama" class="form-control"
-                               value="{{ old('nama_instansi') }}" placeholder="Masukkan nama instansi" required>
-                    </div>
+                <div class="col-md-4">
+                    <label class="form-label">Nama Instansi <span class="text-danger">*</span></label>
+                    <input type="text" name="nama_instansi" id="inputNama" class="form-control"
+                           value="{{ old('nama_instansi') }}" placeholder="Masukkan nama instansi" required>
                 </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Alamat</label>
-                        <input type="text" name="alamat" id="inputAlamat" class="form-control"
-                               value="{{ old('alamat') }}" placeholder="Alamat instansi">
-                    </div>
+                <div class="col-md-4">
+                    <label class="form-label">Alamat</label>
+                    <input type="text" name="alamat" id="inputAlamat" class="form-control"
+                           value="{{ old('alamat') }}" placeholder="Alamat instansi">
                 </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Telepon</label>
-                        <input type="tel" name="telepon" id="inputTelepon" class="form-control"
-                               value="{{ old('telepon') }}" placeholder="08xxxxxxxxxx"
-                               oninput="this.value = this.value.replace(/\D/g, '')" maxlength="15">
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Tipe Identitas <span class="text-danger">*</span></label>
-                        <select name="tipe_identitas" id="inputTipeIdentitas" class="form-control" required>
-                            <option value="NIK">NIK</option>
-                            <option value="NRP">NRP</option>
-                            <option value="NIP">NIP</option>
-                            <option value="NDP/NRP">NDP / NRP</option>
-                        </select>
-                    </div>
+                <div class="col-md-4">
+                    <label class="form-label">Telepon</label>
+                    <input type="tel" name="telepon" id="inputTelepon" class="form-control"
+                           value="{{ old('telepon') }}" placeholder="08xxxxxxxxxx"
+                           oninput="this.value = this.value.replace(/\D/g, '')" maxlength="15">
                 </div>
             </div>
-            <div class="mt-3 d-flex gap-2">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary" id="btnSubmit">
                     <i class="fas fa-save me-1"></i> Simpan
                 </button>
@@ -117,45 +83,44 @@
     <div class="card-header">
         <h3 class="card-title"><i class="fas fa-building me-2 text-primary"></i>Daftar Instansi</h3>
     </div>
-    <div class="card-body table-responsive">
+    <div class="card-body table-responsive p-0">
         <table class="table table-modern mb-0">
             <thead>
                 <tr>
-                    <th width="60">No</th>
+                    <th width="60" class="text-center">No</th>
                     <th>Nama Instansi</th>
                     <th>Alamat</th>
                     <th>Telepon</th>
-                    <th class="text-center">Tipe Identitas</th>
-                    <th class="text-center" width="130">Aksi</th>
+                    <th class="text-center" width="120">Aksi</th>
                 </tr>
             </thead>
             <tbody>
             @forelse($instansi as $item)
                 <tr>
                     <td class="text-center">{{ $instansi->firstItem() + $loop->index }}</td>
-                    <td class="fw-bold">{{ $item->nama_instansi }}</td>
-                    <td>{{ $item->alamat ?? '-' }}</td>
+                    <td class="fw-semibold">{{ $item->nama_instansi }}</td>
+                    <td class="text-muted">{{ $item->alamat ?? '-' }}</td>
                     <td>{{ $item->telepon ?? '-' }}</td>
                     <td class="text-center">
-                        <span class="badge bg-info">{{ $item->effective_tipe_identitas }}</span>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
-                            onclick="editItem({{ $item->id }}, '{{ addslashes($item->nama_instansi) }}', '{{ addslashes($item->alamat ?? '') }}', '{{ addslashes($item->telepon ?? '') }}', '{{ $item->effective_tipe_identitas }}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <form action="{{ route('instansi.destroy', $item->id) }}" method="POST" style="display:inline-block;">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Yakin ingin menghapus data ini?')">
-                                <i class="fas fa-trash"></i>
+                        <div class="btn-actions">
+                            <button class="btn btn-outline-primary" title="Edit"
+                                onclick="editItem({{ $item->id }}, '{{ addslashes($item->nama_instansi) }}', '{{ addslashes($item->alamat ?? '') }}', '{{ addslashes($item->telepon ?? '') }}')">
+                                <i class="fas fa-pen"></i>
                             </button>
-                        </form>
+                            <form action="{{ route('instansi.destroy', $item->id) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-outline-danger" title="Hapus"
+                                    onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="fas fa-folder-open fa-2x mb-2 d-block opacity-25"></i>
                         Belum ada data instansi.
                     </td>
                 </tr>
@@ -169,14 +134,13 @@
 </div>
 
 <script>
-    function editItem(id, nama, alamat, telepon, tipeIdentitas) {
+    function editItem(id, nama, alamat, telepon) {
         document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2 text-primary"></i>Edit Instansi';
         document.getElementById('formMethod').value = 'PUT';
         document.getElementById('editId').value = id;
         document.getElementById('inputNama').value = nama;
         document.getElementById('inputAlamat').value = alamat;
         document.getElementById('inputTelepon').value = telepon;
-        document.getElementById('inputTipeIdentitas').value = tipeIdentitas || 'NIK';
         document.getElementById('formInstansi').action = '{{ url("instansi") }}/' + id;
         document.getElementById('btnCancel').style.display = 'inline-block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -189,7 +153,6 @@
         document.getElementById('inputNama').value = '';
         document.getElementById('inputAlamat').value = '';
         document.getElementById('inputTelepon').value = '';
-        document.getElementById('inputTipeIdentitas').value = 'NIK';
         document.getElementById('formInstansi').action = '{{ route("instansi.store") }}';
         document.getElementById('btnCancel').style.display = 'none';
     }

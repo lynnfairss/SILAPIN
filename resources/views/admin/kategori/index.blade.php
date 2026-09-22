@@ -13,24 +13,7 @@
 
 @section('css')
 <style>
-    .table-modern thead th {
-        background: #1a1a2e;
-        color: #fff;
-        font-weight: 600;
-        font-size: .78rem;
-        text-transform: uppercase;
-        letter-spacing: .4px;
-        border: none;
-        padding: .7rem .9rem;
-        white-space: nowrap;
-    }
-    .table-modern tbody td {
-        padding: .65rem .9rem;
-        font-size: .88rem;
-        vertical-align: middle;
-    }
-    .table-modern tbody tr { border-bottom: 1px solid #f1f3f7; }
-    .table-modern tbody tr:hover { background: rgba(13,110,253,.04); }
+    .table-modern thead th { background: #0f172a; }
 </style>
 @stop
 
@@ -62,7 +45,7 @@
 </div>
 @endif
 
-<div class="card card-flat">
+<div class="card card-flat mb-4">
     <div class="card-header">
         <h3 class="card-title" id="formTitle"><i class="fas fa-plus-circle me-2 text-primary"></i>Tambah Kategori</h3>
     </div>
@@ -75,26 +58,24 @@
         <div class="card-body">
             <div class="row g-3">
                 <div class="col-md-5">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Nama Kategori <span class="text-danger">*</span></label>
-                        <input type="text" name="nama_kategori" id="inputNama" class="form-control"
-                               value="{{ old('nama_kategori') }}" placeholder="Masukkan nama kategori" required>
-                    </div>
+                    <label class="form-label">Nama Kategori <span class="text-danger">*</span></label>
+                    <input type="text" name="nama_kategori" id="inputNama" class="form-control"
+                           value="{{ old('nama_kategori') }}" placeholder="Masukkan nama kategori" required>
                 </div>
                 <div class="col-md-5">
-                    <div class="form-group">
-                        <label class="form-label fw-semibold">Keterangan</label>
-                        <input type="text" name="keterangan" id="inputKeterangan" class="form-control"
-                               value="{{ old('keterangan') }}" placeholder="Keterangan singkat">
-                    </div>
+                    <label class="form-label">Keterangan</label>
+                    <input type="text" name="keterangan" id="inputKeterangan" class="form-control"
+                           value="{{ old('keterangan') }}" placeholder="Keterangan singkat">
                 </div>
-                <div class="col-md-2 d-flex align-items-end gap-1">
-                    <button type="submit" class="btn btn-primary" id="btnSubmit">
-                        <i class="fas fa-save me-1"></i> Simpan
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" id="btnCancel" onclick="resetForm()" style="display:none;">
-                        <i class="fas fa-times me-1"></i> Batal
-                    </button>
+                <div class="col-md-2 d-flex align-items-end">
+                    <div class="form-actions w-100 m-0 p-0 border-0">
+                        <button type="submit" class="btn btn-primary" id="btnSubmit">
+                            <i class="fas fa-save me-1"></i> Simpan
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="btnCancel" onclick="resetForm()" style="display:none;">
+                            <i class="fas fa-times me-1"></i> Batal
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -105,39 +86,42 @@
     <div class="card-header">
         <h3 class="card-title"><i class="fas fa-tags me-2 text-primary"></i>Daftar Kategori</h3>
     </div>
-    <div class="card-body table-responsive">
+    <div class="card-body table-responsive p-0">
         <table class="table table-modern mb-0">
             <thead>
                 <tr>
-                    <th width="60">No</th>
+                    <th width="60" class="text-center">No</th>
                     <th>Nama Kategori</th>
                     <th>Keterangan</th>
-                    <th class="text-center" width="130">Aksi</th>
+                    <th class="text-center" width="120">Aksi</th>
                 </tr>
             </thead>
             <tbody>
             @forelse($kategori as $item)
                 <tr>
                     <td class="text-center">{{ $kategori->firstItem() + $loop->index }}</td>
-                    <td class="fw-bold">{{ $item->nama_kategori }}</td>
-                    <td>{{ $item->keterangan ?? '-' }}</td>
+                    <td class="fw-semibold">{{ $item->nama_kategori }}</td>
+                    <td class="text-muted">{{ $item->keterangan ?? '-' }}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary me-1" title="Edit"
-                            onclick="editItem({{ $item->id }}, '{{ addslashes($item->nama_kategori) }}', '{{ addslashes($item->keterangan ?? '') }}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <form action="{{ route('kategori.destroy', $item->id) }}" method="POST" style="display:inline-block;">
-                            @csrf @method('DELETE')
-                            <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Yakin ingin menghapus data ini?')">
-                                <i class="fas fa-trash"></i>
+                        <div class="btn-actions">
+                            <button class="btn btn-outline-primary" title="Edit"
+                                onclick="editItem({{ $item->id }}, '{{ addslashes($item->nama_kategori) }}', '{{ addslashes($item->keterangan ?? '') }}')">
+                                <i class="fas fa-pen"></i>
                             </button>
-                        </form>
+                            <form action="{{ route('kategori.destroy', $item->id) }}" method="POST">
+                                @csrf @method('DELETE')
+                                <button class="btn btn-outline-danger" title="Hapus"
+                                    onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @empty
                 <tr>
                     <td colspan="4" class="text-center text-muted py-4">
-                        <i class="fas fa-folder-open fa-2x mb-2 d-block"></i>
+                        <i class="fas fa-folder-open fa-2x mb-2 d-block opacity-25"></i>
                         Belum ada data kategori.
                     </td>
                 </tr>

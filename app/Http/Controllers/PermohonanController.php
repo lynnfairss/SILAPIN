@@ -26,9 +26,7 @@ class PermohonanController extends Controller
 
         $jenisList = Jenis::orderBy('nama_jenis')->pluck('nama_jenis');
 
-        $instansiTipe = $instansi->mapWithKeys(fn($item) => [$item->id => $item->effective_tipe_identitas]);
-
-        return view('peminjam.index', compact('instansi', 'kategori', 'inventaris', 'instansiTipe', 'jenisList'));
+        return view('peminjam.index', compact('instansi', 'kategori', 'inventaris', 'jenisList'));
     }
 
     public function store(Request $request)

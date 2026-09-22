@@ -135,54 +135,8 @@ class DashboardController extends Controller
         $topLabels = $topItem->map(fn ($d) => $d->inventaris?->nama_barang ?? 'Item #'.$d->inventaris_id)->toArray();
         $topValues = $topItem->pluck('total')->toArray();
 
-        // ---------- Recap tabel (per bulan atau per hari) ----------
-        if ($per === 'hari') {
-            $recap = (clone $query)
-                ->select(
-                    DB::raw("DATE_FORMAT(tanggal_pinjam, '%Y-%m-%d') as periode"),
-                    'status',
-                    DB::raw('count(*) as jml'),
-                    DB::raw('count(distinct id) as total_row')
-                )
-                ->groupBy('periode', 'status')
-                ->get()
-                ->groupBy('periode');
-            $recapColumns = ['Tanggal'];
-        } else {
-            $recap = (clone $query)
-                ->select(
-                    DB::raw("DATE_FORMAT(tanggal_pinjam, '%Y-%m') as periode"),
-                    'status',
-                    DB::raw('count(*) as jml')
-                )
-                ->groupBy('periode', 'status')
-                ->get()
-                ->groupBy('periode');
-            $recapColumns = ['Bulan'];
-        }
-
-        $recap = $recap->sortKeys();
-        $recapRows = [];
-        $recapTotals = array_fill_keys($statusList, 0);
-        $recapGrandTotal = 0;
-
-        foreach ($recap as $periode => $group) {
-            $row = [
-                'periode' => $per === 'hari'
-                    ? Carbon::parse($periode)->translatedFormat('d M Y')
-                    : Carbon::createFromFormat('Y-m', $periode)->translatedFormat('F Y'),
-                'status' => [],
-            ];
-            foreach ($group as $g) {
-                $row['status'][$g->status] = $g->jml;
-                $recapTotals[$g->status] += $g->jml;
-                $recapGrandTotal += $g->jml;
-            }
-            foreach ($statusList as $st) {
-                $row['status'][$st] = $row['status'][$st] ?? 0;
-            }
-            $recapRows[] = $row;
-        }
+        // ---------- Grand total (untuk summary cards) ----------
+        $recapGrandTotal = array_sum($statusCounts);
 
         // ---------- Permohonan dalam rentang ----------
         $permohonan = (clone $query)
@@ -197,6 +151,40 @@ class DashboardController extends Controller
         $tahunList = Permohonan::selectRaw('YEAR(tanggal_pinjam) as tahun')
             ->distinct()->orderByDesc('tahun')->pluck('tahun');
 
+        // ---------- Rekap peminjaman per instansi ----------
+        $allPermohonan = (clone $query)
+            ->with(['instansi', 'detailPermohonan.inventaris'])
+            ->get();
+
+        $recapInstansi = $allPermohonan
+            ->groupBy(fn ($p) => $p->instansi_id ?? 0)
+            ->map(function ($group) {
+                $first = $group->first();
+                $totalBarang = $group->sum(fn ($p) => $p->detailPermohonan->sum('jumlah'));
+
+                $barangCounts = [];
+                foreach ($group as $p) {
+                    foreach ($p->detailPermohonan as $d) {
+                        $nama = $d->inventaris?->nama_barang ?? 'Barang #' . $d->inventaris_id;
+                        $barangCounts[$nama] = ($barangCounts[$nama] ?? 0) + $d->jumlah;
+                    }
+                }
+                arsort($barangCounts);
+                $topBarang = !empty($barangCounts)
+                    ? array_key_first($barangCounts) . ' (' . $barangCounts[array_key_first($barangCounts)] . 'x)'
+                    : '-';
+
+                return [
+                    'instansi_id'      => $first->instansi_id,
+                    'nama_instansi'    => $first->instansi?->nama_instansi ?? $first->nama_instansi_lain ?? 'Tanpa Instansi',
+                    'total_permohonan' => $group->count(),
+                    'total_barang'     => $totalBarang,
+                    'top_barang'       => $topBarang,
+                ];
+            })
+            ->sortByDesc('total_permohonan')
+            ->values();
+
         return view('admin.dashboard', compact(
             'presets', 'filters', 'preset',
             'totalInventaris', 'totalKategori', 'totalInstansi',
@@ -205,8 +193,67 @@ class DashboardController extends Controller
             'statusLabels', 'statusValues',
             'kategoriLabels', 'kategoriValues',
             'topLabels', 'topValues',
-            'recapRows', 'recapTotals', 'recapGrandTotal', 'recapColumns', 'statusList',
-            'permohonan', 'instansiList', 'tahunList'
+            'recapGrandTotal', 'statusList',
+            'permohonan', 'instansiList', 'tahunList',
+            'recapInstansi'
+        ));
+    }
+
+    public function instansiDetail(Request $request, $instansiId)
+    {
+        $instansi = Instansi::findOrFail($instansiId);
+
+        // Semua permohonan dari instansi ini
+        $permohonan = Permohonan::where('instansi_id', $instansiId)
+            ->with('detailPermohonan.inventaris')
+            ->orderByDesc('tanggal_pinjam')
+            ->get();
+
+        // Hitung barang per inventaris, urut dari paling sering
+        $barangList = DetailPermohonan::whereIn('permohonan_id', $permohonan->pluck('id'))
+            ->with('inventaris')
+            ->select('inventaris_id', DB::raw('SUM(jumlah) as total'))
+            ->groupBy('inventaris_id')
+            ->orderByDesc('total')
+            ->get()
+            ->map(fn ($d) => [
+                'id'    => $d->inventaris_id,
+                'nama'  => $d->inventaris?->nama_barang ?? 'Barang #' . $d->inventaris_id,
+                'kode'  => $d->inventaris?->kode_barang ?? '-',
+                'total' => (int) $d->total,
+            ]);
+
+        // Ranking barang: nama => total (untuk sort detail)
+        $rankBarang = $barangList->pluck('total', 'nama')->toArray();
+
+        // Detail semua peminjaman, sort barang paling sering di atas
+        $detailList = [];
+        foreach ($permohonan as $p) {
+            foreach ($p->detailPermohonan as $d) {
+                $namaBarang = $d->inventaris?->nama_barang ?? 'Barang #' . $d->inventaris_id;
+                $detailList[] = [
+                    'barang'          => $namaBarang,
+                    'kode'            => $d->inventaris?->kode_barang ?? '-',
+                    'jumlah'          => $d->jumlah,
+                    'peminjam'        => $p->nama_peminjam,
+                    'tanggal_pinjam'  => $p->tanggal_pinjam,
+                    'tanggal_kembali' => $p->tanggal_kembali,
+                    'status'          => $p->status,
+                    'nomor'           => $p->nomor_permohonan,
+                    '_rank'           => $rankBarang[$namaBarang] ?? 0,
+                ];
+            }
+        }
+        usort($detailList, fn ($a, $b) => $b['_rank'] <=> $a['_rank']);
+
+        // Statistik ringkas
+        $totalPermohonan = $permohonan->count();
+        $totalBarang     = $permohonan->sum(fn ($p) => $p->detailPermohonan->sum('jumlah'));
+        $peminjamUniq    = $permohonan->pluck('nama_peminjam')->unique()->count();
+
+        return view('admin.dashboard.instansi-detail', compact(
+            'instansi', 'permohonan', 'barangList', 'detailList',
+            'totalPermohonan', 'totalBarang', 'peminjamUniq'
         ));
     }
 }
