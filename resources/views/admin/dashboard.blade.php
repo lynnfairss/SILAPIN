@@ -337,7 +337,7 @@
                                 <label class="filter-field-label"><i class="fas fa-info-circle"></i> Status</label>
                                 <select name="status" class="form-select" onchange="this.form.submit()">
                                     <option value="">Semua Status</option>
-                                    @foreach($statusList as $st)
+                                    @foreach(($statusListFilter ?? $statusList) as $st)
                                     <option value="{{ $st }}" {{ $filters['status'] === $st ? 'selected' : '' }}>{{ $st }}</option>
                                     @endforeach
                                 </select>
@@ -383,7 +383,7 @@
                             <tr>
                                 <th style="min-width:40px" class="text-center">No</th>
                                 <th>Nama Instansi</th>
-                                <th class="text-center" style="min-width:90px">Permohonan</th>
+                                <th class="text-center" style="min-width:140px">Nama Peminjam</th>
                                 <th class="text-center" style="min-width:90px">Barang Dipinjam</th>
                                 <th>Paling Sering Dipinjam</th>
                             </tr>
@@ -394,7 +394,15 @@
                                 <td class="text-center">{{ $i + 1 }}</td>
                                 <td class="fw-bold text-primary">{{ $r['nama_instansi'] }}</td>
                                 <td class="text-center">
-                                    <span class="badge bg-primary badge-soft text-white">{{ $r['total_permohonan'] }}</span>
+                                    @if(!empty($r['nama_peminjam_list']))
+                                    <span class="d-inline-flex flex-wrap gap-1 justify-content-center">
+                                        @foreach($r['nama_peminjam_list'] as $np)
+                                        <span class="badge bg-light border text-dark">{{ $np }}</span>
+                                        @endforeach
+                                    </span>
+                                    @else
+                                    <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td class="text-center fw-bold">{{ $r['total_barang'] }}</td>
                                 <td><small class="text-muted">{{ $r['top_barang'] }}</small></td>

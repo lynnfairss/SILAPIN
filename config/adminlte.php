@@ -373,7 +373,7 @@ return [
     [
         'text' => 'Pengembalian Barang',
         'url'  => 'pengembalian',
-        'icon' => 'fas fa-undo',
+        'icon' => 'fas fa-exchange-alt',
     ],
 
     [

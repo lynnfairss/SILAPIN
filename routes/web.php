@@ -96,6 +96,11 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:super_admin,admin')->group(function () {
         Route::get('permohonan/status/{status}', [AdminPermohonanController::class, 'byStatus'])
             ->name('permohonan.byStatus');
+
+        // Harus sebelum Route::resource agar tidak tertimpa permohonan/{permohonan}
+        Route::get('permohonan/cek-nomor', [AdminPermohonanController::class, 'cekNomor'])
+            ->name('permohonan.cek-nomor');
+
         Route::resource('permohonan', AdminPermohonanController::class);
         Route::patch('permohonan/{permohonan}/status', [AdminPermohonanController::class, 'updateStatus'])
             ->name('permohonan.status');
@@ -108,13 +113,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('surat/sync-now', [SuratController::class, 'syncNow'])->name('surat.sync-now');
         Route::get('surat/sync-status', [SuratController::class, 'syncStatus'])->name('surat.sync-status');
 
-
         // Pengembalian Barang (Super Admin + Admin)
-        Route::middleware('role:super_admin,admin')->group(function () {
-            Route::get('pengembalian', [App\Http\Controllers\Admin\PengembalianController::class, 'index'])->name('pengembalian.index');
-            Route::post('pengembalian/proses', [App\Http\Controllers\Admin\PengembalianController::class, 'proses'])->name('pengembalian.proses');
-            Route::get('permohonan/cek-nomor', [App\Http\Controllers\Admin\PermohonanController::class, 'cekNomor'])->name('permohonan.cek-nomor');
-        });
+        Route::get('pengembalian', [App\Http\Controllers\Admin\PengembalianController::class, 'index'])->name('pengembalian.index');
+        Route::post('pengembalian/proses', [App\Http\Controllers\Admin\PengembalianController::class, 'proses'])->name('pengembalian.proses');
     });
 
 });

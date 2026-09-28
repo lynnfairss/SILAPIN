@@ -151,8 +151,9 @@ class DashboardController extends Controller
         $tahunList = Permohonan::selectRaw('YEAR(tanggal_pinjam) as tahun')
             ->distinct()->orderByDesc('tahun')->pluck('tahun');
 
-        // ---------- Rekap peminjaman per instansi ----------
+        // ---------- Rekap peminjaman per instansi (tanpa status Menunggu) ----------
         $allPermohonan = (clone $query)
+            ->where('status', '!=', 'Menunggu')
             ->with(['instansi', 'detailPermohonan.inventaris'])
             ->get();
 
@@ -161,6 +162,13 @@ class DashboardController extends Controller
             ->map(function ($group) {
                 $first = $group->first();
                 $totalBarang = $group->sum(fn ($p) => $p->detailPermohonan->sum('jumlah'));
+
+                $namaPeminjamList = $group
+                    ->pluck('nama_peminjam')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
 
                 $barangCounts = [];
                 foreach ($group as $p) {
@@ -180,10 +188,13 @@ class DashboardController extends Controller
                     'total_permohonan' => $group->count(),
                     'total_barang'     => $totalBarang,
                     'top_barang'       => $topBarang,
+                    'nama_peminjam_list' => $namaPeminjamList,
                 ];
             })
             ->sortByDesc('total_permohonan')
             ->values();
+
+        $statusListFilter = array_values(array_filter($statusList, fn ($st) => $st !== 'Menunggu'));
 
         return view('admin.dashboard', compact(
             'presets', 'filters', 'preset',
@@ -195,7 +206,7 @@ class DashboardController extends Controller
             'topLabels', 'topValues',
             'recapGrandTotal', 'statusList',
             'permohonan', 'instansiList', 'tahunList',
-            'recapInstansi'
+            'recapInstansi', 'statusListFilter'
         ));
     }
 

@@ -72,11 +72,22 @@
                                 'Dikembalikan' => ['badge' => 'secondary', 'icon' => 'fa-undo'],
                             ];
                             $status = $statusMap[$permohonan->status] ?? ['badge' => 'secondary', 'icon' => 'fa-question'];
+                            $showBarcode = in_array($permohonan->status, ['Disetujui', 'Dipinjam', 'Dikembalikan'], true);
                         @endphp
                         <span class="badge bg-{{ $status['badge'] }} badge-status">
                             <i class="fas {{ $status['icon'] }} me-1"></i>{{ $permohonan->status }}
                         </span>
                     </div>
+
+                    {{-- Barcode hanya jika Disetujui / Dipinjam / Dikembalikan --}}
+                    @if($showBarcode)
+                    <div class="text-center mt-3 pt-3 border-top">
+                        <div id="cekStatusBarcode" style="width:150px;height:150px;display:block;margin:0 auto .3rem;"></div>
+                        <div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:#64748b;">Nomor Permohonan</div>
+                        <div style="font-family:Consolas,Monaco,monospace;font-size:1.05rem;font-weight:700;color:#0f172a;">{{ $permohonan->nomor_permohonan }}</div>
+                        <div class="text-muted" style="font-size:.72rem;">Scan QR ini di Pengembalian (Admin / Super Admin).</div>
+                    </div>
+                    @endif
                 </div>
                 <div class="card-body">
                     <div class="row g-3 mb-4">
@@ -187,6 +198,33 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+@isset($permohonan)
+@if(in_array($permohonan->status, ['Disetujui', 'Dipinjam', 'Dikembalikan'], true))
+<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
+<script>
+    (function () {
+        var el = document.getElementById('cekStatusBarcode');
+        if (!el || typeof QRCode === 'undefined') return;
+        try {
+            el.innerHTML = '';
+            new QRCode(el, {
+                text: @json($permohonan->nomor_permohonan),
+                width: 150,
+                height: 150,
+                colorDark: '#0f172a',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+            el.querySelectorAll('img').forEach(function (img) {
+                img.style.display = 'none';
+            });
+        } catch (e) {
+            console.warn('Gagal render QR', e);
+        }
+    })();
+</script>
+@endif
+@endisset
 
 </body>
 </html>

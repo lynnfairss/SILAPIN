@@ -140,6 +140,77 @@
         border: none; color: #fff; box-shadow: 0 4px 12px rgba(102,16,242,.28); border-radius: 8px;
     }
     .btn-gradient:hover { color: #fff; filter: brightness(1.05); }
+
+    .barcode-card .card-body { padding: 1.25rem 1rem; }
+    .permohonan-barcode {
+        width: 150px;
+        height: 150px;
+        display: block;
+        position: relative;
+        overflow: hidden;
+        margin: 0 auto .35rem;
+    }
+    .permohonan-barcode canvas {
+        width: 150px !important;
+        height: 150px !important;
+        display: block !important;
+    }
+    .permohonan-barcode img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 150px !important;
+        height: 150px !important;
+        display: none !important;
+    }
+    #printBarcode {
+        position: relative;
+        overflow: hidden;
+        margin: 0 auto;
+    }
+    #printBarcode canvas {
+        display: block !important;
+        width: 180px !important;
+        height: 180px !important;
+    }
+    #printBarcode img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 180px !important;
+        height: 180px !important;
+        display: none !important;
+    }
+    .barcode-nomor-label {
+        font-size: .68rem;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: .15rem;
+    }
+    .barcode-nomor-value {
+        font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #0f172a;
+        letter-spacing: .4px;
+        margin-bottom: .35rem;
+    }
+
+    @media print {
+        body * { visibility: hidden !important; }
+        #printBarcodeArea, #printBarcodeArea * { visibility: visible !important; }
+        #printBarcodeArea {
+            position: absolute !important;
+            left: 0; top: 0;
+            width: 100%;
+            padding: 24px;
+            text-align: center;
+            background: #fff !important;
+        }
+        .no-print, .main-sidebar, .main-header, .content-header, .app-footer { display: none !important; }
+    }
 </style>
 @stop
 
@@ -194,6 +265,29 @@
         </span>
     </div>
 </div>
+
+{{-- Barcode: hanya Disetujui / Dipinjam / Dikembalikan --}}
+@php
+    $showBarcode = in_array($permohonan->status, ['Disetujui', 'Dipinjam', 'Dikembalikan'], true);
+@endphp
+@if($showBarcode)
+<div class="card card-flat mb-3 barcode-card no-print">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-qrcode me-2 text-primary"></i>QR Code Nomor Permohonan</h3>
+        <div class="card-tools">
+            <button type="button" class="btn btn-sm btn-outline-primary" onclick="printPermohonanBarcode()" title="Cetak QR code">
+                <i class="fas fa-print me-1"></i>Cetak
+            </button>
+        </div>
+    </div>
+    <div class="card-body text-center">
+        <div id="permohonanBarcode" class="permohonan-barcode"></div>
+        <div class="barcode-nomor-label">Nomor Permohonan</div>
+        <div class="barcode-nomor-value">{{ $permohonan->nomor_permohonan }}</div>
+        <div class="text-muted" style="font-size:.75rem;">Scan QR ini di Pengembalian untuk memudahkan pendataan barang kembali.</div>
+    </div>
+</div>
+@endif
 
 <div class="row g-3 mb-3">
     {{-- Data pemohon --}}
@@ -527,6 +621,54 @@
         <img src="" alt="Pratinjau" id="lightboxImg">
     </div>
 </div>
+
+{{-- Area cetak QR (hanya terlihat saat print) --}}
+@if($showBarcode)
+<div id="printBarcodeArea" style="display:none;">
+    <div id="printBarcode" style="width:180px;height:180px;"></div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Nomor Permohonan</div>
+    <div style="font-family:Consolas,Monaco,monospace;font-size:16px;font-weight:700;margin-top:2px;">{{ $permohonan->nomor_permohonan }}</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#666;">SILAPIN — Scan untuk pendataan pengembalian</div>
+</div>
+
+<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
+<script>
+    (function renderQr() {
+        var nomor = @json($permohonan->nomor_permohonan);
+        function draw(target, size, dark) {
+            if (typeof QRCode === 'undefined') return;
+            var el = document.querySelector(target);
+            if (!el) return;
+            try {
+                el.innerHTML = '';
+                new QRCode(el, {
+                    text: nomor,
+                    width: size,
+                    height: size,
+                    colorDark: dark,
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                el.querySelectorAll('img').forEach(function (img) {
+                    img.style.display = 'none';
+                });
+            } catch (e) {
+                console.warn('Gagal render QR', e);
+            }
+        }
+        draw('#permohonanBarcode', 150, '#0f172a');
+        draw('#printBarcode', 180, '#000000');
+    })();
+
+    function printPermohonanBarcode() {
+        var area = document.getElementById('printBarcodeArea');
+        if (!area) return;
+        area.style.display = 'block';
+        window.print();
+        setTimeout(function () { area.style.display = 'none'; }, 500);
+    }
+</script>
+@endif
 
 @stop
 

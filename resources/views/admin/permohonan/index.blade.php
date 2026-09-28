@@ -107,6 +107,14 @@
                             <a href="{{ route('permohonan.show', $item->id) }}" class="btn btn-outline-info" title="Lihat Detail">
                                 <i class="fas fa-eye"></i>
                             </a>
+                            @if(in_array($item->status, ['Disetujui', 'Dipinjam', 'Dikembalikan'], true))
+                            <button type="button" class="btn btn-outline-primary"
+                                data-toggle="modal" data-target="#modalBarcode"
+                                data-nomor="{{ $item->nomor_permohonan }}"
+                                title="Lihat QR Code">
+                                <i class="fas fa-qrcode"></i>
+                            </button>
+                            @endif
                             <a href="{{ route('permohonan.edit', $item->id) }}" class="btn btn-outline-warning" title="Edit Surat">
                                 <i class="fas fa-pen"></i>
                             </a>
@@ -159,6 +167,34 @@
             </tbody>
         </table>
         @endif
+    </div>
+</div>
+
+{{-- MODAL BARCODE --}}
+<div class="modal fade" id="modalBarcode" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-qrcode me-2 text-primary"></i>QR Code Nomor Permohonan</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <div id="rowBarcode" style="width:160px;height:160px;display:inline-block;"></div>
+                <div class="barcode-nomor-label" style="font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;font-weight:700;color:#64748b;margin-top:.35rem;">Nomor Permohonan</div>
+                <div id="rowBarcodeText" style="font-family:Consolas,Monaco,monospace;font-size:1.1rem;font-weight:700;color:#0f172a;"></div>
+                <div class="text-muted mt-2" style="font-size:.78rem;">
+                    Scan QR ini di halaman <strong>Pengembalian Barang</strong> untuk memudahkan pendataan barang kembali.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i>Cetak
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -235,7 +271,33 @@
 @endsection
 
 @section('js')
+<script src="{{ asset('vendor/qrcode/qrcode.min.js') }}"></script>
 <script>
+    $('#modalBarcode').on('show.bs.modal', function (e) {
+        var btn = $(e.relatedTarget);
+        var nomor = btn.data('nomor');
+        $(this).find('#rowBarcodeText').text(nomor);
+        try {
+            var el = document.getElementById('rowBarcode');
+            if (el && typeof QRCode !== 'undefined') {
+                el.innerHTML = '';
+                new QRCode(el, {
+                    text: nomor,
+                    width: 160,
+                    height: 160,
+                    colorDark: '#0f172a',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                el.querySelectorAll('img').forEach(function (img) {
+                    img.style.display = 'none';
+                });
+            }
+        } catch (err) {
+            console.warn('Gagal render QR', err);
+        }
+    });
+
     $('#modalACC').on('show.bs.modal', function (e) {
         var btn = $(e.relatedTarget);
         var id = btn.data('id');
