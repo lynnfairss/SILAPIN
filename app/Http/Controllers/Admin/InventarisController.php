@@ -7,11 +7,21 @@ use App\Models\Inventaris;
 use App\Models\InventarisFoto;
 use App\Models\Jenis;
 use App\Models\Kategori;
+use App\Services\TransisiStatus;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class InventarisController extends Controller
 {
+    /**
+     * Harus sama persis dengan enum di migration create_inventaris_table.
+     * Nilai lain akan ditolak database sebagai QueryException (500), bukan
+     * sebagai pesan validasi.
+     */
+    private const KONDISI = ['Baik', 'Rusak Ringan', 'Rusak Berat'];
+
     public function index(Request $request)
     {
         $query = Inventaris::with('kategori', 'jenis', 'fotos');
@@ -44,13 +54,13 @@ class InventarisController extends Controller
     {
         $request->validate([
             'kategori_id' => 'nullable|integer|exists:kategoris,id',
-            'kode_barang' => 'required|unique:inventaris,kode_barang',
-            'nama_barang' => 'required',
+            'kode_barang' => 'required|string|max:30|unique:inventaris,kode_barang',
+            'nama_barang' => 'required|string|max:150',
             'jenis_id' => 'required|integer|exists:jensis,id',
-            'stok' => 'required|integer|min:1',
-            'kondisi' => 'required',
-            'deskripsi' => 'nullable',
-            'foto' => 'nullable|array',
+            'stok' => 'required|integer|min:0',
+            'kondisi' => ['required', Rule::in(self::KONDISI)],
+            'deskripsi' => 'nullable|string|max:2000',
+            'foto' => 'nullable|array|max:5',
             'foto.*' => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
@@ -75,13 +85,13 @@ class InventarisController extends Controller
     {
         $request->validate([
             'kategori_id' => 'nullable|integer|exists:kategoris,id',
-            'kode_barang' => 'required|unique:inventaris,kode_barang,' . $inventari->id,
-            'nama_barang' => 'required',
+            'kode_barang' => 'required|string|max:30|unique:inventaris,kode_barang,' . $inventari->id,
+            'nama_barang' => 'required|string|max:150',
             'jenis_id' => 'required|integer|exists:jensis,id',
-            'stok' => 'required|integer|min:1',
-            'kondisi' => 'required',
-            'deskripsi' => 'nullable',
-            'foto' => 'nullable|array',
+            'stok' => 'required|integer|min:0',
+            'kondisi' => ['required', Rule::in(self::KONDISI)],
+            'deskripsi' => 'nullable|string|max:2000',
+            'foto' => 'nullable|array|max:5',
             'foto.*' => 'image|mimes:jpg,jpeg,png|max:2048',
             'hapus_foto' => 'nullable|string',
         ]);
@@ -105,13 +115,28 @@ class InventarisController extends Controller
 
     public function destroy(Inventaris $inventari)
     {
-        foreach ($inventari->fotos as $foto) {
-            if (Storage::disk('public')->exists($foto->foto)) {
-                Storage::disk('public')->delete($foto->foto);
-            }
+        $dipakai = $inventari->detailPermohonan()
+            ->whereHas('permohonan', fn ($q) => $q->whereIn('status', TransisiStatus::SEDANG_DIPAKAI))
+            ->count();
+
+        if ($dipakai > 0) {
+            return redirect()
+                ->route('inventaris.index')
+                ->with('error', "Barang masih dipinjam pada {$dipakai} peminjaman yang sedang berjalan. Selesaikan pengembaliannya terlebih dahulu.");
         }
 
-        $inventari->delete();
+        DB::transaction(function () use ($inventari) {
+            foreach ($inventari->fotos as $foto) {
+                if (Storage::disk('public')->exists($foto->foto)) {
+                    Storage::disk('public')->delete($foto->foto);
+                }
+            }
+
+            // detail_permohonans.inventaris_id kini RESTRICT, jadi penghapusan
+            // gagal di level database bila ada riwayat. Yang tersisa di sini
+            // hanya berkas tanpa riwayat.
+            $inventari->delete();
+        });
 
         return redirect()
             ->route('inventaris.index')

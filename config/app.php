@@ -123,6 +123,11 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
-    'onedrive_surat_path' => env('ONEDRIVE_SURAT_PATH', 'C:/Users/massi/OneDrive/SILAPIN/surat'),
+    /*
+     * Folder tempat berkas .docx surat disimpan. Kosongkan bila fitur sinkron
+     * OneDrive tidak dipakai; Default sengaja tidak memakai path absolut
+     * supaya tidak ada jejak direktori pribadi yang ikut ter-commit.
+     */
+    'onedrive_surat_path' => env('ONEDRIVE_SURAT_PATH', ''),
 
 ];

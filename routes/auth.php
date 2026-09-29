@@ -8,16 +8,12 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
-
+    // Pendaftaran publik dinonaktifkan. Akun admin hanya dibuat oleh Super Admin
+    // melalui menu "Manajemen Admin" (Admin\UserController@create / @store).
     Route::get('login', fn () => redirect()->route('login.admin'))
         ->name('login');
 
@@ -25,18 +21,21 @@ Route::middleware('guest')->group(function () {
         ->name('login.admin');
 
     Route::post('login/admin', [AuthenticatedSessionController::class, 'storeAdmin'])
+        ->middleware('throttle:10,1')
         ->name('login.admin.post');
 
     Route::get('login/superadmin', [AuthenticatedSessionController::class, 'showSuperAdminLogin'])
         ->name('login.superadmin');
 
     Route::post('login/superadmin', [AuthenticatedSessionController::class, 'storeSuperAdmin'])
+        ->middleware('throttle:10,1')
         ->name('login.superadmin.post');
 
     Route::get('login/2fa', [AuthenticatedSessionController::class, 'showTwoFactor'])
         ->name('login.2fa');
 
     Route::post('login/2fa', [AuthenticatedSessionController::class, 'storeTwoFactor'])
+        ->middleware('throttle:6,1')
         ->name('login.2fa.post');
 
     // Passkey login (tanpa kata sandi)

@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'peminjam.access' => \App\Http\Middleware\VerifyPemohonanAccess::class,
         ]);
 
         $middleware->validateCsrfTokens(except: [
@@ -22,10 +23,17 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Sesi telah berakhir. Muat ulang halaman lalu coba lagi.',
+                ], 419);
+            }
+
             if ($request->is('peminjam/*')) {
                 return redirect()->route('peminjam.form')
                     ->with('error', 'Sesi telah berakhir atau token keamanan tidak valid. Silakan isi form kembali.');
             }
+
             return response()->view('errors.419', [], 419);
         });
     })->create();

@@ -32,10 +32,23 @@ Route::get('/', [WebsiteController::class, 'index'])->name('website');
 Route::prefix('peminjam')->name('peminjam.')->group(function () {
     Route::get('form', [PermohonanController::class, 'form'])->name('form');
     Route::post('store', [PermohonanController::class, 'store'])->name('store');
-    Route::get('cek-status', [PermohonanController::class, 'cekStatus'])->name('cek-status');
-    Route::get('download-surat/{permohonan}/docx', [PermohonanController::class, 'downloadDocx'])->name('download-surat.docx');
-    Route::get('download-surat/{permohonan}/pdf', [\App\Http\Controllers\PdfController::class, 'download'])->name('download-surat.pdf');
-    Route::get('download-surat/{permohonan}', [PermohonanController::class, 'downloadSurat'])->name('download-surat');
+
+    // Ringkas tampilan status. Tanpa token yang benar, controller hanya
+    // mengirim status dan daftar barang, bukan data pribadi peminjam.
+    Route::get('cek-status', [PermohonanController::class, 'cekStatus'])
+        ->middleware('peminjam.access')
+        ->name('cek-status');
+
+    // Berkas memuat NIK, alamat, dan telepon: wajib token atau sesi admin.
+    Route::get('download-surat/{permohonan}/docx', [PermohonanController::class, 'downloadDocx'])
+        ->middleware('peminjam.access')
+        ->name('download-surat.docx');
+    Route::get('download-surat/{permohonan}/pdf', [\App\Http\Controllers\PdfController::class, 'download'])
+        ->middleware('peminjam.access')
+        ->name('download-surat.pdf');
+    Route::get('download-surat/{permohonan}', [PermohonanController::class, 'downloadSurat'])
+        ->middleware('peminjam.access')
+        ->name('download-surat');
 });
 
 /*
@@ -82,14 +95,14 @@ Route::middleware(['auth'])->group(function () {
 
     // Master Data (hanya Super Admin)
     Route::middleware('role:super_admin')->group(function () {
-        Route::resource('instansi', InstansiController::class)->except(['create', 'edit']);
-        Route::resource('kategori', KategoriController::class)->except(['create', 'edit']);
+        Route::resource('instansi', InstansiController::class)->except(['create', 'edit', 'show']);
+        Route::resource('kategori', KategoriController::class)->except(['create', 'edit', 'show']);
         Route::resource('jenis', JenisController::class)->except(['create', 'edit', 'show']);
         Route::resource('inventaris', InventarisController::class)->except(['create', 'edit', 'show']);
         Route::delete('inventaris/foto/{foto}', [InventarisController::class, 'destroyFoto'])->name('inventaris.foto.destroy');
 
         // Manajemen User (hanya Super Admin)
-        Route::resource('users', UserController::class)->except(['create', 'store', 'edit', 'update']);
+        Route::resource('users', UserController::class)->except(['show', 'edit', 'update']);
     });
 
     // Permohonan (Super Admin + Admin)

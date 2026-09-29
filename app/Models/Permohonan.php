@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Permohonan extends Model
 {
@@ -35,6 +36,30 @@ class Permohonan extends Model
         'surat_content' => 'array',
         'last_sync_at' => 'datetime',
     ];
+
+    /**
+     * Sengaja tidak ada di $fillable: token adalah rahasia yang harus dibuat
+     * server, bukan pernah diterima dari input pengguna.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (self $permohonan): void {
+            if (blank($permohonan->token)) {
+                $permohonan->token = Str::random(64);
+            }
+        });
+    }
+
+    /**
+     * Bandingkan token dengan constant-time agar tidak bisa ditebak lewat
+     * perbedaan waktu respons.
+     */
+    public function tokenMatches(?string $token): bool
+    {
+        return filled($token)
+            && filled($this->token)
+            && hash_equals($this->token, $token);
+    }
 
     public function instansi()
     {

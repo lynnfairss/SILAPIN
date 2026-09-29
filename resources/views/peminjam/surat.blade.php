@@ -56,10 +56,11 @@
     @endphp
 
     @if(!$forPdf)
+    @php $tokenParams = ['token' => request('token')]; @endphp
     <div class="no-print" style="text-align: right; margin-bottom: 8px;">
-        <a href="{{ route('peminjam.download-surat.docx', $permohonan) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
+        <a href="{{ route('peminjam.download-surat.docx', array_merge(['permohonan' => $permohonan->id], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
         <button style="display:inline-block;padding:6px 12px;border-radius:4px;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;border:none;cursor:pointer;" onclick="window.print()">Cetak / Simpan PDF</button>
-        <a href="{{ route('peminjam.cek-status', ['nomor' => $permohonan->nomor_permohonan]) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#6c757d;color:#fff;">Kembali</a>
+        <a href="{{ route('peminjam.cek-status', array_merge(['nomor' => $permohonan->nomor_permohonan], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#6c757d;color:#fff;">Kembali</a>
     </div>
     @endif
 

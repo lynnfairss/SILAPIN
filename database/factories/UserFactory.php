@@ -30,7 +30,26 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => 'admin',
+            'status' => 'approved',
         ];
+    }
+
+    /**
+     * Akun yang belum disetujui Super Admin, dan karena itu tidak bisa login.
+     */
+    public function pending(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'pending',
+        ]);
+    }
+
+    public function superAdmin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'super_admin',
+        ]);
     }
 
     /**

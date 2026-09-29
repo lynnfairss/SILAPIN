@@ -40,17 +40,34 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
-        $this->ensureIsNotRateLimited();
-
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
-
+        if (! $this->authenticateSilently()) {
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
+    }
+
+    /**
+     * Verify the credentials with rate limiting, without logging the user in.
+     *
+     * The SILAPIN login flow needs to inspect the user (role, status, 2FA) before
+     * deciding whether to establish a session, so it cannot use Auth::attempt().
+     * Doing so would also silently bypass the throttle if Auth::validate() were
+     * called directly, which is what this method exists to prevent.
+     */
+    public function authenticateSilently(): bool
+    {
+        $this->ensureIsNotRateLimited();
+
+        if (! Auth::validate($this->only('email', 'password'))) {
+            RateLimiter::hit($this->throttleKey());
+
+            return false;
+        }
 
         RateLimiter::clear($this->throttleKey());
+
+        return true;
     }
 
     /**

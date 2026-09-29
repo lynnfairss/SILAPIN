@@ -3,20 +3,26 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Jalankan ulang karena versi lama memakai SQL MySQL mentah
+     * (ALTER TABLE ... MODIFY COLUMN) yang tidak dimengerti SQLite maupun
+     * PostgreSQL. phpunit.xml memakai sqlite :memory:, sehingga seluruh
+     * feature test gagal pada tahap migrasi sebelum satu pun test berjalan.
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE inventaris MODIFY COLUMN kategori_id BIGINT UNSIGNED NULL');
+        Schema::table('inventaris', function (Blueprint $table) {
+            $table->unsignedBigInteger('kategori_id')->nullable()->change();
+        });
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE inventaris MODIFY COLUMN kategori_id BIGINT UNSIGNED NOT NULL');
+        Schema::table('inventaris', function (Blueprint $table) {
+            $table->unsignedBigInteger('kategori_id')->nullable(false)->change();
+        });
     }
 };

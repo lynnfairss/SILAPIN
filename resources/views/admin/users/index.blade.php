@@ -23,6 +23,14 @@
 @endif
 
 <div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-users me-2"></i>Daftar Akun</h3>
+        <div class="card-tools">
+            <a href="{{ route('users.create') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus me-1"></i>Tambah Admin
+            </a>
+        </div>
+    </div>
     <div class="card-body">
 
         <table class="table table-bordered table-striped">

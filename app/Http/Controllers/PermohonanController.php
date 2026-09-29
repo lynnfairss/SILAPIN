@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\NomorPermohonan;
+use App\Http\Middleware\VerifyPemohonanAccess;
 use App\Models\Permohonan;
 use App\Models\Instansi;
 use App\Models\Inventaris;
@@ -31,25 +33,40 @@ class PermohonanController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'nama_peminjam'    => 'required|string|max:150',
-            'nik'              => 'required|string|max:30',
+            'nik'              => 'required|string|max:20',
             'jabatan'          => 'nullable|string|max:100',
-            'telepon'          => 'required|string|max:15|regex:/^[0-9]+$/',
-            'alamat'           => 'nullable|string|max:255',
+            'telepon'          => 'required|string|max:20|regex:/^[0-9]+$/',
+            'alamat'           => 'nullable|string|max:500',
             'tempat_tanggal_lahir' => 'nullable|string|max:120',
             'instansi_id'      => 'nullable|string|max:150',
             'nama_instansi_lain' => 'nullable|string|max:100',
             'tanggal_pinjam'   => 'required|date',
             'tanggal_kembali'  => 'required|date|after_or_equal:tanggal_pinjam',
-            'keperluan'        => 'required|string',
+            'keperluan'        => 'required|string|max:2000',
             'foto_ktp'         => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'surat_tugas'      => 'nullable|mimes:pdf,jpg,jpeg,png|max:2048',
-            'inventaris'       => 'required|array|min:1',
-            'inventaris.*'     => 'exists:inventaris,id',
+            'inventaris'       => 'required|array|min:1|max:50',
+            'inventaris.*'     => 'integer|distinct|exists:inventaris,id',
             'jumlah'           => 'required|array',
             'jumlah.*'         => 'integer|min:1',
         ]);
+
+        // instansi_id bisa berupa id yang sudah ada atau nama baru yang diketik
+        // peminjam (select2 tags), jadi tidak bisa diperiksa `exists` di aturan
+        // utama. Yang bentuk id-nya diperiksa terpisah di sini.
+        $instansiId = $validated['instansi_id'] ?? null;
+
+        if (filled($instansiId) && is_numeric($instansiId)) {
+            $request->validate([
+                'instansi_id' => ['exists:instansis,id'],
+            ]);
+        }
+
+        if ($galat = $this->periksaStok($validated)) {
+            return back()->withErrors($galat)->withInput();
+        }
 
         $fotoKtp = null;
         if ($request->hasFile('foto_ktp')) {
@@ -61,13 +78,13 @@ class PermohonanController extends Controller
             $suratTugas = $request->file('surat_tugas')->store('surat-tugas', 'public');
         }
 
-        $nomor = 'SP-' . strtoupper(date('dmy')) . '-' . strtoupper(substr(uniqid(), -6));
+        $nomor = NomorPermohonan::generate();
 
-        DB::transaction(function () use ($request, $nomor, $fotoKtp, $suratTugas) {
+        $permohonan = DB::transaction(function () use ($validated, $nomor, $fotoKtp, $suratTugas) {
             $instansiId = null;
             $namaInstansiLain = null;
 
-            $instansiVal = $request->input('instansi_id');
+            $instansiVal = $validated['instansi_id'] ?? null;
             if (!empty($instansiVal)) {
                 if (is_numeric($instansiVal)) {
                     $instansiId = (int) $instansiVal;
@@ -86,26 +103,25 @@ class PermohonanController extends Controller
                 'nomor_permohonan'   => $nomor,
                 'instansi_id'        => $instansiId,
                 'nama_instansi_lain' => $namaInstansiLain,
-                'nama_peminjam'      => $request->nama_peminjam,
-                'nik'                => $request->nik,
-                'jabatan'            => $request->jabatan,
-                'telepon'            => $request->telepon,
-                'alamat'             => $request->alamat,
-                'tempat_tanggal_lahir' => $request->tempat_tanggal_lahir,
-                'tanggal_pinjam'     => $request->tanggal_pinjam,
-                'tanggal_kembali'    => $request->tanggal_kembali,
-                'keperluan'          => $request->keperluan,
+                'nama_peminjam'      => $validated['nama_peminjam'],
+                'nik'                => $validated['nik'],
+                'jabatan'            => $validated['jabatan'] ?? null,
+                'telepon'            => $validated['telepon'],
+                'alamat'             => $validated['alamat'] ?? null,
+                'tempat_tanggal_lahir' => $validated['tempat_tanggal_lahir'] ?? null,
+                'tanggal_pinjam'     => $validated['tanggal_pinjam'],
+                'tanggal_kembali'    => $validated['tanggal_kembali'],
+                'keperluan'          => $validated['keperluan'],
                 'status'             => 'Menunggu',
                 'foto_ktp'           => $fotoKtp,
                 'surat_tugas'        => $suratTugas,
             ]);
 
-            foreach ($request->inventaris as $key => $inventarisId) {
-                $jml = $request->jumlah[$inventarisId] ?? 1;
+            foreach ($validated['inventaris'] as $inventarisId) {
                 DetailPermohonan::create([
                     'permohonan_id'  => $permohonan->id,
                     'inventaris_id'  => $inventarisId,
-                    'jumlah'         => $jml,
+                    'jumlah'         => (int) ($validated['jumlah'][$inventarisId] ?? 1),
                 ]);
             }
 
@@ -116,14 +132,34 @@ class PermohonanController extends Controller
                 'catatan'       => 'Permohonan diajukan oleh peminjam.',
                 'user_id'       => null,
             ]);
+
+            return $permohonan;
         });
 
-        $permohonan = Permohonan::with('detailPermohonan.inventaris', 'instansi')
-            ->where('nomor_permohonan', $nomor)
-            ->first();
+        return redirect()->route('peminjam.cek-status', [
+            'nomor' => $nomor,
+            'token' => $permohonan->token,
+        ])->with('success', 'Permohonan berhasil dikirim!');
+    }
 
-        return redirect()->route('peminjam.cek-status', ['nomor' => $nomor])
-            ->with('success', 'Permohonan berhasil dikirim!');
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, string>  pesan galat, atau array kosong bila aman
+     */
+    private function periksaStok(array $validated): array
+    {
+        $galat = [];
+
+        foreach ($validated['inventaris'] as $inventarisId) {
+            $jumlah = (int) ($validated['jumlah'][$inventarisId] ?? 1);
+            $stok = (int) Inventaris::where('id', $inventarisId)->value('stok');
+
+            if ($jumlah > $stok) {
+                $galat['jumlah.'.$inventarisId] = "Jumlah melebihi stok tersedia (tersisa {$stok}).";
+            }
+        }
+
+        return $galat;
     }
 
     public function cekStatus(Request $request)
@@ -139,7 +175,7 @@ class PermohonanController extends Controller
                 ], 404);
             }
 
-            return response()->json([
+            $data = [
                 'nomor'           => $permohonan->nomor_permohonan,
                 'nama'            => $permohonan->nama_peminjam,
                 'instansi'        => $permohonan->instansi?->nama_instansi ?? $permohonan->nama_instansi_lain ?? '-',
@@ -153,7 +189,23 @@ class PermohonanController extends Controller
                     'kode'   => $d->inventaris?->kode_barang ?? '',
                     'jumlah' => $d->jumlah,
                 ]),
-            ]);
+            ];
+
+            if (VerifyPemohonanAccess::bolehLihatPii($request, $permohonan)) {
+                $data['nik'] = $permohonan->nik;
+                $data['telepon'] = $permohonan->telepon;
+                $data['alamat'] = $permohonan->alamat;
+                $data['tempat_tanggal_lahir'] = $permohonan->tempat_tanggal_lahir;
+            } else {
+                // Kunci dikosongkan, tapi kunci responsnya tetap ada supaya
+                // bentuk data sama dan frontend tidak perlu menebak.
+                $data['nik'] = null;
+                $data['telepon'] = null;
+                $data['alamat'] = null;
+                $data['tempat_tanggal_lahir'] = null;
+            }
+
+            return response()->json($data);
         }
 
         $permohonan = null;
@@ -169,7 +221,9 @@ class PermohonanController extends Controller
             }
         }
 
-        return view('peminjam.cek-status', compact('permohonan'));
+        $piiTerbuka = VerifyPemohonanAccess::bolehLihatPii($request, $permohonan);
+
+        return view('peminjam.cek-status', compact('permohonan', 'piiTerbuka'));
     }
 
     public function downloadSurat(Permohonan $permohonan)

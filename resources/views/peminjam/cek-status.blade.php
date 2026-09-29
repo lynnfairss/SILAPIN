@@ -44,6 +44,9 @@
             <div class="card shadow-sm mb-4">
                 <div class="card-body p-4">
                     <form method="GET" action="{{ route('peminjam.cek-status') }}" id="formCek">
+                        @if(request('token'))
+                            <input type="hidden" name="token" value="{{ request('token') }}">
+                        @endif
                         <div class="input-group input-group-lg">
                             <span class="input-group-text bg-white"><i class="fas fa-file-invoice text-muted"></i></span>
                             <input type="text" name="nomor" class="form-control" placeholder="Masukkan nomor permohonan..." value="{{ request('nomor') }}" autocomplete="off" required>
@@ -176,9 +179,15 @@
                     </div>
                 </div>
                 <div class="card-footer bg-white text-end">
-                    <a href="{{ route('peminjam.download-surat', $permohonan->id) }}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-download me-1"></i>Download Surat
-                    </a>
+                    @if($piiTerbuka ?? false)
+                        <a href="{{ route('peminjam.download-surat', ['permohonan' => $permohonan->id, 'token' => request('token')]) }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-download me-1"></i>Download Surat
+                        </a>
+                    @else
+                        <span class="text-muted small">
+                            <i class="fas fa-lock me-1"></i>Surat hanya dapat diunduh dari perangkat yang Anda gunakan saat mengajukan.
+                        </span>
+                    @endif
                 </div>
             </div>
             @endif

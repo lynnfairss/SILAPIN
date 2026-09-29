@@ -390,7 +390,11 @@
                         </thead>
                         <tbody>
                             @forelse($recapInstansi as $i => $r)
-                            <tr style="cursor:pointer;" onclick="window.location='{{ route('dashboard.instansi.detail', $r['instansi_id']) }}'">
+                            {{-- Route detail hanya menerima Instansi yang benar-benar ada.
+                                 Permohonan tanpa instansi_id tidak punya halaman detail,
+                                 jadi barisnya tidak diklikable (route() tanpa parameter
+                                 akan melempar 500). --}}
+                            <tr @if(!empty($r['instansi_id'])) style="cursor:pointer;" onclick="window.location='{{ route('dashboard.instansi.detail', $r['instansi_id']) }}'" @endif>
                                 <td class="text-center">{{ $i + 1 }}</td>
                                 <td class="fw-bold text-primary">{{ $r['nama_instansi'] }}</td>
                                 <td class="text-center">

@@ -6,10 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Permohonan;
 use App\Models\PermohonanStatusLog;
 use App\Models\Instansi;
+use App\Services\NomorPermohonan;
+use App\Services\StokTidakCukup;
+use App\Services\StatusPermohonan;
+use App\Services\TransisiStatus;
+use App\Services\TransisiStatusTidakValid;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use App\Models\Inventaris;
 use App\Models\DetailPermohonan;
-use Illuminate\Support\Facades\DB;
 
 class PermohonanController extends Controller
 {
@@ -72,55 +79,31 @@ class PermohonanController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'instansi_id'      => 'required',
-            'nama_peminjam'    => 'required',
-            'nik'              => 'required',
-            'jabatan'          => 'nullable',
-            'telepon'          => 'required',
-            'tanggal_pinjam'   => 'required|date',
-            'tanggal_kembali'  => 'required|date',
-            'keperluan'        => 'required',
-            'inventaris'       => 'required|array|min:1',
-            'inventaris.*'     => 'exists:inventaris,id',
-            'jumlah'           => 'required|array',
-            'jumlah.*'         => 'integer|min:1',
-        ]);
+        $validated = $request->validate($this->rulesPermohonan());
 
-        foreach ($request->inventaris as $inventarisId) {
-            $item = Inventaris::find($inventarisId);
-            $qty = $request->jumlah[$inventarisId] ?? 1;
-            if (!$item || (int) $qty > (int) $item->stok) {
-                return back()->withErrors([
-                    'jumlah.' . $inventarisId => "Jumlah melebihi stok tersedia ({$item->nama_barang} = {$item->stok}).",
-                ])->withInput();
-            }
+        if ($galat = $this->periksaStok($validated)) {
+            return back()->withErrors($galat)->withInput();
         }
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($validated) {
             $permohonan = Permohonan::create([
-                'instansi_id'      => $request->instansi_id,
-                'nama_peminjam'    => $request->nama_peminjam,
-                'nik'              => $request->nik,
-                'jabatan'          => $request->jabatan,
-                'telepon'          => $request->telepon,
-                'tanggal_pinjam'   => $request->tanggal_pinjam,
-                'tanggal_kembali'  => $request->tanggal_kembali,
-                'keperluan'        => $request->keperluan,
-                'status'           => 'Menunggu',
+                'nomor_permohonan' => NomorPermohonan::generate(),
+                'instansi_id'      => $validated['instansi_id'],
+                'nama_peminjam'    => $validated['nama_peminjam'],
+                'nik'              => $validated['nik'],
+                'jabatan'          => $validated['jabatan'] ?? null,
+                'telepon'          => $validated['telepon'],
+                'tanggal_pinjam'   => $validated['tanggal_pinjam'],
+                'tanggal_kembali'  => $validated['tanggal_kembali'],
+                'keperluan'        => $validated['keperluan'],
+                'status'           => TransisiStatus::MENUNGGU,
             ]);
 
-            foreach ($request->inventaris as $inventarisId) {
-                DetailPermohonan::create([
-                    'permohonan_id'  => $permohonan->id,
-                    'inventaris_id'  => $inventarisId,
-                    'jumlah'         => $request->jumlah[$inventarisId] ?? 1,
-                ]);
-            }
+            $this->simpanDetail($permohonan, $validated);
 
             $permohonan->statusLogs()->create([
                 'status_lama' => null,
-                'status_baru' => 'Menunggu',
+                'status_baru' => TransisiStatus::MENUNGGU,
                 'catatan'     => 'Permohonan dibuat oleh admin.',
                 'user_id'     => auth()->id(),
             ]);
@@ -128,6 +111,71 @@ class PermohonanController extends Controller
 
         return redirect()->route('permohonan.index')
             ->with('success', 'Permohonan berhasil ditambahkan.');
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    private function rulesPermohonan(): array
+    {
+        return [
+            'instansi_id'      => ['required', 'integer', 'exists:instansis,id'],
+            'nama_peminjam'    => ['required', 'string', 'max:150'],
+            'nik'              => ['required', 'string', 'max:20'],
+            'jabatan'          => ['nullable', 'string', 'max:100'],
+            'telepon'          => ['required', 'string', 'max:20'],
+            'tanggal_pinjam'   => ['required', 'date'],
+            'tanggal_kembali'  => ['required', 'date', 'after_or_equal:tanggal_pinjam'],
+            'keperluan'        => ['required', 'string', 'max:2000'],
+            'inventaris'       => ['required', 'array', 'min:1', 'max:50'],
+            'inventaris.*'     => ['integer', 'exists:inventaris,id', 'distinct'],
+            'jumlah'           => ['required', 'array'],
+            'jumlah.*'         => ['integer', 'min:1'],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, string>  pesan galat, atau array kosong bila aman
+     */
+    private function periksaStok(array $validated): array
+    {
+        $galat = [];
+
+        foreach ($validated['inventaris'] as $inventarisId) {
+            $jumlah = (int) ($validated['jumlah'][$inventarisId] ?? 1);
+            $barang = Inventaris::find($inventarisId);
+
+            if (! $barang) {
+                $galat['inventaris'] = 'Barang yang dipilih tidak ditemukan.';
+
+                continue;
+            }
+
+            if ($jumlah > (int) $barang->stok) {
+                $galat['jumlah.'.$inventarisId] = sprintf(
+                    'Jumlah melebihi stok tersedia (%s = %d).',
+                    $barang->nama_barang,
+                    (int) $barang->stok,
+                );
+            }
+        }
+
+        return $galat;
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function simpanDetail(Permohonan $permohonan, array $validated): void
+    {
+        foreach ($validated['inventaris'] as $inventarisId) {
+            DetailPermohonan::create([
+                'permohonan_id' => $permohonan->id,
+                'inventaris_id' => $inventarisId,
+                'jumlah'        => (int) ($validated['jumlah'][$inventarisId] ?? 1),
+            ]);
+        }
     }
 
     public function edit(Permohonan $permohonan)
@@ -141,58 +189,36 @@ class PermohonanController extends Controller
 
     public function update(Request $request, Permohonan $permohonan)
     {
-        $request->validate([
-            'instansi_id'      => 'required',
-            'nama_peminjam'    => 'required',
-            'nik'              => 'required',
-            'jabatan'          => 'nullable',
-            'telepon'          => 'required',
-            'tanggal_pinjam'   => 'required|date',
-            'tanggal_kembali'  => 'required|date',
-            'keperluan'        => 'required',
-            'inventaris'       => 'required|array|min:1',
-            'inventaris.*'     => 'exists:inventaris,id',
-            'jumlah'           => 'required|array',
-            'jumlah.*'         => 'integer|min:1',
-        ]);
+        $validated = $request->validate($this->rulesPermohonan());
 
-        foreach ($request->inventaris as $inventarisId) {
-            $item = Inventaris::find($inventarisId);
-            $qty = $request->jumlah[$inventarisId] ?? 1;
-            if (!$item || (int) $qty > (int) $item->stok) {
-                return back()->withErrors([
-                    'jumlah.' . $inventarisId => "Jumlah melebihi stok tersedia ({$item->nama_barang} = {$item->stok}).",
-                ])->withInput();
-            }
+        if (in_array($permohonan->status, TransisiStatus::SEDANG_DIPAKAI, true)) {
+            return back()->with('error', 'Permohonan yang barangnya sudah keluar tidak dapat diedit. Gunakan menu Pengembalian.');
         }
 
-        $statusLama = $permohonan->status;
+        if ($galat = $this->periksaStok($validated)) {
+            return back()->withErrors($galat)->withInput();
+        }
 
-        DB::transaction(function () use ($request, $permohonan, $statusLama) {
+        DB::transaction(function () use ($validated, $permohonan) {
             $permohonan->update([
-                'instansi_id'      => $request->instansi_id,
-                'nama_peminjam'    => $request->nama_peminjam,
-                'nik'              => $request->nik,
-                'jabatan'          => $request->jabatan,
-                'telepon'          => $request->telepon,
-                'tanggal_pinjam'   => $request->tanggal_pinjam,
-                'tanggal_kembali'  => $request->tanggal_kembali,
-                'keperluan'        => $request->keperluan,
+                'instansi_id'      => $validated['instansi_id'],
+                'nama_peminjam'    => $validated['nama_peminjam'],
+                'nik'              => $validated['nik'],
+                'jabatan'          => $validated['jabatan'] ?? null,
+                'telepon'          => $validated['telepon'],
+                'tanggal_pinjam'   => $validated['tanggal_pinjam'],
+                'tanggal_kembali'  => $validated['tanggal_kembali'],
+                'keperluan'        => $validated['keperluan'],
             ]);
 
             $permohonan->detailPermohonan()->delete();
-            foreach ($request->inventaris as $inventarisId) {
-                DetailPermohonan::create([
-                    'permohonan_id'  => $permohonan->id,
-                    'inventaris_id'  => $inventarisId,
-                    'jumlah'         => $request->jumlah[$inventarisId] ?? 1,
-                ]);
-            }
+
+            $this->simpanDetail($permohonan, $validated);
 
             PermohonanStatusLog::create([
                 'permohonan_id' => $permohonan->id,
-                'status_lama'   => $statusLama,
-                'status_baru'   => $statusLama,
+                'status_lama'   => $permohonan->status,
+                'status_baru'   => $permohonan->status,
                 'catatan'       => 'Surat / permohonan diperbarui oleh admin.',
                 'user_id'       => auth()->id(),
             ]);
@@ -202,43 +228,49 @@ class PermohonanController extends Controller
             ->with('success', 'Surat / permohonan berhasil diubah.');
     }
 
-    public function updateStatus(Request $request, Permohonan $permohonan)
+    public function updateStatus(Request $request, Permohonan $permohonan, StatusPermohonan $statusPermohonan)
     {
         $request->validate([
-            'status' => 'required|in:Disetujui,Ditolak,Dikembalikan',
-            'catatan_admin' => $request->status === 'Ditolak' ? 'required|string' : 'nullable|string',
+            'status' => ['required', Rule::in(TransisiStatus::SEMUA)],
+            'catatan_admin' => [
+                Rule::requiredIf($request->input('status') === TransisiStatus::DITOLAK),
+                'nullable', 'string', 'max:1000',
+            ],
         ]);
 
-        $statusLama = $permohonan->status;
+        $statusBaru = $request->string('status')->toString();
 
-        DB::transaction(function () use ($request, $permohonan, $statusLama) {
-            $permohonan->update([
-                'status' => $request->status,
-                'catatan_admin' => $request->catatan_admin,
-            ]);
+        try {
+            $statusPermohonan->ubah(
+                $permohonan,
+                $statusBaru,
+                ['catatan_admin' => $request->input('catatan_admin')],
+                $request->input('catatan_admin'),
+            );
+        } catch (TransisiStatusTidakValid $e) {
+            return redirect()->route('permohonan.index')->with('error', $e->getMessage());
+        } catch (StokTidakCukup $e) {
+            return redirect()->route('permohonan.index')->with('error', $e->getMessage());
+        }
 
-            PermohonanStatusLog::create([
-                'permohonan_id' => $permohonan->id,
-                'status_lama'   => $statusLama,
-                'status_baru'   => $request->status,
-                'catatan'       => $request->catatan_admin,
-                'user_id'       => auth()->id(),
-            ]);
-        });
+        $pesan = match ($statusBaru) {
+            TransisiStatus::DISETUJUI => 'Permohonan berhasil disetujui. Stok barang telah dikurangi.',
+            TransisiStatus::DITOLAK => 'Permohonan berhasil ditolak.',
+            TransisiStatus::DIKEMBALIKAN => 'Barang berhasil dikembalikan dan stok telah bertambah.',
+            default => 'Status permohonan diperbarui.',
+        };
 
-        $pesan = $request->status === 'Disetujui'
-            ? 'Permohonan berhasil disetujui.'
-            : ($request->status === 'Ditolak' ? 'Permohonan berhasil ditolak.' : 'Permohonan berhasil dikembalikan.');
-
-        return redirect()->route('permohonan.index')
-            ->with('success', $pesan);
+        return redirect()->route('permohonan.index')->with('success', $pesan);
     }
 
     public function cekNomor(Request $request)
     {
-        $nomor = $request->nomor_permohonan;
+        $request->validate([
+            'nomor_permohonan' => ['required', 'string', 'max:50'],
+        ]);
+
         $permohonan = Permohonan::with('detailPermohonan.inventaris')
-            ->where('nomor_permohonan', $nomor)
+            ->where('nomor_permohonan', $request->string('nomor_permohonan')->toString())
             ->first();
 
         if (!$permohonan) {
@@ -260,7 +292,27 @@ class PermohonanController extends Controller
 
     public function destroy(Permohonan $permohonan)
     {
-        $permohonan->delete();
+        if (in_array($permohonan->status, TransisiStatus::SEDANG_DIPAKAI, true)) {
+            return redirect()->route('permohonan.index')
+                ->with('error', 'Barang pada permohonan ini masih dipinjam. Proses pengembalian terlebih dahulu.');
+        }
+
+        DB::transaction(function () use ($permohonan) {
+            // Tidak ada stok yang perlu dilepas: status Disetujui/Dipinjam sudah
+            // ditolak di atas, dan yang sudah Dikembalikan stoknya sudah kembali
+            // ke inventaris saat proses pengembalian.
+            $berkas = array_values(array_filter([
+                $permohonan->foto_ktp,
+                $permohonan->surat_tugas,
+                $permohonan->bukti_pengembalian,
+            ]));
+
+            if ($berkas !== []) {
+                Storage::disk('public')->delete($berkas);
+            }
+
+            $permohonan->delete();
+        });
 
         return redirect()->route('permohonan.index')
             ->with('success', 'Permohonan berhasil dihapus.');

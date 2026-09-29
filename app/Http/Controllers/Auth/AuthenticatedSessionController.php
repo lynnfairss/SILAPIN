@@ -100,13 +100,21 @@ class AuthenticatedSessionController extends Controller
 
     private function verifyCredentials(LoginRequest $request): User
     {
-        $credentials = $request->only('email', 'password');
-
-        if (! Auth::validate($credentials)) {
+        if (! $request->authenticateSilently()) {
             throw ValidationException::withMessages(['email' => trans('auth.failed')]);
         }
 
-        return User::where('email', $request->email)->firstOrFail();
+        $user = User::where('email', $request->string('email')->toString())->firstOrFail();
+
+        if ($user->status !== 'approved') {
+            throw ValidationException::withMessages([
+                'email' => $user->status === 'rejected'
+                    ? 'Akun ini telah ditolak. Hubungi Super Admin.'
+                    : 'Akun ini belum disetujui. Hubungi Super Admin untuk mengaktifkan akses.',
+            ]);
+        }
+
+        return $user;
     }
 
     private function handleTwoFactorOrLogin(LoginRequest $request, User $user): RedirectResponse
