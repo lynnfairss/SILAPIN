@@ -12,6 +12,7 @@
             body { padding: 25mm; }
         }
     </style>
+    <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
 </head>
 <body>
     @php

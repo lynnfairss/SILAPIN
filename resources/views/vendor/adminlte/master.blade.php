@@ -27,6 +27,9 @@
         }
     </style>
 
+    {{-- Client-Side Protection --}}
+    <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+
     {{-- Custom stylesheets (pre AdminLTE) --}}
     @yield('adminlte_css_pre')
 

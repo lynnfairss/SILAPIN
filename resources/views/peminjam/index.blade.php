@@ -10,6 +10,7 @@
     <link href="{{ asset('css/peminjam.css') }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
 </head>
 <body>
 
