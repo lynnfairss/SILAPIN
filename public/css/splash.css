@@ -1,0 +1,82 @@
+/* SILAPIN intro logo (zoom out) — halaman landing ("/") */
+
+.silapin-splash {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 40%, #ffffff 0%, #eef4fb 45%, #dbe7f7 100%);
+    opacity: 1;
+    transition: opacity .45s ease;
+}
+
+.silapin-splash.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.silapin-splash-skip #silapinSplash {
+    display: none !important;
+}
+
+html.silapin-splash-lock,
+html.silapin-splash-lock body {
+    overflow: hidden !important;
+}
+
+.silapin-splash__box {
+    text-align: center;
+    padding: 24px;
+    max-width: 88vw;
+}
+
+.silapin-splash__logo {
+    display: block;
+    width: min(52vw, 260px);
+    height: auto;
+    margin: 0 auto;
+    animation: silapinSplashZoomOut 1.15s cubic-bezier(.16, .84, .3, 1) both;
+    filter: drop-shadow(0 18px 40px rgba(15, 52, 96, .18));
+}
+
+.silapin-splash__fallback {
+    display: none;
+    font-size: clamp(2rem, 8vw, 3rem);
+    font-weight: 800;
+    letter-spacing: .14em;
+    color: #0f3460;
+    animation: silapinSplashZoomOut 1.15s cubic-bezier(.16, .84, .3, 1) both;
+}
+
+.silapin-splash--no-logo .silapin-splash__logo {
+    display: none;
+}
+
+.silapin-splash--no-logo .silapin-splash__fallback {
+    display: block;
+}
+
+@keyframes silapinSplashZoomOut {
+    from {
+        opacity: 0;
+        transform: scale(1.55);
+    }
+    60% {
+        opacity: 1;
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .silapin-splash,
+    .silapin-splash__logo,
+    .silapin-splash__fallback {
+        animation: none !important;
+        transition: none !important;
+    }
+}

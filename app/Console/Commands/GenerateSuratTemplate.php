@@ -25,117 +25,103 @@ class GenerateSuratTemplate extends Command
             'marginLeft' => 1440,
         ]);
 
-        $fontTNR = ['name' => 'Times New Roman', 'size' => 12];
-        $singleLine = ['spacing' => ['after' => 120, 'line' => 300]];
-        $right = ['alignment' => Jc::RIGHT];
-        $justify = ['alignment' => Jc::BOTH];
-        $center = ['alignment' => Jc::CENTER];
+        $fTNR       = ['name' => 'Times New Roman', 'size' => 12];
+        $fArial     = ['name' => 'Arial', 'size' => 10];
+        $fArial9    = ['name' => 'Arial', 'size' => 9];
+        $fArialNum    = ['name' => 'Arial', 'size' => 5.5];
 
-        $noBorderTable = [
-            'borderTop' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderBottom' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderLeft' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderRight' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-        ];
-        $noBorderCell = [
-            'borderTop' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderBottom' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderLeft' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
-            'borderRight' => ['val' => 'none', 'sz' => 0, 'color' => 'FFFFFF'],
+        $para = ['lineHeight' => 1.5, 'spaceAfter' => 0];
+        $pRight   = $para + ['alignment' => Jc::RIGHT];
+        $pJustify = $para + ['alignment' => Jc::BOTH, 'indentation' => ['firstLine' => 480]];
+        $pFirst   = $para + ['indentation' => ['firstLine' => 480]];
+        $pKop     = ['lineHeight' => 1.25, 'spaceAfter' => 0, 'alignment' => Jc::CENTER];
+        $pList    = ['lineHeight' => 1.5, 'spaceAfter' => 0];
+        $pListC   = $pList + ['alignment' => Jc::CENTER];
+        $pTtd     = ['lineHeight' => 1.2, 'spaceAfter' => 0, 'alignment' => Jc::CENTER];
+        $pTtdLabel = ['lineHeight' => 1.5, 'spaceAfter' => 0, 'alignment' => Jc::CENTER];
+        $pQr      = ['lineHeight' => 1.2, 'spaceAfter' => 0, 'alignment' => Jc::RIGHT];
+        // Nomor di bawah QR: kotak = lebar QR (1191 twips dari 3159) → teks persis di bawah barcode.
+        $pNomor   = ['lineHeight' => 1.2, 'spaceAfter' => 0, 'alignment' => Jc::CENTER,
+                     'indentation' => ['left' => 3159 - 1191]];
+
+        $gapFont = fn (int $pt) => ['name' => 'Times New Roman', 'size' => $pt];
+        $gapPara = ['lineHeight' => 1, 'spaceAfter' => 0];
+
+        $kopBorder = [
+            'borderBottomStyle' => 'double',
+            'borderBottomSize' => 12,
+            'borderBottomColor' => '000000',
         ];
 
-        // === HEADER ===
-        $headerTable = $section->addTable(['width' => 10000, 'layout' => 'fixed']);
+        // Lebar konten A4 dgn margin 1440 twips = 11906 - 2880 = 9026 twips.
+        // Tiga sel simetris (16% / 68% / 16%) supaya pusat teks kop = pusat halaman.
+        $headerTable = $section->addTable(['width' => 9026, 'layout' => 'fixed']);
         $headerTable->addRow(1700);
 
-        $logoCell = $headerTable->addCell(1600, [
-            'borderBottom' => ['val' => 'double', 'sz' => 12, 'color' => '000000'],
-            'valign' => 'center',
-        ]);
-        // Logo placeholder - will be replaced by code via setImageValue
-        $logoCell->addText('${LOGO}', ['name' => 'Arial', 'size' => 8, 'color' => '999999']);
+        $logoCell = $headerTable->addCell(1219, $kopBorder + ['valign' => 'center']);
+        $logoCell->addText('${LOGO}', ['name' => 'Arial', 'size' => 8, 'color' => '999999'], $pKop);
 
-        $textCellWidth = 6800;
-        $textCell = $headerTable->addCell($textCellWidth, [
-            'borderBottom' => ['val' => 'double', 'sz' => 12, 'color' => '000000'],
-            'valign' => 'center',
-        ]);
-        $textCell->addText('PEMERINTAH KABUPATEN PONOROGO', [
-            'name' => 'Arial', 'size' => 13, 'bold' => true,
-            'alignment' => Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 260],
-        ]);
-        $textCell->addText('DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK', [
-            'name' => 'Arial', 'size' => 13, 'bold' => true,
-            'alignment' => Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 260],
-        ]);
-        $textCell->addText('Jl. Ir. Juanda Nomor 198 Telp. (0352) 3592999 Kode Pos 63418', [
-            'name' => 'Arial', 'size' => 10,
-            'alignment' => Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240],
-        ]);
-        $textCell->addText('Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id', [
-            'name' => 'Arial', 'size' => 10, 'italic' => true,
-            'alignment' => Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240],
-        ]);
-        $textCell->addText('P O N O R O G O', [
-            'name' => 'Arial', 'size' => 14, 'bold' => true,
-            'alignment' => Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 260],
-        ]);
+        $textCell = $headerTable->addCell(6588, $kopBorder + ['valign' => 'center']);
+        $textCell->addText('PEMERINTAH KABUPATEN PONOROGO', ['name' => 'Arial', 'size' => 12, 'bold' => true], $pKop);
+        $textCell->addText('DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK', ['name' => 'Arial', 'size' => 12, 'bold' => true], $pKop);
+        $textCell->addText('Jl. Ir. Juanda Nomor 198 Telp. (0352) 3592999 Kode Pos 63418', ['name' => 'Arial', 'size' => 10], $pKop);
+        $textCell->addText('Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id', ['name' => 'Arial', 'size' => 10, 'italic' => true], $pKop);
+        $textCell->addText('P O N O R O G O', ['name' => 'Arial', 'size' => 14, 'bold' => true], $pKop);
 
-        $section->addText('', null, ['spacing' => ['after' => 160]]);
+        $headerTable->addCell(1219, $kopBorder + ['valign' => 'center']);
 
-        // === HAL / TANGGAL ===
-        $infoTable = $section->addTable(array_merge(['width' => 10000, 'layout' => 'fixed'], $noBorderTable));
+        $section->addText('', $gapFont(8), $gapPara);
+
+        $infoTable = $section->addTable(['width' => 9026, 'layout' => 'fixed']);
         $infoTable->addRow();
-        $infoTable->addCell(6500, $noBorderCell)->addText('Hal        : ${hal}', $fontTNR + $singleLine);
-        $infoTable->addCell(3500, $noBorderCell)->addText('${tanggal}', $fontTNR + $right + $singleLine);
+        $infoTable->addCell(5867)->addText('Hal        : ${hal}', $fTNR, $pList);
+        $infoRight = $infoTable->addCell(3159);
+        $infoRight->addText('${tanggal}', $fTNR, $pRight);
+        $infoRight->addText('${QR}', $fArial9, $pQr);
+        $infoRight->addText('${nomor}', $fArialNum, $pNomor);
 
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
+        $section->addText('', $gapFont(4), $gapPara);
 
-        // === KEPADA ===
-        $section->addText('Kepada', $fontTNR, $singleLine);
-        $section->addText('${kepada_yth}', $fontTNR, $singleLine);
-        $section->addText('${kepada_kab}', $fontTNR, $singleLine);
-        $section->addText('${kepada_tempat}', $fontTNR, $singleLine);
+        $section->addText('Kepada', $fTNR, $pList);
+        $section->addText('${kepada_yth}', $fTNR, $pList);
+        $section->addText('${kepada_kab}', $fTNR, $pList);
+        $section->addText('${kepada_tempat}', $fTNR, $pList);
 
-        $section->addText('', null, ['spacing' => ['after' => 120]]);
+        $section->addText('', $gapFont(6), $gapPara);
 
-        // === PEMBUKA ===
-        $section->addText('${pembuka}', $fontTNR, $singleLine);
+        $section->addText('${pembuka}', $fTNR, $pList);
 
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
+        $section->addText('', $gapFont(4), $gapPara);
 
-        // === SAYA YANG BERTANDA TANGAN ===
-        $section->addText('${saya_yang}', $fontTNR, $singleLine + ['indentation' => ['left' => 480]]);
+        $section->addText('${saya_yang}', $fTNR, $pFirst);
 
-        // === IDENTITAS TABLE ===
-        $identitasTable = $section->addTable(array_merge(['width' => 8000, 'layout' => 'fixed'], $noBorderTable));
+        $identitasTable = $section->addTable(['width' => 8000, 'layout' => 'fixed']);
+        $pIdentitas = $pList + ['indentation' => ['left' => 480]];
         $identitasTable->addRow();
-        $identitasTable->addCell(2000, $noBorderCell + ['indentation' => ['left' => 480]])->addText('Nama', $fontTNR + $singleLine);
-        $identitasTable->addCell(400, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(5600, $noBorderCell)->addText('${nama_peminjam}', $fontTNR + $singleLine);
+        $identitasTable->addCell(2000)->addText('Nama', $fTNR, $pIdentitas);
+        $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
+        $identitasTable->addCell(5600)->addText('${nama_peminjam}', $fTNR, $pIdentitas);
         $identitasTable->addRow();
-        $identitasTable->addCell(2000, $noBorderCell + ['indentation' => ['left' => 480]])->addText('NRP', $fontTNR + $singleLine);
-        $identitasTable->addCell(400, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(5600, $noBorderCell)->addText('${nrp}', $fontTNR + $singleLine);
+        $identitasTable->addCell(2000)->addText('NRP', $fTNR, $pIdentitas);
+        $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
+        $identitasTable->addCell(5600)->addText('${nrp}', $fTNR, $pIdentitas);
         $identitasTable->addRow();
-        $identitasTable->addCell(2000, $noBorderCell + ['indentation' => ['left' => 480]])->addText('Pangkat', $fontTNR + $singleLine);
-        $identitasTable->addCell(400, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(5600, $noBorderCell)->addText('${pangkat}', $fontTNR + $singleLine);
+        $identitasTable->addCell(2000)->addText('Pangkat', $fTNR, $pIdentitas);
+        $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
+        $identitasTable->addCell(5600)->addText('${pangkat}', $fTNR, $pIdentitas);
         $identitasTable->addRow();
-        $identitasTable->addCell(2000, $noBorderCell + ['indentation' => ['left' => 480]])->addText('No. Telepon/HP', $fontTNR + $singleLine);
-        $identitasTable->addCell(400, $noBorderCell)->addText(':', $fontTNR + $singleLine);
-        $identitasTable->addCell(5600, $noBorderCell)->addText('${telepon}', $fontTNR + $singleLine);
+        $identitasTable->addCell(2000)->addText('No. Telepon/HP', $fTNR, $pIdentitas);
+        $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
+        $identitasTable->addCell(5600)->addText('${telepon}', $fTNR, $pIdentitas);
 
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
+        $section->addText('', $gapFont(4), $gapPara);
 
-        // === BERMAKSUD ===
-        $section->addText('${bermaksud}', $fontTNR, $singleLine);
+        $section->addText('${bermaksud}', $fTNR, $pList);
 
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
+        $section->addText('', $gapFont(4), $gapPara);
 
-        // === ITEM TABLE ===
         $phpWord->addTableStyle('ItemTable', [
-            'borderSize' => 4,
+            'borderSize' => 8,
             'borderColor' => '000000',
             'cellMarginTop' => 0,
             'cellMarginBottom' => 0,
@@ -145,87 +131,77 @@ class GenerateSuratTemplate extends Command
         $itemTable = $section->addTable('ItemTable');
 
         $itemTable->addRow();
-        $itemTable->addCell(532, ['shading' => ['fill' => 'D9D9D9']])->addText('No', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => Jc::CENTER]);
-        $itemTable->addCell(3689, ['shading' => ['fill' => 'D9D9D9']])->addText('Nama alat', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => Jc::CENTER]);
-        $itemTable->addCell(992, ['shading' => ['fill' => 'D9D9D9']])->addText('Jumlah', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => Jc::CENTER]);
-        $itemTable->addCell(3083, ['shading' => ['fill' => 'D9D9D9']])->addText('Keterangan', ['bold' => true, 'name' => 'Arial', 'size' => 10, 'alignment' => Jc::CENTER]);
+        $itemTable->addCell(532, ['shading' => ['fill' => 'D9D9D9']])->addText('No', $fArial + ['bold' => true], $pListC);
+        $itemTable->addCell(3689, ['shading' => ['fill' => 'D9D9D9']])->addText('Nama alat', $fArial + ['bold' => true], $pListC);
+        $itemTable->addCell(992, ['shading' => ['fill' => 'D9D9D9']])->addText('Jumlah', $fArial + ['bold' => true], $pListC);
+        $itemTable->addCell(3083, ['shading' => ['fill' => 'D9D9D9']])->addText('Keterangan', $fArial + ['bold' => true], $pListC);
 
-        // Single item row with placeholders (will be cloned per item)
         $itemTable->addRow();
-        $itemTable->addCell(532)->addText('${item_no}', ['name' => 'Arial', 'size' => 10, 'alignment' => Jc::CENTER]);
-        $itemTable->addCell(3689)->addText('${item_nama}', ['name' => 'Arial', 'size' => 10]);
-        $itemTable->addCell(992)->addText('${item_jumlah}', ['name' => 'Arial', 'size' => 10, 'alignment' => Jc::CENTER]);
-        $itemTable->addCell(3083)->addText('${item_keterangan}', ['name' => 'Arial', 'size' => 10, 'alignment' => Jc::CENTER]);
+        $itemTable->addCell(532)->addText('${item_no}', $fArial, $pListC);
+        $itemTable->addCell(3689)->addText('${item_nama}', $fArial, $pList);
+        $itemTable->addCell(992)->addText('${item_jumlah}', $fArial, $pListC);
+        $itemTable->addCell(3083)->addText('${item_keterangan}', $fArial, $pListC);
 
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
+        $section->addText('', $gapFont(4), $gapPara);
 
-        // === UNTUK KEPERLUAN ===
-        $pKeperluan = $section->addTextRun($justify + ['indentation' => ['firstLine' => 480]] + $singleLine);
-        $pKeperluan->addText('untuk keperluan ', $fontTNR);
-        $pKeperluan->addText('${keperluan}', $fontTNR + ['bold' => true]);
-        $pKeperluan->addText('.', $fontTNR);
+        $pKeperluan = $section->addTextRun($pJustify);
+        $pKeperluan->addText('untuk keperluan ', $fTNR);
+        $pKeperluan->addText('${keperluan}', $fTNR + ['bold' => true]);
+        $pKeperluan->addText('.', $fTNR);
 
-        // === ISI ===
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
-        $section->addText('${isi}', $fontTNR, $justify + ['indentation' => ['firstLine' => 480]] + $singleLine);
+        $section->addText('', $gapFont(2), $gapPara);
 
-        // === RENCANA ===
-        $section->addText('${rencana}', $fontTNR, $justify + ['indentation' => ['firstLine' => 480]] + $singleLine);
+        $section->addText('${isi}', $fTNR, $pJustify);
 
-        // === JADWAL TABLE ===
-        $jadwalTable = $section->addTable(array_merge(['width' => 8000, 'layout' => 'fixed'], $noBorderTable));
+        $section->addText('${rencana}', $fTNR, $pJustify);
+
+        $jadwalTable = $section->addTable(['width' => 8000, 'layout' => 'fixed']);
         $jadwalTable->addRow();
-        $jadwalTable->addCell(720, $noBorderCell);
-        $jadwalTable->addCell(1400, $noBorderCell)->addText('${hari_label}', $fontTNR + $singleLine);
-        $jadwalTable->addCell(300, $noBorderCell);
-        $jadwalTable->addCell(5500, $noBorderCell)->addText(':  ${hari}', $fontTNR + $singleLine);
+        $jadwalTable->addCell(720);
+        $jadwalTable->addCell(1400)->addText('${hari_label}', $fTNR, $pList);
+        $jadwalTable->addCell(300);
+        $jadwalTable->addCell(5500)->addText(':  ${hari}', $fTNR, $pList);
         $jadwalTable->addRow();
-        $jadwalTable->addCell(720, $noBorderCell);
-        $jadwalTable->addCell(1400, $noBorderCell)->addText('${tanggal_label}', $fontTNR + $singleLine);
-        $jadwalTable->addCell(300, $noBorderCell);
-        $jadwalTable->addCell(5500, $noBorderCell)->addText(':  ${tanggal_pinjam}', $fontTNR + $singleLine);
+        $jadwalTable->addCell(720);
+        $jadwalTable->addCell(1400)->addText('${tanggal_label}', $fTNR, $pList);
+        $jadwalTable->addCell(300);
+        $jadwalTable->addCell(5500)->addText(':  ${tanggal_pinjam}', $fTNR, $pList);
         $jadwalTable->addRow();
-        $jadwalTable->addCell(720, $noBorderCell);
-        $jadwalTable->addCell(1400, $noBorderCell)->addText('${tempat_label}', $fontTNR + $singleLine);
-        $jadwalTable->addCell(300, $noBorderCell);
-        $jadwalTable->addCell(5500, $noBorderCell)->addText(':  ${instansi}', $fontTNR + $singleLine);
+        $jadwalTable->addCell(720);
+        $jadwalTable->addCell(1400)->addText('${tempat_label}', $fTNR, $pList);
+        $jadwalTable->addCell(300);
+        $jadwalTable->addCell(5500)->addText(':  ${instansi}', $fTNR, $pList);
 
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
+        $section->addText('', $gapFont(4), $gapPara);
 
-        // === PENUTUP + TERIMA KASIH ===
-        $pDemikian = $section->addTextRun($justify + $singleLine);
-        $pDemikian->addText('${penutup} ', $fontTNR);
-        $pDemikian->addText('${terima_kasih}', $fontTNR);
+        $pDemikian = $section->addTextRun($pJustify);
+        $pDemikian->addText('${penutup} ', $fTNR);
+        $pDemikian->addText('${terima_kasih}', $fTNR);
 
-        $section->addText('', null, ['spacing' => ['after' => 80]]);
+        $section->addText('', $gapFont(2), $gapPara);
 
-        // === TTD TABLE (4-column) ===
-        $ttdTable = $section->addTable(array_merge(['width' => 10000, 'layout' => 'fixed'], $noBorderTable));
+        // Dua kolom simetris (50/50) supaya center kolom = 25% dan 75% halaman.
+        $ttdTable = $section->addTable(['width' => 9026, 'layout' => 'fixed']);
         $ttdTable->addRow();
-        $ttdTable->addCell(500, $noBorderCell);
-        $ttdTable->addCell(4500, $noBorderCell)->addText('${ttd_kiri_label}', $fontTNR + $singleLine);
-        $ttdTable->addCell(500, $noBorderCell);
-        $ttdTable->addCell(4500, $noBorderCell)->addText('${ttd_kanan_label}', $fontTNR + $singleLine);
+        $ttdTable->addCell(4513)->addText('${ttd_kiri_label}', $fTNR, $pTtdLabel);
+        $ttdTable->addCell(4513)->addText('${ttd_kanan_label}', $fTNR, $pTtdLabel);
 
         $ttdTable->addRow();
-        $ttdTable->addCell(500, $noBorderCell);
-        $leftCell = $ttdTable->addCell(4500, $noBorderCell);
+        $leftCell = $ttdTable->addCell(4513);
         for ($i = 0; $i < 6; $i++) {
             $leftCell->addTextBreak();
         }
-        $centerStyle = ['name' => 'Times New Roman', 'size' => 12, 'alignment' => Jc::CENTER, 'spacing' => ['after' => 0, 'line' => 240]];
-        $leftCell->addText('${ttd_kiri_nama}', $centerStyle + ['bold' => true]);
-        $leftCell->addText('NRP. ${ttd_kiri_nrp}', $centerStyle);
-        $leftCell->addText('${ttd_kiri_jabatan}', $centerStyle);
+        $leftCell->addText('${ttd_kiri_nama}', $fTNR + ['bold' => true], $pTtd);
+        $leftCell->addText('NRP. ${ttd_kiri_nrp}', $fTNR, $pTtd);
+        $leftCell->addText('${ttd_kiri_jabatan}', $fTNR, $pTtd);
 
-        $ttdTable->addCell(500, $noBorderCell);
-        $rightCell = $ttdTable->addCell(4500, $noBorderCell);
+        $rightCell = $ttdTable->addCell(4513);
         for ($i = 0; $i < 6; $i++) {
             $rightCell->addTextBreak();
         }
-        $rightCell->addText('${ttd_kanan_nama}', $centerStyle + ['bold' => true]);
-        $rightCell->addText('NRP. ${ttd_kanan_nrp}', $centerStyle);
-        $rightCell->addText('${ttd_kanan_jabatan}', $centerStyle);
+        $rightCell->addText('${ttd_kanan_nama}', $fTNR + ['bold' => true], $pTtd);
+        $rightCell->addText('NRP. ${ttd_kanan_nrp}', $fTNR, $pTtd);
+        $rightCell->addText('${ttd_kanan_jabatan}', $fTNR, $pTtd);
 
         $outputPath = public_path('templates/template_peminjaman.docx');
         $writer = IOFactory::createWriter($phpWord, 'Word2007');

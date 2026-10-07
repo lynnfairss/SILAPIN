@@ -3,14 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <title>Surat Permohonan - {{ $permohonan->nomor_permohonan }}</title>
+    @php $forPdf = $forPdf ?? false; @endphp
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Times New Roman', Times, serif; padding: 25mm; color: #000; font-size: 12pt; line-height: 1.5; }
-        @page { margin: 0; size: A4; }
+        body { font-family: 'Times New Roman', Times, serif; color: #000; font-size: 12pt; line-height: 1.5; }
+        @page { margin: 25.4mm; size: A4; }
+        @if($forPdf)
+            html { margin: 25.4mm; }
+            body { padding: 0; }
+        @else
+            body { padding: 25.4mm; }
+        @endif
         @media print {
             .no-print { display: none !important; }
-            body { padding: 25mm; }
+            body { padding: 0; }
         }
+        .ttd-block { page-break-inside: avoid; }
     </style>
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
 </head>
@@ -54,40 +62,45 @@
             'Sunday' => 'Minggu',
         ];
         $hari = $hariNames[$datePinjam->format('l')] ?? $datePinjam->format('l');
+
+        // QR nomor permohonan (server-side SVG â†’ jalan di HTML, cetak, dan PDF dompdf)
+        $qrSvgDataUri = \App\Services\QrCodeService::svgDataUri((string) $permohonan->nomor_permohonan);
     @endphp
 
     @if(!$forPdf)
     @php $tokenParams = ['token' => request('token')]; @endphp
     <div class="no-print" style="text-align: right; margin-bottom: 8px;">
         <a href="{{ route('peminjam.download-surat.docx', array_merge(['permohonan' => $permohonan->id], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
-        <button style="display:inline-block;padding:6px 12px;border-radius:4px;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;border:none;cursor:pointer;" onclick="window.print()">Cetak / Simpan PDF</button>
+        <a href="{{ route('peminjam.download-surat.pdf', array_merge(['permohonan' => $permohonan->id], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;">Unduh PDF</a>
         <a href="{{ route('peminjam.cek-status', array_merge(['nomor' => $permohonan->nomor_permohonan], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#6c757d;color:#fff;">Kembali</a>
     </div>
     @endif
 
     {{-- HEADER TABLE: logo kiri + text center + logo kanan, double border bawah --}}
-    <table style="width:100%; border-collapse:collapse;">
+    <table style="width:100%; table-layout:fixed; border-collapse:collapse;">
         <tr>
-            <td style="width:16%; border-bottom:6px double #000; vertical-align:center; padding:0;">
+            <td style="width:13.5%; border-bottom:6px double #000; vertical-align:center; padding:0;">
                 <img src="{{ $imgLogoKiri }}" style="width:2.1cm; height:2.1cm; display:block;">
             </td>
-            <td style="width:68%; border-bottom:6px double #000; vertical-align:center; padding:0 0 10px 14px;">
-                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:13pt; font-weight:bold; text-align:center; line-height:1.3;">PEMERINTAH KABUPATEN PONOROGO</p>
-                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:13pt; font-weight:bold; text-align:center; line-height:1.3;">DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK</p>
+            <td style="width:73%; border-bottom:6px double #000; vertical-align:center; padding:0 0 2px;">
+                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:12pt; font-weight:bold; text-align:center; line-height:1.3;">PEMERINTAH KABUPATEN PONOROGO</p>
+                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:12pt; font-weight:bold; text-align:center; line-height:1.3;">DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK</p>
                 <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:10pt; text-align:center; line-height:1.2;">Jl. Ir. Juanda Nomor 198 Telp. (0352) 3592999 Kode Pos 63418</p>
                 <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:10pt; font-style:italic; text-align:center; line-height:1.2;">Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id</p>
                 <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:14pt; font-weight:bold; text-align:center; line-height:1.3; margin-top:4px;">P O N O R O G O</p>
             </td>
             @if($imgLogoKanan)
-            <td style="width:16%; border-bottom:6px double #000; vertical-align:center; padding:0;">
+            <td style="width:13.5%; border-bottom:6px double #000; vertical-align:center; padding:0;">
                 <img src="{{ $imgLogoKanan }}" style="width:2.1cm; height:2.1cm; display:block; margin-left:auto;">
             </td>
+            @else
+            <td style="width:13.5%; border-bottom:6px double #000; vertical-align:center; padding:0;"></td>
             @endif
         </tr>
     </table>
 
     {{-- SPACER: 8pt (after=160) --}}
-    <p style="margin:0; padding:0; height:8pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:8pt; line-height:1; height:8pt;">&nbsp;</p>
 
     {{-- HAL/TANGGAL TABLE: double border bawah --}}
     <table style="width:100%; border-collapse:collapse;">
@@ -97,12 +110,20 @@
             </td>
             <td style="width:35%; padding:0; text-align:right;">
                 <p style="margin:0; padding:0; font-size:12pt;">{{ $dateText }}</p>
+                @if($qrSvgDataUri)
+                <div style="margin:4px 0 0; text-align:right;">
+                    <div style="display:inline-block; width:2.1cm; text-align:center;">
+                        <img src="{{ $qrSvgDataUri }}" style="width:2.1cm; height:2.1cm; display:block;">
+                        <p style="margin:0; padding:2px 0 0; font-family:Arial,sans-serif; font-size:5.5pt; letter-spacing:0; color:#000; text-align:center; white-space:nowrap;">{{ $permohonan->nomor_permohonan }}</p>
+                    </div>
+                </div>
+                @endif
             </td>
         </tr>
     </table>
 
     {{-- SPACER: 4pt (after=80) --}}
-    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:4pt; line-height:1; height:4pt;">&nbsp;</p>
 
     {{-- KEPADA --}}
     <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">Kepada</p>
@@ -111,13 +132,13 @@
     <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['kepada_tempat'] }}</p>
 
     {{-- SPACER: 6pt (after=120) --}}
-    <p style="margin:0; padding:0; height:6pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:6pt; line-height:1; height:6pt;">&nbsp;</p>
 
     {{-- PEMBUKA --}}
     <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['pembuka'] }}</p>
 
     {{-- SPACER: 4pt (after=80) --}}
-    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:4pt; line-height:1; height:4pt;">&nbsp;</p>
 
     {{-- SAYA YANG BERTANDA TANGAN --}}
     <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-indent:24pt;">{{ $sc['saya_yang'] }}</p>
@@ -147,13 +168,13 @@
     </table>
 
     {{-- SPACER: 4pt (after=80) --}}
-    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:4pt; line-height:1; height:4pt;">&nbsp;</p>
 
     {{-- BERMAKSUD --}}
     <p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['bermaksud'] }}</p>
 
     {{-- SPACER: 4pt (after=80) --}}
-    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:4pt; line-height:1; height:4pt;">&nbsp;</p>
 
     {{-- ITEM TABLE --}}
     <table style="width:100%; border-collapse:collapse; border:1.5px solid #000;">
@@ -178,7 +199,7 @@
     </table>
 
     {{-- SPACER: 4pt (after=80) --}}
-    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:4pt; line-height:1; height:4pt;">&nbsp;</p>
 
     {{-- UNTUK KEPERLUAN --}}
     <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-indent:24pt; text-align:justify;">{{ $sc['untuk_keperluan'] }} <strong>{{ $permohonan->keperluan }}</strong>.</p>
@@ -218,37 +239,38 @@
     </table>
 
     {{-- SPACER: 4pt (after=80) --}}
-    <p style="margin:0; padding:0; height:4pt;">&nbsp;</p>
+    <p style="margin:0; padding:0; font-size:4pt; line-height:1; height:4pt;">&nbsp;</p>
 
-    {{-- PENUTUP + TERIMA KASIH --}}
+    {{-- PENUTUP + TTD: satu blok, jangan dipecah antar halaman (sinkron dg DOCX) --}}
+    <div class="ttd-block">
     <p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-align:justify;">{{ str_replace("\n", " ", $sc['penutup']) }} {{ str_replace("\n", " ", $sc['terima_kasih']) }}</p>
 
+    {{-- SPACER: 2pt (after=40) --}}
+    <p style="margin:0; padding:0; font-size:2pt; line-height:1; height:2pt;">&nbsp;</p>
+
     {{-- TTD TABLE: 4-column --}}
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; table-layout:fixed;">
         <tr>
-            <td width="5%" style="padding:0;">&nbsp;</td>
-            <td width="45%" valign="top" style="padding:0;"><p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['ttd_kiri_label'] }}</p></td>
-            <td width="5%" style="padding:0;">&nbsp;</td>
-            <td width="45%" valign="top" style="padding:0;"><p style="margin:0; padding:0; font-size:12pt; line-height:1.5;">{{ $sc['ttd_kanan_label'] }}</p></td>
+            <td width="50%" valign="top" align="center" style="padding:0;"><p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-align:center;">{{ $sc['ttd_kiri_label'] }}</p></td>
+            <td width="50%" valign="top" align="center" style="padding:0;"><p style="margin:0; padding:0; font-size:12pt; line-height:1.5; text-align:center;">{{ $sc['ttd_kanan_label'] }}</p></td>
         </tr>
         <tr>
-            <td colspan="4" height="72" style="padding:0;">&nbsp;</td>
+            <td colspan="2" height="72" style="padding:0;">&nbsp;</td>
         </tr>
         <tr>
-            <td width="5%" style="padding:0;">&nbsp;</td>
-            <td width="45%" valign="top" align="center" style="padding:0;">
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;"><strong>{{ $ttdKiriNama }}</strong></p>
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">NRP. {{ $ttdKiriNrp }}</p>
-                @if($ttdKiriJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">{{ $ttdKiriJab }}</p>@endif
+            <td width="50%" valign="top" align="center" style="padding:0;">
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;"><strong>{{ $ttdKiriNama }}</strong></p>
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NRP. {{ $ttdKiriNrp }}</p>
+                @if($ttdKiriJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">{{ $ttdKiriJab }}</p>@endif
             </td>
-            <td width="5%" style="padding:0;">&nbsp;</td>
-            <td width="45%" valign="top" align="center" style="padding:0;">
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;"><strong>{{ $ttdKananNama }}</strong></p>
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">NRP. {{ $ttdKananNrp }}</p>
-                @if($ttdKananJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2;">{{ $ttdKananJab }}</p>@endif
+            <td width="50%" valign="top" align="center" style="padding:0;">
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;"><strong>{{ $ttdKananNama }}</strong></p>
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NRP. {{ $ttdKananNrp }}</p>
+                @if($ttdKananJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">{{ $ttdKananJab }}</p>@endif
             </td>
         </tr>
     </table>
+    </div>
 
 </body>
 </html>

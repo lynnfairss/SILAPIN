@@ -19,11 +19,7 @@ class PdfController extends Controller
         $pdf->setOption('isRemoteEnabled', true);
         $pdf->setOption('dpi', 150);
         $pdf->setOption('isFontSubsettingEnabled', true);
-        $pdf->setOption('defaultFont', 'serif');
-        $pdf->setOption('margin_left', 15);
-        $pdf->setOption('margin_right', 15);
-        $pdf->setOption('margin_top', 15);
-        $pdf->setOption('margin_bottom', 15);
+        $pdf->setOption('defaultFont', 'Times New Roman');
 
         $filename = 'Surat-' . $permohonan->nomor_permohonan . '.pdf';
 

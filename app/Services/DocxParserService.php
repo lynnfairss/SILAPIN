@@ -241,15 +241,24 @@ class DocxParserService
         $rows = $table->getRows();
         if (count($rows) < 2) return;
 
+        // Template lama memakai 4 sel (500/4500/500/4500), template baru 2 sel
+        // (4513/4513). Pilih indeks menyesuaikan supaya file lama & baru terbaca sama.
+        $idx = static fn (array $cells): array => [
+            count($cells) >= 4 ? 1 : 0,
+            count($cells) >= 4 ? 3 : 1,
+        ];
+
         $row0Cells = $rows[0]->getCells();
-        if (count($row0Cells) >= 4) {
-            $result['ttd_kiri_label'] = $this->getCellText($row0Cells[1]);
-            $result['ttd_kanan_label'] = $this->getCellText($row0Cells[3]);
+        [$kiri0, $kanan0] = $idx($row0Cells);
+        if (count($row0Cells) >= 2) {
+            $result['ttd_kiri_label'] = $this->getCellText($row0Cells[$kiri0]);
+            $result['ttd_kanan_label'] = $this->getCellText($row0Cells[$kanan0]);
         }
 
         $row1Cells = $rows[1]->getCells();
-        if (count($row1Cells) >= 4) {
-            $leftTexts = $this->getCellTexts($row1Cells[1]);
+        [$kiri1, $kanan1] = $idx($row1Cells);
+        if (count($row1Cells) >= 2) {
+            $leftTexts = $this->getCellTexts($row1Cells[$kiri1]);
             $leftTexts = array_values(array_filter($leftTexts, fn($t) => trim($t) !== ''));
 
             if (count($leftTexts) >= 1) {
@@ -263,7 +272,7 @@ class DocxParserService
                 $result['ttd_kiri_jabatan'] = $leftTexts[2];
             }
 
-            $rightTexts = $this->getCellTexts($row1Cells[3]);
+            $rightTexts = $this->getCellTexts($row1Cells[$kanan1]);
             $rightTexts = array_values(array_filter($rightTexts, fn($t) => trim($t) !== ''));
 
             if (count($rightTexts) >= 1) {

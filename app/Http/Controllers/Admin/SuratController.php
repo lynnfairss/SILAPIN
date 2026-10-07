@@ -115,6 +115,12 @@ class SuratController extends Controller
             $template->setImageValue('LOGO', $logoPath);
         }
 
+        $qrPath = \App\Services\QrCodeService::pngFile((string) $permohonan->nomor_permohonan);
+        if ($qrPath) {
+            $template->setImageValue('QR', ['path' => $qrPath, 'width' => '2.1cm', 'height' => '2.1cm']);
+        }
+        $template->setValue('nomor', $xv((string) $permohonan->nomor_permohonan));
+
         $template->setValue('hal', $xv($halText));
         $template->setValue('tanggal', $xv($dateText));
         $template->setValue('kepada_yth', $xv($sc['kepada_yth']));
@@ -167,6 +173,9 @@ class SuratController extends Controller
 
         $outputPath = $folderPath . '/' . $permohonan->nomor_permohonan . '.docx';
         $template->saveAs($outputPath);
+        if ($qrPath) {
+            @unlink($qrPath);
+        }
 
         $permohonan->update(['word_path' => $outputPath]);
 

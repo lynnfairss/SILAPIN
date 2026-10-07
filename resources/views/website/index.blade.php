@@ -8,10 +8,34 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('css/website.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/splash.css') }}?v={{ time() }}" rel="stylesheet">
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+    <script>
+        (function () {
+            try {
+                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    document.documentElement.classList.add('silapin-splash-skip');
+                    return;
+                }
+                if (sessionStorage.getItem('silapin.splash.v1') === '1') {
+                    document.documentElement.classList.add('silapin-splash-skip');
+                    return;
+                }
+                sessionStorage.setItem('silapin.splash.v1', '1');
+                document.documentElement.classList.add('silapin-splash-lock');
+            } catch (e) {}
+        })();
+    </script>
+    <noscript>
+        <style>
+            #silapinSplash { display: none !important; }
+            html.silapin-splash-lock { overflow: auto !important; }
+        </style>
+    </noscript>
 </head>
 
 <body>
+@include('partials.splash')
 
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow" id="mainNav" style="background: rgba(33,37,41,.9); backdrop-filter: blur(10px);">
     <div class="container">

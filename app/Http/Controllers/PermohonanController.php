@@ -299,6 +299,12 @@ class PermohonanController extends Controller
             $template->setImageValue('LOGO', $logoKiriPath);
         }
 
+        $qrPath = \App\Services\QrCodeService::pngFile((string) $permohonan->nomor_permohonan);
+        if ($qrPath) {
+            $template->setImageValue('QR', ['path' => $qrPath, 'width' => '2.1cm', 'height' => '2.1cm']);
+        }
+        $template->setValue('nomor', $xv((string) $permohonan->nomor_permohonan));
+
         // --- Simple placeholder replacements (escape XML entities) ---
         $template->setValue('hal', $xv($halText));
         $template->setValue('tanggal', $xv($dateText));
@@ -356,6 +362,9 @@ class PermohonanController extends Controller
         $filename = 'Surat_Peminjaman_' . preg_replace('/[^a-zA-Z0-9]/', '_', $permohonan->nomor_permohonan) . '.docx';
         $tempFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'silapin_' . uniqid() . '.docx';
         $template->saveAs($tempFile);
+        if ($qrPath) {
+            @unlink($qrPath);
+        }
 
         return response()->streamDownload(function () use ($tempFile) {
             readfile($tempFile);
