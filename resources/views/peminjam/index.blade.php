@@ -7,7 +7,7 @@
     <title>Ajukan Peminjaman - SILAPIN</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ asset('css/peminjam.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/peminjam.css') }}?v={{ filemtime(public_path('css/peminjam.css')) }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
@@ -159,7 +159,7 @@
                         </div>
                     </div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex justify-content-between align-items-center mt-3 step-nav">
                         <a href="{{ route('website') }}" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-1"></i> Kembali ke Halaman Utama
                         </a>
@@ -293,7 +293,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between mt-3">
+                    <div class="d-flex justify-content-between mt-3 step-nav">
                         <button type="button" class="btn btn-secondary btn-prev px-4" onclick="goToStep(1)">
                             <i class="fas fa-arrow-left me-1"></i> Sebelumnya
                         </button>
@@ -338,7 +338,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between mt-3">
+                    <div class="d-flex justify-content-between mt-3 step-nav">
                         <button type="button" class="btn btn-secondary btn-prev px-4" onclick="goToStep(2)">
                             <i class="fas fa-arrow-left me-1"></i> Sebelumnya
                         </button>
@@ -879,8 +879,21 @@
         btnCapture.disabled = true;
         status.textContent = isKtp ? 'Aktifkan kamera, lalu letakkan KTP di dalam bingkai…' : 'Mengaktifkan kamera…';
 
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            status.textContent = 'Browser tidak mendukung kamera. Gunakan upload file biasa.';
+        if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            if (window.isSecureContext) {
+                status.textContent = 'Browser tidak mendukung kamera. Gunakan upload file biasa.';
+            } else {
+                status.textContent = 'Kamera butuh koneksi aman (https://). ';
+                const link = document.createElement('a');
+                link.className = 'btn btn-sm btn-primary d-block mx-auto mt-2';
+                link.href = 'https://' + location.hostname + ':8443' + location.pathname + location.search;
+                link.innerHTML = '<i class="fas fa-lock me-1"></i>Buka lewat HTTPS';
+                status.appendChild(link);
+                const hint = document.createElement('div');
+                hint.className = 'mt-1';
+                hint.textContent = 'Jalankan "npm run https" di komputer, atau gunakan upload file biasa.';
+                status.appendChild(hint);
+            }
             return;
         }
 

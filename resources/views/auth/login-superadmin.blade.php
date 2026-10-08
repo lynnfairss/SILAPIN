@@ -293,6 +293,18 @@
         showPasskeyError('Sesi halaman sudah diperbarui. Silakan klik "Masuk dengan Passkey" lagi.');
     }
 
+    function ipHostHint() {
+        const h = location.hostname;
+        if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return null;
+        if (/^127\./.test(h)) {
+            return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat http://localhost' +
+                (location.port ? ':' + location.port : '') + ' (bukan ' + h + ').';
+        }
+        const dashed = h.split('.').join('-');
+        return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat https://' + dashed +
+            '.nip.io:8443 (domain pengganti untuk IP ' + h + ').';
+    }
+
     document.getElementById('btnPasskey').addEventListener('click', function () {
         const btn = this;
         const email = document.querySelector('input[name="email"]').value.trim();
@@ -302,10 +314,16 @@
             return;
         }
 
+        const hint = ipHostHint();
+        if (hint) {
+            showPasskeyError(hint);
+            return;
+        }
+
         const remember = document.getElementById('remember') ? document.getElementById('remember').checked : false;
         btn.disabled = true;
 
-        fetch('{{ route('passkey.options') }}', {
+        fetch('{{ route('passkey.options', absolute: false) }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -328,39 +346,48 @@
                 return;
             }
 
-            const webauthn = new WebAuthn();
-            webauthn.sign(d.publicKey, function (credential) {
-                credential.remember = remember;
-
-                fetch('{{ route('passkey.login') }}', {
-                    method: 'POST',
-                    headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-                    body: JSON.stringify(credential),
-                })
-                .then(r => {
-            if (r.status === 419) {
-                reloadStale();
-                return new Promise(() => {});
-            }
-            return r.json().then(d => ({ ok: r.ok, d }));
-        })
-                .then(({ ok, d }) => {
-                    if (ok && d.callback) {
-                        window.location.href = d.callback;
-                        return;
-                    }
-                    btn.disabled = false;
-                    showPasskeyError(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Login passkey gagal.'));
-                })
-                .catch(() => {
-                    btn.disabled = false;
-                    showPasskeyError('Terjadi kesalahan saat login passkey. Silakan coba lagi.');
-                });
+            const webauthn = new WebAuthn(function (message, detail) {
+                btn.disabled = false;
+                showPasskeyError(typeof detail === 'string' && detail ? message + ': ' + detail : message);
             });
+
+            try {
+                webauthn.sign(d.publicKey, function (credential) {
+                    credential.remember = remember;
+
+                    fetch('{{ route('passkey.login', absolute: false) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify(credential),
+                    })
+                    .then(r => {
+                        if (r.status === 419) {
+                            reloadStale();
+                            return new Promise(() => {});
+                        }
+                        return r.json().then(d => ({ ok: r.ok, d }));
+                    })
+                    .then(({ ok, d }) => {
+                        if (ok && d.callback) {
+                            window.location.href = d.callback;
+                            return;
+                        }
+                        btn.disabled = false;
+                        showPasskeyError(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Login passkey gagal.'));
+                    })
+                    .catch(() => {
+                        btn.disabled = false;
+                        showPasskeyError('Terjadi kesalahan saat login passkey. Silakan coba lagi.');
+                    });
+                });
+            } catch (e) {
+                btn.disabled = false;
+                showPasskeyError('Gagal memulai dialog passkey: ' + e.message);
+            }
         })
         .catch(() => {
             btn.disabled = false;

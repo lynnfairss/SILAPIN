@@ -336,6 +336,37 @@ footer {
     box-shadow: 0 0 0 1px #0d6efd;
 }
 
+/* ===== KARTU SERAGAM: tinggi sama dalam 1 baris, aksi rata bawah ===== */
+#barangContainer .barang-item {
+    display: flex;
+}
+
+#barangContainer .product-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+}
+
+#barangContainer .product-info {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+#barangContainer .product-meta > span:first-child {
+    flex: 1 0 100%;
+}
+
+#barangContainer .product-stok {
+    margin-top: auto;
+    padding-top: 6px;
+}
+
+#barangContainer .product-action {
+    margin-top: auto;
+}
+
 /* ===== IMAGE SLIDER ===== */
 .img-slider {
     position: relative;
@@ -470,7 +501,7 @@ footer {
     -webkit-box-orient: vertical;
     overflow: hidden;
     line-height: 1.3;
-    min-height: 2.47em;
+    min-height: 2.6em;
 }
 
 .product-meta {
@@ -865,7 +896,10 @@ footer {
     font-weight: 500;
     padding: 4px 14px;
     border-radius: 20px;
-    white-space: nowrap;
+    white-space: normal;
+    max-width: calc(100% - 16px);
+    text-align: center;
+    line-height: 1.35;
     letter-spacing: .3px;
 }
 
@@ -1074,4 +1108,125 @@ footer {
 .btn-next, .btn-prev {
     border-radius: 8px;
     font-weight: 500;
+}
+
+/* ===== MOBILE: FILTER KATEGORI / JENIS RAPI ===== */
+@media (max-width: 767.98px) {
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+        margin-bottom: 14px;
+    }
+
+    .filter-label {
+        min-width: 0;
+        padding: 0;
+    }
+
+    .filter-group .filter-chips {
+        flex: none;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        margin: 0 -16px;
+        padding: 0 16px 6px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-group .filter-chips::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-chip {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+
+    .filter-search .form-control {
+        font-size: 16px;
+    }
+}
+
+/* ===== MOBILE: GRID 2 KOLOM + KARTU KOMPACT ===== */
+@media (max-width: 575.98px) {
+    #barangContainer .barang-item {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    .product-info {
+        padding: 10px 10px 12px;
+    }
+
+    .product-name {
+        font-size: .85rem;
+        min-height: 2.6em;
+    }
+
+    .product-meta {
+        font-size: .7rem;
+        gap: 4px;
+        min-height: 63px;
+    }
+
+    .product-meta code {
+        font-size: .68rem;
+    }
+
+    .product-stok .badge {
+        font-size: .7rem;
+        padding: .3em .55em;
+    }
+
+    .img-slider .slider-btn {
+        width: 26px;
+        height: 26px;
+        font-size: .7rem;
+    }
+
+    .product-action {
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px 10px;
+    }
+
+    .product-action .form-check {
+        margin: 0;
+    }
+
+    /* ===== NAV STEP: TOMBOL PENUH, BERTUMPUK ===== */
+    .step-nav {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 10px;
+    }
+
+    .step-nav .btn {
+        width: 100%;
+        padding: .7rem 1rem;
+        white-space: nowrap;
+    }
+
+    /* ===== UPLOAD DOKUMEN: RAPI DI HP ===== */
+    .step-content .input-group {
+        flex-wrap: wrap;
+    }
+
+    .step-content .input-group > .form-control {
+        min-width: 100%;
+        font-size: 16px;
+    }
+
+    .step-content .input-group > .btn {
+        flex: 1 0 100%;
+        margin-top: 6px;
+        border-radius: 8px;
+        padding: .55rem 1rem;
+    }
+
+    .step-content .d-flex.gap-2 > .btn {
+        white-space: nowrap;
+    }
 }

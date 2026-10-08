@@ -1,4 +1,4 @@
-{{-- Splash screen awal masuk web (hanya halaman landing "/"). Lihat css/splash.css --}}
+{{-- Splash logo awal halaman landing "/" — tampil setiap refresh. Lihat css/splash.css --}}
 @php($splashLogo = file_exists(public_path('images/logo-silapin.png')))
 
 <div id="silapinSplash" class="silapin-splash{{ $splashLogo ? '' : ' silapin-splash--no-logo' }}"
@@ -39,7 +39,7 @@
             unlock();
         }
 
-        // Sudah tampil di tab ini / reduced-motion → hilangkan seketika
+        // prefers-reduced-motion → langsung hilangkan tanpa animasi
         if (root.classList.contains('silapin-splash-skip')) {
             drop();
             return;

@@ -146,7 +146,7 @@
                                 <td class="text-center">{{ $key->created_at->format('d M Y H:i') }}</td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-danger"
-                                            onclick="deletePasskey('{{ route('passkey.destroy', $key) }}')">
+                                            onclick="deletePasskey('{{ route('passkey.destroy', $key, absolute: false) }}')">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
@@ -187,10 +187,28 @@
         showAlert('Sesi halaman sudah diperbarui. Silakan coba tambahkan passkey lagi.');
     }
 
+    function ipHostHint() {
+        const h = location.hostname;
+        if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(h) && h !== '127.0.0.1') return null;
+        if (/^127\./.test(h)) {
+            return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat http://localhost' +
+                (location.port ? ':' + location.port : '') + ' (bukan ' + h + ').';
+        }
+        const dashed = h.split('.').join('-');
+        return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat https://' + dashed +
+            '.nip.io:8443 (domain pengganti untuk IP ' + h + ').';
+    }
+
     document.getElementById('btnAddPasskey').addEventListener('click', function () {
+        const hint = ipHostHint();
+        if (hint) {
+            showAlert(hint);
+            return;
+        }
+
         const name = prompt('Nama untuk passkey ini (contoh: HP Pribadi):') || 'Passkey';
 
-        fetch('{{ route('passkey.register.options') }}', {
+        fetch('{{ route('passkey.register.options', absolute: false) }}', {
             method: 'POST',
             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
         })
@@ -207,34 +225,41 @@
                 return;
             }
 
-            const webauthn = new WebAuthn();
-            webauthn.register(d.publicKey, function (credential) {
-                credential.name = name;
-                fetch('{{ route('passkey.register') }}', {
-                    method: 'POST',
-                    headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-                    body: JSON.stringify(credential),
-                })
-                .then(r => {
-            if (r.status === 419) {
-                reloadStale();
-                return new Promise(() => {});
-            }
-            return r.json().then(d => ({ ok: r.ok, d }));
-        })
-                .then(({ ok, d }) => {
-                    if (ok && d.callback) {
-                        window.location.href = d.callback;
-                    } else {
-                        showAlert(d.message || 'Registrasi passkey gagal.');
-                    }
-                })
-                .catch(() => showAlert('Terjadi kesalahan saat registrasi passkey.'));
+            const webauthn = new WebAuthn(function (message, detail) {
+                showAlert(typeof detail === 'string' && detail ? message + ': ' + detail : message);
             });
+
+            try {
+                webauthn.register(d.publicKey, function (credential) {
+                    credential.name = name;
+                    fetch('{{ route('passkey.register', absolute: false) }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify(credential),
+                    })
+                    .then(r => {
+                        if (r.status === 419) {
+                            reloadStale();
+                            return new Promise(() => {});
+                        }
+                        return r.json().then(d => ({ ok: r.ok, d }));
+                    })
+                    .then(({ ok, d }) => {
+                        if (ok && d.callback) {
+                            window.location.href = d.callback;
+                        } else {
+                            showAlert(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Registrasi passkey gagal.'));
+                        }
+                    })
+                    .catch(() => showAlert('Terjadi kesalahan saat registrasi passkey.'));
+                });
+            } catch (e) {
+                showAlert('Gagal memulai dialog passkey: ' + e.message);
+            }
         })
         .catch(() => showAlert('Terjadi kesalahan saat mempersiapkan registrasi.'));
     });

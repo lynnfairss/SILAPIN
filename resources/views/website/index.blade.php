@@ -7,7 +7,7 @@
     <title>SILAPIN</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ asset('css/website.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/website.css') }}?v={{ filemtime(public_path('css/website.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/splash.css') }}?v={{ time() }}" rel="stylesheet">
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
     <script>
@@ -17,11 +17,6 @@
                     document.documentElement.classList.add('silapin-splash-skip');
                     return;
                 }
-                if (sessionStorage.getItem('silapin.splash.v1') === '1') {
-                    document.documentElement.classList.add('silapin-splash-skip');
-                    return;
-                }
-                sessionStorage.setItem('silapin.splash.v1', '1');
                 document.documentElement.classList.add('silapin-splash-lock');
             } catch (e) {}
         })();
@@ -82,8 +77,8 @@
     <div class="container py-5 position-relative" style="z-index:1;">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h1 class="display-4 fw-bold mb-3 fade-up"><i class="fas fa-boxes-stacked me-2"></i>SILAPIN</h1>
-                <p class="lead mb-3 fade-up" style="transition-delay:.1s">Sistem Informasi Peminjaman Inventaris</p>
+                <img class="hero__logo fade-up" src="{{ asset('images/logosilapin.png') }}?v={{ filemtime(public_path('images/logosilapin.png')) }}" alt="Logo SILAPIN">
+                <h1 class="visually-hidden">SILAPIN</h1>
                 <hr class="border-light mx-auto mb-4" style="width: 80px;">
                 <p class="mb-4 fade-up" style="transition-delay:.2s">Kelola peminjaman barang inventaris dengan mudah, cepat, dan transparan.</p>
                 <div class="d-flex justify-content-center gap-3 flex-wrap fade-up" style="transition-delay:.3s">

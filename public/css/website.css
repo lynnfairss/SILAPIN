@@ -17,6 +17,13 @@
     background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
+.hero__logo {
+    display: block;
+    width: clamp(150px, 18vw, 230px);
+    height: auto;
+    margin: 0 auto 24px;
+}
+
 .table-responsive-custom {
     overflow-x: auto;
 }
@@ -124,6 +131,10 @@
 .stat-card {
     border-left: 4px solid;
     min-width: 160px;
+}
+
+section[id] {
+    scroll-margin-top: 64px;
 }
 
 footer {
@@ -472,11 +483,74 @@ footer {
 }
 @media (max-width: 575.98px) {
     .inventory-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
     }
     .inventory-grid .product-card {
-        max-width: 400px;
-        margin: 0 auto;
+        max-width: none;
+        width: 100%;
+        margin: 0;
+    }
+    .inventory-grid .product-info {
+        padding: 10px 10px 12px;
+    }
+    .inventory-grid .product-name {
+        font-size: .85rem;
+        min-height: 2.34em;
+    }
+    .inventory-grid .product-meta {
+        font-size: .7rem;
+        gap: 4px;
+    }
+    .inventory-grid .product-meta code {
+        font-size: .68rem;
+    }
+    .inventory-grid .product-stok-kondisi {
+        gap: 4px;
+    }
+    .inventory-grid .badge-kondisi {
+        font-size: .7rem;
+        padding: .3em .5em;
+    }
+    .inventory-grid .slider-btn {
+        width: 26px;
+        height: 26px;
+        font-size: .7rem;
+    }
+    .inv-chips {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        margin: 0 -12px 20px;
+        padding: 0 12px 8px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .inv-chips::-webkit-scrollbar {
+        display: none;
+    }
+    .inv-chip {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+    .inv-search .form-control {
+        font-size: 16px;
+    }
+    .hero .row > .col-auto {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+    .stat-card {
+        min-width: 0;
+        height: 100%;
+        padding: .55rem .3rem !important;
+    }
+    .stat-card h3 {
+        font-size: 1.25rem;
+    }
+    .stat-card small {
+        font-size: .65rem;
+        line-height: 1.25;
     }
     .inv-modal-prev { left: 10px; }
     .inv-modal-next { right: 10px; }

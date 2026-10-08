@@ -11,6 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Percaya proxy dev (dev-https.js / reverse proxy) agar skema
+        // X-Forwarded-Proto: https dikenali (kamera & aset https).
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'peminjam.access' => \App\Http\Middleware\VerifyPemohonanAccess::class,

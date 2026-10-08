@@ -317,8 +317,18 @@
                 setScanStatus('Library scanner gagal dimuat. Muat ulang halaman atau isi manual.', true);
                 return;
             }
-            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                setScanStatus('Browser tidak mendukung kamera. Gunakan input manual.', true);
+            if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                if (window.isSecureContext) {
+                    setScanStatus('Browser tidak mendukung kamera. Gunakan input manual.', true);
+                } else {
+                    setScanStatus('Scanner butuh koneksi aman (https://). Buka lewat https:// atau isi manual.', true);
+                    var scanEl = document.getElementById('scanStatus');
+                    var httpsLink = document.createElement('a');
+                    httpsLink.className = 'btn btn-sm btn-primary d-block mx-auto mt-2';
+                    httpsLink.href = 'https://' + location.hostname + ':8443' + location.pathname + location.search;
+                    httpsLink.innerHTML = '<i class="fas fa-lock me-1"></i>Buka lewat HTTPS';
+                    scanEl.appendChild(httpsLink);
+                }
                 return;
             }
 
