@@ -372,6 +372,10 @@
         <div class="camera-frame">
             <video id="cameraPreview" autoplay playsinline muted></video>
             <canvas id="cameraCanvas" class="d-none"></canvas>
+            <button type="button" class="torch-btn d-none" id="btnTorch"
+                    onclick="toggleTorch()" title="Nyalakan flash" aria-label="Nyalakan flash">
+                <i class="fas fa-bolt"></i>
+            </button>
             <div class="camera-flash" id="cameraFlash"></div>
             <div class="ktp-frame hidden" id="ktpFrame">
                 <div class="ktp-hole">
@@ -865,6 +869,51 @@
         }, 150);
     }
 
+    // ========== FLASH (TORCH) ==========
+    let torchOn = false;
+
+    function torchTrack() {
+        return cameraStream ? cameraStream.getVideoTracks()[0] : null;
+    }
+
+    function setupTorch() {
+        const btn = document.getElementById('btnTorch');
+        const track = torchTrack();
+        const caps = track && track.getCapabilities ? track.getCapabilities() : {};
+        const supported = caps && 'torch' in caps;
+        btn.classList.toggle('d-none', !supported);
+        if (!supported) torchOn = false;
+    }
+
+    function toggleTorch() {
+        const btn = document.getElementById('btnTorch');
+        const track = torchTrack();
+        if (!track) { resetTorch(); return; }
+
+        const next = !torchOn;
+        track.applyConstraints({ advanced: [{ torch: next }] })
+            .then(function () {
+                torchOn = next;
+                btn.classList.toggle('active', torchOn);
+                const label = torchOn ? 'Matikan flash' : 'Nyalakan flash';
+                btn.title = label;
+                btn.setAttribute('aria-label', label);
+            })
+            .catch(function () {
+                // Perangkat tidak mendukung torch sungguhan: sembunyikan tombol.
+                resetTorch();
+            });
+    }
+
+    function resetTorch() {
+        torchOn = false;
+        const btn = document.getElementById('btnTorch');
+        btn.classList.add('d-none');
+        btn.classList.remove('active');
+        btn.title = 'Nyalakan flash';
+        btn.setAttribute('aria-label', 'Nyalakan flash');
+    }
+
     async function openCamera(btn) {
         const video = document.getElementById('cameraPreview');
         const status = document.getElementById('cameraStatus');
@@ -904,6 +953,7 @@
             });
             video.srcObject = cameraStream;
             await video.play();
+            setupTorch();
             btnCapture.disabled = false;
             if (isKtp) {
                 startAutoDetect();
@@ -1023,6 +1073,7 @@
     function closeCamera() {
         stopAutoDetect();
         autoCapturing = false;
+        resetTorch();
         document.getElementById('cameraFlash').classList.remove('active');
         if (cameraStream) {
             cameraStream.getTracks().forEach(function(t) { t.stop(); });
