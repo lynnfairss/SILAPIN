@@ -38,6 +38,7 @@
                 <tr>
                     <th width="50">No</th>
                     <th>Nama</th>
+                    <th>NIK</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Dibuat</th>
@@ -49,6 +50,7 @@
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td>{{ $item->name }}</td>
+                <td>{{ $item->nik ?: '-' }}</td>
                 <td>{{ $item->email }}</td>
                 <td class="text-center">
                     @if($item->isSuperAdmin())
@@ -59,6 +61,9 @@
                 </td>
                 <td>{{ $item->created_at->format('d M Y') }}</td>
                 <td class="text-center">
+                    <a href="{{ route('users.edit', $item->id) }}" class="btn btn-primary btn-sm" title="Edit">
+                        <i class="fas fa-pen"></i>
+                    </a>
                     @if(!$item->isSuperAdmin())
                     <form action="{{ route('users.destroy', $item->id) }}" method="POST" style="display:inline;">
                         @csrf @method('DELETE')
@@ -72,7 +77,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="text-center text-muted">
+                <td colspan="7" class="text-center text-muted">
                     Belum ada data user admin.
                 </td>
             </tr>

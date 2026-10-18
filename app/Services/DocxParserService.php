@@ -266,7 +266,7 @@ class DocxParserService
             }
             if (count($leftTexts) >= 2) {
                 $nrpText = $leftTexts[1];
-                $result['ttd_kiri_nrp'] = preg_replace('/^NRP\.\s*/', '', $nrpText);
+                $result['ttd_kiri_nrp'] = preg_replace('/^(?:NRP|NIK)\.\s*/', '', $nrpText);
             }
             if (count($leftTexts) >= 3) {
                 $result['ttd_kiri_jabatan'] = $leftTexts[2];
@@ -280,7 +280,7 @@ class DocxParserService
             }
             if (count($rightTexts) >= 2) {
                 $nrpText = $rightTexts[1];
-                $result['ttd_kanan_nrp'] = preg_replace('/^NRP\.\s*/', '', $nrpText);
+                $result['ttd_kanan_nrp'] = preg_replace('/^(?:NRP|NIK)\.\s*/', '', $nrpText);
             }
             if (count($rightTexts) >= 3) {
                 $result['ttd_kanan_jabatan'] = $rightTexts[2];

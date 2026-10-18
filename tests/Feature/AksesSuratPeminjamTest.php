@@ -41,43 +41,39 @@ it('does not accept a token through mass assignment', function () {
         ->not->toContain('token');
 });
 
-it('refuses to hand the letter to a visitor without the token', function () {
+it('no longer exposes a public download route', function () {
     $permohonan = permohonanPII();
 
-    $this->get(route('peminjam.download-surat', $permohonan->id))->assertForbidden();
-    $this->get(route('peminjam.download-surat.docx', $permohonan->id))->assertForbidden();
-    $this->get(route('peminjam.download-surat.pdf', $permohonan->id))->assertForbidden();
+    // Route publik /peminjam/download-surat... dihapus, jadi 404.
+    $this->get('/peminjam/download-surat/'.$permohonan->id)->assertNotFound();
+    $this->get('/peminjam/download-surat/'.$permohonan->id.'/docx')->assertNotFound();
+    $this->get('/peminjam/download-surat/'.$permohonan->id.'/pdf')->assertNotFound();
 });
 
-it('refuses a wrong token', function () {
+it('refuses the applicant even when they hold a valid token', function () {
     $permohonan = permohonanPII();
 
-    $this->get(route('peminjam.download-surat', $permohonan).'?token=token-salah')
-        ->assertForbidden();
-});
+    // Token peminjam tidak lagi membuka berkas surat.
+    $this->get(route('surat.download.docx', $permohonan).'?token='.$permohonan->token)
+        ->assertRedirect(route('login'));
 
-it('lets the applicant download their own letter with the token', function () {
-    $permohonan = permohonanPII();
-
-    $this->get(route('peminjam.download-surat', $permohonan).'?token='.$permohonan->token)
-        ->assertOk();
-
-    $this->get(route('peminjam.download-surat.docx', $permohonan).'?token='.$permohonan->token)
-        ->assertOk();
-
-    $this->get(route('peminjam.download-surat.pdf', $permohonan).'?token='.$permohonan->token)
-        ->assertOk();
+    $this->get(route('surat.download.pdf', $permohonan).'?token='.$permohonan->token)
+        ->assertRedirect(route('login'));
 });
 
 it('lets admins download any letter without a token', function () {
     $permohonan = permohonanPII();
 
     $this->actingAs(User::factory()->create(['role' => 'admin']))
-        ->get(route('peminjam.download-surat', $permohonan->id))
+        ->get(route('surat.download.docx', $permohonan->id))
         ->assertOk();
 
     $this->actingAs(User::factory()->superAdmin()->create())
-        ->get(route('peminjam.download-surat.pdf', $permohonan->id))
+        ->get(route('surat.download.pdf', $permohonan->id))
+        ->assertOk();
+
+    $this->actingAs(User::factory()->superAdmin()->create())
+        ->get(route('surat.download.docx', $permohonan->id))
         ->assertOk();
 });
 
@@ -114,8 +110,23 @@ it('does not leak the letter of another request on the status page', function ()
     $response = $this->get(route('peminjam.cek-status').'?nomor='.$permohonan->nomor_permohonan)
         ->assertOk();
 
-    // Status tetap terlihat, tetapi tombol unduh dan data pribadi tidak.
+    // Status tetap terlihat, tetapi tidak ada tautan berkas dan data pribadi
+    // peminjam tidak ikut terbuka.
     $response->assertDontSee($permohonan->nik);
     $response->assertDontSee($permohonan->telepon);
-    $response->assertDontSee(route('peminjam.download-surat', $permohonan->id));
+    $response->assertDontSee('Download Surat');
+    $response->assertDontSee(route('surat.download.docx', $permohonan->id));
+});
+
+it('offers no letter download to the applicant on their own status page', function () {
+    $permohonan = permohonanPII();
+
+    // Bahkan dengan token yang benar, halaman status tidak lagi memuat
+    // tombol atau tautan berkas surat.
+    $response = $this->get(route('peminjam.cek-status')
+        .'?nomor='.$permohonan->nomor_permohonan.'&token='.$permohonan->token)
+        ->assertOk();
+
+    $response->assertDontSee('Download Surat');
+    $response->assertDontSee(route('surat.download.pdf', $permohonan->id));
 });

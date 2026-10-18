@@ -126,10 +126,10 @@
                                     <i class="fas fa-download"></i>
                                 </button>
                                 <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="{{ route('peminjam.download-surat.docx', $item->id) }}" target="_blank">
+                                    <a class="dropdown-item" href="{{ route('surat.download.docx', $item->id) }}" target="_blank">
                                         <i class="fas fa-file-word me-2 text-primary"></i>Download DOCX
                                     </a>
-                                    <a class="dropdown-item" href="{{ route('peminjam.download-surat.pdf', $item->id) }}" target="_blank">
+                                    <a class="dropdown-item" href="{{ route('surat.download.pdf', $item->id) }}" target="_blank">
                                         <i class="fas fa-file-pdf me-2 text-danger"></i>Download PDF
                                     </a>
                                 </div>

@@ -52,6 +52,55 @@ class SuratController extends Controller
         return array_merge($defaults, $saved);
     }
 
+    /**
+     * Tentukan isi keenam kolom tanda tangan surat.
+     *
+     * Kolom kiri berlabel "Yang menyerahkan" diisi nama admin/superadmin yang
+     * menyetujui permohonan; kolom kanan "Yang menerima" diisi nama peminjam.
+     *
+     * Urutan untuk kolom kiri:
+     *   1. nilai yang sudah tersimpan di surat_content (hasil sync dari Word)
+     *      -- isian manual itu yang menang;
+     *   2. nama akun penyetuju beserta NIK-nya; jabatan dikosongkan karena
+     *      tabel users tidak menyimpannya;
+     *   3. belum ada penyetuju (permohonan belum disetujui) -- kembali ke data
+     *      peminjam supaya surat lama tetap sama seperti sebelumnya.
+     */
+    public static function resolveTtd(Permohonan $permohonan, array $sc): array
+    {
+        $namaPeminjam = $permohonan->nama_peminjam ?: '-';
+        $penyetuju = $permohonan->penyetuju();
+
+        if (filled($sc['ttd_kiri_nama'])) {
+            $kiri = [
+                'nama'    => $sc['ttd_kiri_nama'],
+                'nrp'     => $sc['ttd_kiri_nrp'] ?: '',
+                'jabatan' => $sc['ttd_kiri_jabatan'] ?: '',
+            ];
+        } elseif ($penyetuju?->name) {
+            $kiri = [
+                'nama'    => $penyetuju->name,
+                'nrp'     => $sc['ttd_kiri_nrp'] ?: ($penyetuju->nik ?: ''),
+                'jabatan' => $sc['ttd_kiri_jabatan'] ?: '',
+            ];
+        } else {
+            $kiri = [
+                'nama'    => $namaPeminjam,
+                'nrp'     => $sc['ttd_kiri_nrp'] ?: ($permohonan->nik ?: ''),
+                'jabatan' => $sc['ttd_kiri_jabatan'] ?: ($permohonan->jabatan ?: ''),
+            ];
+        }
+
+        return [
+            'kiri_nama'     => $kiri['nama'],
+            'kiri_nrp'      => $kiri['nrp'],
+            'kiri_jabatan'  => $kiri['jabatan'],
+            'kanan_nama'    => $sc['ttd_kanan_nama'] ?: $namaPeminjam,
+            'kanan_nrp'     => $sc['ttd_kanan_nrp'] ?: ($permohonan->nik ?: ''),
+            'kanan_jabatan' => $sc['ttd_kanan_jabatan'] ?: ($permohonan->jabatan ?: ''),
+        ];
+    }
+
     public function index()
     {
         $permohonan = Permohonan::with('instansi')->latest()->get();
@@ -144,14 +193,16 @@ class SuratController extends Controller
         $template->setValue('instansi', $xv($vInst));
         $template->setValue('penutup', $xv(str_replace("\n", ' ', $sc['penutup'])));
         $template->setValue('terima_kasih', $xv(str_replace("\n", ' ', $sc['terima_kasih'])));
+        $ttd = self::resolveTtd($permohonan, $sc);
+
         $template->setValue('ttd_kiri_label', $xv($sc['ttd_kiri_label']));
-        $template->setValue('ttd_kiri_nama', $xv($sc['ttd_kiri_nama'] ?: $permohonan->nama_peminjam ?? '-'));
-        $template->setValue('ttd_kiri_nrp', $xv($sc['ttd_kiri_nrp'] ?: $permohonan->nik ?? ''));
-        $template->setValue('ttd_kiri_jabatan', $xv($sc['ttd_kiri_jabatan'] ?: $permohonan->jabatan ?? ''));
+        $template->setValue('ttd_kiri_nama', $xv($ttd['kiri_nama']));
+        $template->setValue('ttd_kiri_nrp', $xv($ttd['kiri_nrp']));
+        $template->setValue('ttd_kiri_jabatan', $xv($ttd['kiri_jabatan']));
         $template->setValue('ttd_kanan_label', $xv($sc['ttd_kanan_label']));
-        $template->setValue('ttd_kanan_nama', $xv($sc['ttd_kanan_nama'] ?: $permohonan->nama_peminjam ?? '-'));
-        $template->setValue('ttd_kanan_nrp', $xv($sc['ttd_kanan_nrp'] ?: $permohonan->nik ?? ''));
-        $template->setValue('ttd_kanan_jabatan', $xv($sc['ttd_kanan_jabatan'] ?: $permohonan->jabatan ?? ''));
+        $template->setValue('ttd_kanan_nama', $xv($ttd['kanan_nama']));
+        $template->setValue('ttd_kanan_nrp', $xv($ttd['kanan_nrp']));
+        $template->setValue('ttd_kanan_jabatan', $xv($ttd['kanan_jabatan']));
 
         // Items
         $items = $permohonan->detailPermohonan;

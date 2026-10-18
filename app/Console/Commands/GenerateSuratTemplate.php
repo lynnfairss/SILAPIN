@@ -102,7 +102,7 @@ class GenerateSuratTemplate extends Command
         $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
         $identitasTable->addCell(5600)->addText('${nama_peminjam}', $fTNR, $pIdentitas);
         $identitasTable->addRow();
-        $identitasTable->addCell(2000)->addText('NRP', $fTNR, $pIdentitas);
+        $identitasTable->addCell(2000)->addText('NIK', $fTNR, $pIdentitas);
         $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
         $identitasTable->addCell(5600)->addText('${nrp}', $fTNR, $pIdentitas);
         $identitasTable->addRow();
@@ -192,7 +192,7 @@ class GenerateSuratTemplate extends Command
             $leftCell->addTextBreak();
         }
         $leftCell->addText('${ttd_kiri_nama}', $fTNR + ['bold' => true], $pTtd);
-        $leftCell->addText('NRP. ${ttd_kiri_nrp}', $fTNR, $pTtd);
+        $leftCell->addText('NIK. ${ttd_kiri_nrp}', $fTNR, $pTtd);
         $leftCell->addText('${ttd_kiri_jabatan}', $fTNR, $pTtd);
 
         $rightCell = $ttdTable->addCell(4513);
@@ -200,7 +200,7 @@ class GenerateSuratTemplate extends Command
             $rightCell->addTextBreak();
         }
         $rightCell->addText('${ttd_kanan_nama}', $fTNR + ['bold' => true], $pTtd);
-        $rightCell->addText('NRP. ${ttd_kanan_nrp}', $fTNR, $pTtd);
+        $rightCell->addText('NIK. ${ttd_kanan_nrp}', $fTNR, $pTtd);
         $rightCell->addText('${ttd_kanan_jabatan}', $fTNR, $pTtd);
 
         $outputPath = public_path('templates/template_peminjaman.docx');

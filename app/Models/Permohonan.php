@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TransisiStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -74,5 +75,19 @@ class Permohonan extends Model
     public function statusLogs()
     {
         return $this->hasMany(PermohonanStatusLog::class)->orderBy('created_at');
+    }
+
+    /**
+     * Admin/superadmin yang menyetujui permohonan ini, dipakai sebagai nama
+     * penandatangan pada kolom "Yang menyerahkan" di surat.
+     *
+     * Disetujui hanya bisa terjadi sekali (Menunggu → Disetujui), jadi log
+     * pertama yang cocok sudah pasti orang yang menyetujui.
+     */
+    public function penyetuju(): ?User
+    {
+        return $this->statusLogs()
+            ->where('status_baru', TransisiStatus::DISETUJUI)
+            ->first()?->user;
     }
 }

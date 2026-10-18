@@ -51,6 +51,20 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
+                        <label for="nik">NIK <span class="text-danger">*</span></label>
+                        <input type="text" name="nik" id="nik" inputmode="numeric" pattern="\d{16}"
+                               class="form-control @error('nik') is-invalid @enderror"
+                               value="{{ old('nik') }}" required maxlength="16" placeholder="3500000000000009">
+                        @error('nik')
+                            <span class="invalid-feedback">{{ $message }}</span>
+                        @enderror
+                        <small class="form-text text-muted">
+                            16 digit. NIK ini yang dicetak pada kolom &ldquo;Yang menyerahkan&rdquo; di surat peminjaman.
+                        </small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
                         <label for="role">Role <span class="text-danger">*</span></label>
                         <select name="role" id="role" class="form-control @error('role') is-invalid @enderror" required>
                             <option value="">-- Pilih Role --</option>

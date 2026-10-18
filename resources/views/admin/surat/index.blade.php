@@ -75,7 +75,7 @@
                     <a href="{{ route('surat.preview', $item->id) }}" class="btn btn-info btn-sm" title="Preview Surat" target="_blank">
                         <i class="fas fa-eye"></i>
                     </a>
-                    <a href="{{ route('peminjam.download-surat.docx', $item->id) }}" class="btn btn-success btn-sm" title="Download .docx">
+                    <a href="{{ route('surat.download.docx', $item->id) }}" class="btn btn-success btn-sm" title="Download .docx">
                         <i class="fas fa-file-word"></i>
                     </a>
                     <form action="{{ route('surat.generate-word', $item->id) }}" method="POST" style="display:inline;">

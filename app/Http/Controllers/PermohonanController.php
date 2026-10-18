@@ -24,7 +24,13 @@ class PermohonanController extends Controller
     {
         $instansi = Instansi::all();
         $kategori = Kategori::all();
-        $inventaris = Inventaris::with('kategori', 'jenis', 'fotos')->where('stok', '>', 0)->get();
+        // Barang stok 0 tetap dikirim ke form supaya peminjam tetap tahu barang
+        // itu ada, tapi tidak tersedia. Larangan memilihnya hanya di sisi
+        // tampilan (checkbox disabled).
+        $inventaris = Inventaris::with('kategori', 'jenis', 'fotos')
+            ->orderByRaw('stok <= 0')
+            ->orderBy('nama_barang')
+            ->get();
 
         $jenisList = Jenis::orderBy('nama_jenis')->pluck('nama_jenis');
 
@@ -226,13 +232,10 @@ class PermohonanController extends Controller
         return view('peminjam.cek-status', compact('permohonan', 'piiTerbuka'));
     }
 
-    public function downloadSurat(Permohonan $permohonan)
-    {
-        $permohonan->load('detailPermohonan.inventaris', 'instansi');
-
-        return view('peminjam.surat', compact('permohonan'));
-    }
-
+    /**
+     * Unduh surat dalam format DOCX. Hanya Admin/Super Admin yang boleh
+     * melewati route ini; peminjam tidak diberi akses unduh.
+     */
     public function downloadDocx(Permohonan $permohonan)
     {
         $permohonan->load('detailPermohonan.inventaris', 'instansi');
@@ -257,12 +260,14 @@ class PermohonanController extends Controller
         ];
         $hari = $hariNames[$datePinjam->format('l')] ?? $datePinjam->format('l');
 
-        $ttdKiriNama  = $sc['ttd_kiri_nama']   ?: $permohonan->nama_peminjam ?? '-';
-        $ttdKiriNrp   = $sc['ttd_kiri_nrp']    ?: $permohonan->nik ?? '';
-        $ttdKiriJab   = $sc['ttd_kiri_jabatan'] ?: $permohonan->jabatan ?? '';
-        $ttdKananNama = $sc['ttd_kanan_nama']  ?: $permohonan->nama_peminjam ?? '-';
-        $ttdKananNrp  = $sc['ttd_kanan_nrp']   ?: $permohonan->nik ?? '';
-        $ttdKananJab  = $sc['ttd_kanan_jabatan']?: $permohonan->jabatan ?? '';
+        $ttd = \App\Http\Controllers\Admin\SuratController::resolveTtd($permohonan, $sc);
+
+        $ttdKiriNama  = $ttd['kiri_nama'];
+        $ttdKiriNrp   = $ttd['kiri_nrp'];
+        $ttdKiriJab   = $ttd['kiri_jabatan'];
+        $ttdKananNama = $ttd['kanan_nama'];
+        $ttdKananNrp  = $ttd['kanan_nrp'];
+        $ttdKananJab  = $ttd['kanan_jabatan'];
 
         $isiText = '';
         if (!empty($sc['isi'])) {

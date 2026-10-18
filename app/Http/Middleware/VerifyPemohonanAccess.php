@@ -9,16 +9,15 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Menjaga berkas peminjam (surat DOCX/PDF/HTML).
+ * Menjaga halaman status peminjam (peminjam/cek-status).
  *
  * Dua sumber akses yang sah:
  *  1. Admin / Super Admin yang sudah login.
  *  2. Peminjam yang memegang token rahasia dari pengajuan atau cek-status.
  *
- * Route yang memakai middleware ini wajib menyertakan route model {permohonan}
- * supaya $request->route('permohonan') tersedia. Route tanpa model (cek-status)
- * memakai bolehLihatPii() di controller, karena yang perlu divalidasi adalah
- * berkas hasil pencarian, bukan parameter route.
+ * Catatan: berkas surat (DOCX/PDF/HTML) tidak lagi dilindungi middleware ini.
+ * Unduh surat hanya boleh Admin/Super Admin dan dipindah ke route surat.* di
+ * area admin, sehingga peminjam tidak punya jalur unduh sama sekali.
  */
 class VerifyPemohonanAccess
 {

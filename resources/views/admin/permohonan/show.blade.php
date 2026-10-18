@@ -504,10 +504,10 @@
                             <i class="fas fa-download me-1"></i>Download Surat
                         </button>
                         <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{{ route('peminjam.download-surat.docx', $permohonan->id) }}" target="_blank">
+                            <a class="dropdown-item" href="{{ route('surat.download.docx', $permohonan->id) }}" target="_blank">
                                 <i class="fas fa-file-word me-2 text-primary"></i>Format DOCX
                             </a>
-                            <a class="dropdown-item" href="{{ route('peminjam.download-surat.pdf', $permohonan->id) }}" target="_blank">
+                            <a class="dropdown-item" href="{{ route('surat.download.pdf', $permohonan->id) }}" target="_blank">
                                 <i class="fas fa-file-pdf me-2 text-danger"></i>Format PDF
                             </a>
                         </div>

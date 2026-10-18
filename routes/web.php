@@ -5,6 +5,7 @@ use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PermohonanController;
+use App\Http\Controllers\PdfController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\InstansiController;
 use App\Http\Controllers\Admin\KategoriController;
@@ -39,16 +40,8 @@ Route::prefix('peminjam')->name('peminjam.')->group(function () {
         ->middleware('peminjam.access')
         ->name('cek-status');
 
-    // Berkas memuat NIK, alamat, dan telepon: wajib token atau sesi admin.
-    Route::get('download-surat/{permohonan}/docx', [PermohonanController::class, 'downloadDocx'])
-        ->middleware('peminjam.access')
-        ->name('download-surat.docx');
-    Route::get('download-surat/{permohonan}/pdf', [\App\Http\Controllers\PdfController::class, 'download'])
-        ->middleware('peminjam.access')
-        ->name('download-surat.pdf');
-    Route::get('download-surat/{permohonan}', [PermohonanController::class, 'downloadSurat'])
-        ->middleware('peminjam.access')
-        ->name('download-surat');
+    // Catatan: berkas surat (DOCX/PDF/HTML) tidak lagi dibuka untuk peminjam.
+    // Hanya Admin/Super Admin yang boleh, lewat route surat.* di area admin.
 });
 
 /*
@@ -102,7 +95,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('inventaris/foto/{foto}', [InventarisController::class, 'destroyFoto'])->name('inventaris.foto.destroy');
 
         // Manajemen User (hanya Super Admin)
-        Route::resource('users', UserController::class)->except(['show', 'edit', 'update']);
+        Route::resource('users', UserController::class)->except(['show']);
     });
 
     // Permohonan (Super Admin + Admin)
@@ -122,6 +115,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('surat', [SuratController::class, 'index'])->name('surat.index');
 
         Route::get('surat/{permohonan}/preview', [SuratController::class, 'preview'])->name('surat.preview');
+
+        // Berkas surat hanya untuk Admin/Super Admin. Peminjam tidak diberi
+        // jalur unduh sama sekali, sehingga tidak perlu token di sini.
+        Route::get('surat/{permohonan}/download/docx', [PermohonanController::class, 'downloadDocx'])
+            ->name('surat.download.docx');
+        Route::get('surat/{permohonan}/download/pdf', [PdfController::class, 'download'])
+            ->name('surat.download.pdf');
+
         Route::post('surat/{permohonan}/generate-word', [SuratController::class, 'generateWord'])->name('surat.generate-word');
         Route::post('surat/sync-now', [SuratController::class, 'syncNow'])->name('surat.sync-now');
         Route::get('surat/sync-status', [SuratController::class, 'syncStatus'])->name('surat.sync-status');

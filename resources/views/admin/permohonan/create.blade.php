@@ -104,14 +104,14 @@
                     <div class="form-group">
                         <label for="tanggal_pinjam">Tanggal Pinjam <span class="text-danger">*</span></label>
                         <input type="date" name="tanggal_pinjam" id="tanggal_pinjam" class="form-control"
-                               value="{{ old('tanggal_pinjam') }}" required>
+                               value="{{ old('tanggal_pinjam', now('Asia/Jakarta')->format('Y-m-d')) }}" required>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
                         <label for="tanggal_kembali">Tanggal Kembali <span class="text-danger">*</span></label>
                         <input type="date" name="tanggal_kembali" id="tanggal_kembali" class="form-control"
-                               value="{{ old('tanggal_kembali') }}" required>
+                               value="{{ old('tanggal_kembali', now('Asia/Jakarta')->format('Y-m-d')) }}" required>
                     </div>
                 </div>
             </div>

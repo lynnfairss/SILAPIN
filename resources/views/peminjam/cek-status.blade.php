@@ -143,7 +143,10 @@
                                 <strong>Permohonan Diajukan</strong>
                                 <div class="text-muted small">{{ $permohonan->created_at->format('d M Y H:i') }}</div>
                             </div>
-                            <div class="status-item {{ in_array($permohonan->status, ['Menunggu','Disetujui','Ditolak','Dipinjam','Dikembalikan']) ? 'active' : '' }} {{ $permohonan->status == 'Menunggu' ? 'active' : '' }}">
+                            {{-- Langkah ini pasti sudah dilalui begitu permohonan dikirim,
+                                 jadi titiknya hijau sama seperti "Permohonan Diajukan".
+                                 Jangan pakai kelas active: tidak ada aturan CSS untuknya. --}}
+                            <div class="status-item completed">
                                 <div class="status-dot"></div>
                                 <strong>Menunggu Persetujuan</strong>
                                 <div class="text-muted small">Permohonan sedang diproses admin</div>
@@ -179,16 +182,6 @@
                         </div>
                     </div>
                 </div>
-                <div class="card-footer bg-white text-end">
-                    @if($piiTerbuka ?? false)
-                        <a href="{{ route('peminjam.download-surat', ['permohonan' => $permohonan->id, 'token' => request('token')]) }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-download me-1"></i>Download Surat
-                        </a>
-                    @else
-                        <span class="text-muted small">
-                            <i class="fas fa-lock me-1"></i>Surat hanya dapat diunduh dari perangkat yang Anda gunakan saat mengajukan.
-                        </span>
-                    @endif
                 </div>
             </div>
             @endif

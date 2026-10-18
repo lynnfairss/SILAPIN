@@ -48,12 +48,14 @@
         $vJab   = $sc['jabatan']       ?: $permohonan->jabatan ?? '-';
         $vInst  = $sc['instansi']      ?: ($permohonan->instansi?->nama_instansi ?? $permohonan->nama_instansi_lain ?? '-');
 
-        $ttdKiriNama = $sc['ttd_kiri_nama']  ?: $permohonan->nama_peminjam ?? '-';
-        $ttdKiriNrp  = $sc['ttd_kiri_nrp']   ?: $permohonan->nik ?? '';
-        $ttdKiriJab  = $sc['ttd_kiri_jabatan']?: $permohonan->jabatan ?? '';
-        $ttdKananNama = $sc['ttd_kanan_nama'] ?: $permohonan->nama_peminjam ?? '-';
-        $ttdKananNrp  = $sc['ttd_kanan_nrp']  ?: $permohonan->nik ?? '';
-        $ttdKananJab  = $sc['ttd_kanan_jabatan']?: $permohonan->jabatan ?? '';
+        $ttd = \App\Http\Controllers\Admin\SuratController::resolveTtd($permohonan, $sc);
+
+        $ttdKiriNama = $ttd['kiri_nama'];
+        $ttdKiriNrp  = $ttd['kiri_nrp'];
+        $ttdKiriJab  = $ttd['kiri_jabatan'];
+        $ttdKananNama = $ttd['kanan_nama'];
+        $ttdKananNrp  = $ttd['kanan_nrp'];
+        $ttdKananJab  = $ttd['kanan_jabatan'];
 
         $datePinjam = \Carbon\Carbon::parse($permohonan->tanggal_pinjam);
         $hariNames = [
@@ -68,11 +70,11 @@
     @endphp
 
     @if(!$forPdf)
-    @php $tokenParams = ['token' => request('token')]; @endphp
+    {{-- Halaman ini hanya untuk Admin/Super Admin, jadi tidak ada parameter token. --}}
     <div class="no-print" style="text-align: right; margin-bottom: 8px;">
-        <a href="{{ route('peminjam.download-surat.docx', array_merge(['permohonan' => $permohonan->id], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
-        <a href="{{ route('peminjam.download-surat.pdf', array_merge(['permohonan' => $permohonan->id], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;">Unduh PDF</a>
-        <a href="{{ route('peminjam.cek-status', array_merge(['nomor' => $permohonan->nomor_permohonan], $tokenParams)) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#6c757d;color:#fff;">Kembali</a>
+        <a href="{{ route('surat.download.docx', $permohonan->id) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
+        <a href="{{ route('surat.download.pdf', $permohonan->id) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;">Unduh PDF</a>
+        <a href="{{ route('surat.index') }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#6c757d;color:#fff;">Kembali</a>
     </div>
     @endif
 
@@ -151,7 +153,7 @@
             <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $vNama }}</td>
         </tr>
         <tr>
-            <td style="padding:0; font-size:12pt; line-height:1.5;">NRP</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">NIK</td>
             <td style="padding:0; font-size:12pt; line-height:1.5;">:</td>
             <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $vNrp }}</td>
         </tr>
@@ -260,12 +262,12 @@
         <tr>
             <td width="50%" valign="top" align="center" style="padding:0;">
                 <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;"><strong>{{ $ttdKiriNama }}</strong></p>
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NRP. {{ $ttdKiriNrp }}</p>
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NIK. {{ $ttdKiriNrp }}</p>
                 @if($ttdKiriJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">{{ $ttdKiriJab }}</p>@endif
             </td>
             <td width="50%" valign="top" align="center" style="padding:0;">
                 <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;"><strong>{{ $ttdKananNama }}</strong></p>
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NRP. {{ $ttdKananNrp }}</p>
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NIK. {{ $ttdKananNrp }}</p>
                 @if($ttdKananJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">{{ $ttdKananJab }}</p>@endif
             </td>
         </tr>

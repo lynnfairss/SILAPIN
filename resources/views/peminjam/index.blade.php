@@ -179,11 +179,11 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Tanggal Pinjam <span class="text-danger">*</span></label>
-                                    <input type="date" name="tanggal_pinjam" class="form-control" value="{{ old('tanggal_pinjam') }}" required>
+                                    <input type="date" name="tanggal_pinjam" class="form-control" value="{{ old('tanggal_pinjam', now('Asia/Jakarta')->format('Y-m-d')) }}" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Tanggal Kembali <span class="text-danger">*</span></label>
-                                    <input type="date" name="tanggal_kembali" class="form-control" value="{{ old('tanggal_kembali') }}" required>
+                                    <input type="date" name="tanggal_kembali" class="form-control" value="{{ old('tanggal_kembali', now('Asia/Jakarta')->format('Y-m-d')) }}" required>
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-medium">Keperluan <span class="text-danger">*</span></label>
@@ -225,7 +225,7 @@
                             <div class="row g-3" id="barangContainer">
                                 @forelse($inventaris as $item)
                                  <div class="col-md-4 col-sm-6 barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-jenis="{{ $item->jenis?->nama_jenis ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
-                                    <div class="product-card" onclick="toggleBarang(this, {{ $item->id }})">
+                                    <div class="product-card{{ $item->stok <= 0 ? ' out-of-stock' : '' }}" data-stok="{{ (int) $item->stok }}" onclick="toggleBarang(this, {{ $item->id }})">
                                         <div class="img-slider" id="slider_{{ $item->id }}">
                                             @php $fotos = $item->fotos; @endphp
                                             @if($fotos->count() > 0)
@@ -261,24 +261,24 @@
                                                 @endif
                                             </div>
                                             <div class="product-stok">
-                                                @if($item->stok > 5)
-                                                    <span class="badge badge-stok-ample"><i class="fas fa-check-circle me-1"></i>Stok: {{ $item->stok }}</span>
-                                                @elseif($item->stok >= 2)
-                                                    <span class="badge badge-stok-moderate"><i class="fas fa-exclamation-circle me-1"></i>Stok: {{ $item->stok }}</span>
+                                                @if($item->stok <= 0)
+                                                    <span class="badge badge-stok-empty"><i class="fas fa-ban me-1"></i>Stok Habis</span>
                                                 @else
-                                                    <span class="badge badge-stok-low"><i class="fas fa-times-circle me-1"></i>Stok: {{ $item->stok }}</span>
+                                                    <span class="badge badge-stok-{{ $item->stok > 5 ? 'ample' : ($item->stok >= 2 ? 'moderate' : 'low') }}" data-stok-badge>
+                                                        <i class="fas {{ $item->stok > 5 ? 'fa-check-circle' : ($item->stok >= 2 ? 'fa-exclamation-circle' : 'fa-times-circle') }} me-1"></i>Stok: <span data-stok-value>{{ (int) $item->stok }}</span><span data-stok-sisa></span>
+                                                    </span>
                                                 @endif
                                             </div>
                                         </div>
 
                                         <div class="product-action">
                                             <div class="form-check" onclick="event.stopPropagation()">
-                                                <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})">
-                                                <label class="form-check-label" for="barang_{{ $item->id }}">Pilih Barang</label>
+                                                <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})" @disabled($item->stok <= 0)>
+                                                <label class="form-check-label" for="barang_{{ $item->id }}">{{ $item->stok <= 0 ? 'Stok Habis' : 'Pilih Barang' }}</label>
                                             </div>
                                             <div class="qty-stepper" onclick="event.stopPropagation()">
                                                 <button type="button" class="qty-btn qty-minus" onclick="changeQty(this, -1)" disabled>&minus;</button>
-                                                <input type="text" name="jumlah[{{ $item->id }}]" class="qty-input" value="1" min="1" max="{{ $item->stok }}" disabled oninput="validateQty(this)" onkeydown="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 96 && event.keyCode <= 105) || event.keyCode === 8 || event.keyCode === 46">
+                                                <input type="text" name="jumlah[{{ $item->id }}]" class="qty-input" value="1" min="1" max="{{ max(1, (int) $item->stok) }}" disabled oninput="validateQty(this)" onkeydown="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 96 && event.keyCode <= 105) || event.keyCode === 8 || event.keyCode === 46">
                                                 <button type="button" class="qty-btn qty-plus" onclick="changeQty(this, 1)">+</button>
                                             </div>
                                         </div>
@@ -477,6 +477,7 @@
     // ========== PRODUCT CARD: SELECT + STEPPER ==========
 
     function toggleSelect(chk, id) {
+        if (!chk || chk.disabled) return;
         const card = chk.closest('.product-card');
         card.classList.toggle('selected', chk.checked);
         const input = card.querySelector('.qty-input');
@@ -490,12 +491,61 @@
                 minus.disabled = true;
             }
         }
+        updateStokDisplay(card);
     }
 
     function toggleBarang(el, id) {
         const chk = el.querySelector('.form-check-input');
+        if (!chk || chk.disabled) return;
         chk.checked = !chk.checked;
         toggleSelect(chk, id);
+    }
+
+    // Warna + ikon badge mengikuti nilai stok yang ditampilkan. Ambangnya
+    // sengaja sama dengan yang dipakai Blade agar tampilan tidak berubah
+    // saat angka sisa stok ikut bergerak.
+    function terapkanGayaBadge(badge, angka) {
+        const gaya = angka > 5
+            ? ['ample', 'fa-check-circle']
+            : angka >= 2
+                ? ['moderate', 'fa-exclamation-circle']
+                : ['low', 'fa-times-circle'];
+
+        badge.className = 'badge badge-stok-' + gaya[0];
+
+        const ikon = badge.querySelector('i');
+        if (ikon) ikon.className = 'fas me-1 ' + gaya[1];
+    }
+
+    // Badge "Stok" pada kartu yang sedang dipilih menampilkan sisa stok setelah
+    // dikurangi jumlah yang diminta. Angka stok asli tidak diubah, hanya
+    // tampilannya, sehingga kartu yang di-uncheck kembali menampilkan angka penuh.
+    function updateStokDisplay(card) {
+        if (!card) return;
+
+        const badge = card.querySelector('[data-stok-badge]');
+        const nilai = card.querySelector('[data-stok-value]');
+        const sisa = card.querySelector('[data-stok-sisa]');
+        if (!badge || !nilai || !sisa) return;
+
+        const total = parseInt(card.dataset.stok, 10) || 0;
+        const chk = card.querySelector('.form-check-input');
+        const input = card.querySelector('.qty-input');
+        const dipilih = chk && !chk.disabled && chk.checked;
+
+        nilai.textContent = total;
+
+        if (!dipilih) {
+            terapkanGayaBadge(badge, total);
+            sisa.textContent = '';
+            return;
+        }
+
+        const jumlah = Math.min(Math.max(parseInt(input ? input.value : 1, 10) || 1, 1), total);
+        const tersisa = Math.max(total - jumlah, 0);
+
+        terapkanGayaBadge(badge, tersisa);
+        sisa.textContent = ' · Sisa: ' + tersisa;
     }
 
     function changeQty(btn, delta) {
@@ -508,6 +558,7 @@
         input.value = val;
         btn.parentElement.querySelector('.qty-minus').disabled = val <= min;
         btn.parentElement.querySelector('.qty-plus').disabled = val >= max;
+        updateStokDisplay(input.closest('.product-card'));
     }
 
     function validateQty(input) {
@@ -519,6 +570,7 @@
         input.value = val;
         input.parentElement.querySelector('.qty-minus').disabled = val <= min;
         input.parentElement.querySelector('.qty-plus').disabled = val >= max;
+        updateStokDisplay(input.closest('.product-card'));
     }
 
     // ========== IMAGE SLIDER PER CARD ==========
