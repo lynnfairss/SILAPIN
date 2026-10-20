@@ -263,13 +263,20 @@ class PermohonanController extends Controller
         return redirect()->route('permohonan.index')->with('success', $pesan);
     }
 
+    /**
+     * Data permohonan untuk halaman pengembalian setelah QR discan.
+     *
+     * Dipakai juga oleh petugas untuk memverifikasi identitas peminjam:
+     * karena itu data pribadi dan lampiran (foto KTP / surat tugas) ikut
+     * dikirim. Route ini hanya untuk Admin/Super Admin.
+     */
     public function cekNomor(Request $request)
     {
         $request->validate([
             'nomor_permohonan' => ['required', 'string', 'max:50'],
         ]);
 
-        $permohonan = Permohonan::with('detailPermohonan.inventaris')
+        $permohonan = Permohonan::with('detailPermohonan.inventaris', 'instansi')
             ->where('nomor_permohonan', $request->string('nomor_permohonan')->toString())
             ->first();
 
@@ -277,17 +284,71 @@ class PermohonanController extends Controller
             return response()->json(['exists' => false]);
         }
 
-        $barang = $permohonan->detailPermohonan->map(function ($d) {
-            return ($d->inventaris->nama_barang ?? 'Barang #' . $d->inventaris_id) . ' (' . $d->jumlah . ')';
-        })->implode(', ');
+        $items = $permohonan->detailPermohonan->map(function ($d) {
+            return [
+                'nama'   => $d->inventaris->nama_barang ?? 'Barang #' . $d->inventaris_id,
+                'kode'   => $d->inventaris->kode_barang ?? '-',
+                'jumlah' => (int) $d->jumlah,
+            ];
+        })->values();
+
+        $barang = $items
+            ->map(fn ($i) => $i['nama'] . ' (' . $i['jumlah'] . ')')
+            ->implode(', ');
 
         return response()->json([
             'exists'         => true,
+
+            // Identitas peminjam
             'nama_peminjam'  => $permohonan->nama_peminjam,
+            'nik'            => $permohonan->nik,
+            'telepon'        => $permohonan->telepon,
+            'alamat'         => $permohonan->alamat,
+            'instansi'       => $permohonan->instansi?->nama_instansi
+                ?? $permohonan->nama_instansi_lain
+                ?? '-',
+            'tanggal_pinjam' => $this->formatTanggal($permohonan->tanggal_pinjam),
+            'tanggal_kembali' => $this->formatTanggal($permohonan->tanggal_kembali),
+            'keperluan'      => $permohonan->keperluan,
             'status'         => $permohonan->status,
-            'barang'         => $barang ?: '-',
-            'total_jumlah'   => $permohonan->detailPermohonan->sum('jumlah'),
+
+            // Barang yang dipinjam
+            'items'          => $items,
+            'barang'         => $barang ?: '-', // dipertahankan untuk kompatibilitas
+            'total_jumlah'   => (int) $permohonan->detailPermohonan->sum('jumlah'),
+
+            // Lampiran
+            'foto_ktp'       => $this->infoLampiran($permohonan->foto_ktp),
+            'surat_tugas'    => $this->infoLampiran($permohonan->surat_tugas),
         ]);
+    }
+
+    private function formatTanggal($tanggal): ?string
+    {
+        if (blank($tanggal)) {
+            return null;
+        }
+
+        return \Illuminate\Support\Carbon::parse($tanggal)->translatedFormat('d M Y');
+    }
+
+    /**
+     * @return array{url: string, nama: string, is_image: bool, is_pdf: bool}|null
+     */
+    private function infoLampiran(?string $path): ?array
+    {
+        if (blank($path)) {
+            return null;
+        }
+
+        $ekstensi = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+        return [
+            'url'      => asset('storage/' . $path),
+            'nama'     => basename($path),
+            'is_image' => in_array($ekstensi, ['jpg', 'jpeg', 'png', 'webp', 'gif'], true),
+            'is_pdf'   => $ekstensi === 'pdf',
+        ];
     }
 
     public function destroy(Permohonan $permohonan)
