@@ -4,9 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SILAPIN</title>
+    <title>SILAPIN — Sistem Informasi Peminjaman Inventaris</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ asset('css/silapin-theme.css') }}?v={{ filemtime(public_path('css/silapin-theme.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/website.css') }}?v={{ filemtime(public_path('css/website.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/splash.css') }}?v={{ time() }}" rel="stylesheet">
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
@@ -32,92 +36,70 @@
 <body>
 @include('partials.splash')
 
-<nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow" id="mainNav" style="background: rgba(33,37,41,.9); backdrop-filter: blur(10px);">
-    <div class="container">
-        <button class="navbar-toggler border-0 me-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <a class="navbar-brand fw-bold" href="#home">
-            <i class="fas fa-boxes-stacked me-2"></i>SILAPIN
-        </a>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link active" href="#home"><i class="fas fa-home me-1"></i>Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#inventaris"><i class="fas fa-boxes-stacked me-1"></i>Daftar Inventaris</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#layanan"><i class="fas fa-hand-holding-heart me-1"></i>Layanan Peminjaman</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#cek-status"><i class="fas fa-search me-1"></i>Cek Status</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#kontak"><i class="fas fa-envelope me-1"></i>Kontak</a>
-                </li>
-            </ul>
-            <div class="d-flex align-items-center">
-                @auth
-                    <a href="{{ route('dashboard') }}" class="btn btn-outline-light btn-sm">
-                        <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                    </a>
-                @else
-                    <a href="{{ route('login.admin') }}" class="btn btn-light btn-sm fw-semibold">
-                        <i class="fas fa-sign-in-alt me-1"></i>Login Admin
-                    </a>
-                @endauth
-            </div>
-        </div>
-    </div>
-</nav>
+@include('partials.public-navbar', ['active' => 'home', 'transparent' => true])
 
-<section id="home" class="hero text-white text-center" style="margin-top: 56px;">
-    <div class="container py-5 position-relative" style="z-index:1;">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <img class="hero__logo fade-up" src="{{ asset('images/logosilapin.png') }}?v={{ filemtime(public_path('images/logosilapin.png')) }}" alt="Logo SILAPIN">
-                <h1 class="visually-hidden">SILAPIN</h1>
-                <hr class="border-light mx-auto mb-4" style="width: 80px;">
-                <p class="mb-4 fade-up" style="transition-delay:.2s">Kelola peminjaman barang inventaris dengan mudah, cepat, dan transparan.</p>
-                <div class="d-flex justify-content-center gap-3 flex-wrap fade-up" style="transition-delay:.3s">
-                    <a href="#inventaris" class="btn btn-light btn-lg px-4">
-                        <i class="fas fa-boxes-stacked me-2"></i>Lihat Daftar Barang
+<section id="home" class="sp-hero">
+    <span class="sp-hero__dots sp-hero__dots--left" aria-hidden="true"></span>
+    <span class="sp-hero__dots sp-hero__dots--right" aria-hidden="true"></span>
+
+    <div class="container position-relative" style="z-index:2;">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-9 col-xl-8">
+                <img class="sp-hero__logo fade-up"
+                     src="{{ asset('images/logosilapin.png') }}?v={{ filemtime(public_path('images/logosilapin.png')) }}"
+                     alt="Logo SILAPIN">
+                <h1 class="sp-hero__title fade-up" style="transition-delay:.1s">
+                    Peminjaman Inventaris Lebih Mudah dan Transparan
+                </h1>
+                <p class="sp-hero__sub fade-up" style="transition-delay:.18s">
+                    Temukan barang, ajukan peminjaman, dan pantau status permohonan dalam satu tempat.
+                </p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap fade-up" style="transition-delay:.26s">
+                    <a href="#inventaris" class="sp-btn sp-btn--light">
+                        <i class="fas fa-boxes-stacked"></i>Lihat Daftar Barang
                     </a>
-                    <a href="{{ route('peminjam.form') }}" class="btn btn-outline-light btn-lg px-4">
-                        <i class="fas fa-hand-holding-heart me-2"></i>Ajukan Peminjaman
+                    <a href="{{ route('peminjam.form') }}" class="sp-btn sp-btn--primary">
+                        <i class="fas fa-paper-plane"></i>Ajukan Peminjaman<i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
             </div>
         </div>
-        <div class="row mt-5 pt-4 justify-content-center fade-up" style="transition-delay:.4s">
-            <div class="col-auto">
-                <div class="stat-card bg-white bg-opacity-10 text-white rounded-3 px-4 py-3 text-center" style="border-left-color:#4dabf7;">
-                    <h3 class="fw-bold mb-0" id="counterBarang">0</h3>
-                    <small class="opacity-75">Barang Tersedia</small>
+
+        <div class="sp-stats fade-up" style="transition-delay:.34s">
+            <div class="sp-stat">
+                <div class="sp-stat__icon sp-stat__icon--blue"><i class="fas fa-cube"></i></div>
+                <div class="text-start">
+                    <div class="sp-stat__value" id="counterBarang">0</div>
+                    <div class="sp-stat__label">Barang Tersedia</div>
                 </div>
             </div>
-            <div class="col-auto">
-                <div class="stat-card bg-white bg-opacity-10 text-white rounded-3 px-4 py-3 text-center" style="border-left-color:#69db7c;">
-                    <h3 class="fw-bold mb-0" id="counterKategori">0</h3>
-                    <small class="opacity-75">Kategori</small>
+            <div class="sp-stat">
+                <div class="sp-stat__icon sp-stat__icon--purple"><i class="fas fa-table-cells-large"></i></div>
+                <div class="text-start">
+                    <div class="sp-stat__value" id="counterKategori">0</div>
+                    <div class="sp-stat__label">Kategori</div>
                 </div>
             </div>
-            <div class="col-auto">
-                <div class="stat-card bg-white bg-opacity-10 text-white rounded-3 px-4 py-3 text-center" style="border-left-color:#ffd43b;">
-                    <h3 class="fw-bold mb-0" id="counterStok">0</h3>
-                    <small class="opacity-75">Total Stok</small>
+            <div class="sp-stat">
+                <div class="sp-stat__icon sp-stat__icon--teal"><i class="fas fa-layer-group"></i></div>
+                <div class="text-start">
+                    <div class="sp-stat__value" id="counterStok">0</div>
+                    <div class="sp-stat__label">Total Stok</div>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section id="inventaris" class="py-5 bg-light">
+<section id="inventaris" class="sp-section sp-section--light">
     <div class="container">
-        <h3 class="text-center fw-bold mb-2 section-title fade-up">Daftar Inventaris</h3>
-        <p class="text-center text-muted mb-4 fade-up">Daftar barang yang tersedia untuk dipinjam</p>
+        <div class="sp-section-head fade-up">
+            <div>
+                <h2 class="sp-section-head__title">Inventaris Pilihan</h2>
+                <p class="sp-section-head__sub">Berbagai peralatan yang paling sering dipinjam oleh instansi dan masyarakat.</p>
+            </div>
+            <a href="#inventoryGrid" class="sp-link-more">Lihat Semua <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
 
         <div class="inv-search fade-up">
             <i class="fas fa-search inv-search-icon"></i>
@@ -133,6 +115,23 @@
 
         <div class="inventory-grid fade-up" id="inventoryGrid">
             @forelse($inventaris as $item)
+            @php
+                $katName = strtolower($item->kategori->nama_kategori ?? '');
+                $catIcon = 'fa-tag';
+                foreach ([
+                    'kamera' => 'fa-camera', 'camera' => 'fa-camera',
+                    'laptop' => 'fa-laptop', 'komputer' => 'fa-laptop', 'notebook' => 'fa-laptop',
+                    'proyektor' => 'fa-video', 'projector' => 'fa-video',
+                    'mikrofon' => 'fa-microphone', 'mic' => 'fa-microphone', 'audio' => 'fa-microphone', 'sound' => 'fa-microphone',
+                    'printer' => 'fa-print', 'cetak' => 'fa-print',
+                    'jaringan' => 'fa-network-wired', 'router' => 'fa-wifi',
+                    'meja' => 'fa-chair', 'kursi' => 'fa-chair',
+                    'kendaraan' => 'fa-car', 'mobil' => 'fa-car', 'motor' => 'fa-motorcycle',
+                    'tenda' => 'fa-campground',
+                ] as $needle => $icon) {
+                    if ($katName !== '' && str_contains($katName, $needle)) { $catIcon = $icon; break; }
+                }
+            @endphp
             <div class="product-card" data-nama="{{ strtolower($item->nama_barang) }}" data-kode="{{ strtolower($item->kode_barang) }}" data-kategori="{{ strtolower($item->kategori->nama_kategori ?? '') }}">
                 <div class="img-slider" id="slider_inv_{{ $item->id }}">
                     @php $fotos = $item->fotos; @endphp
@@ -160,27 +159,30 @@
                             <i class="fas fa-box"></i>
                         </div>
                     @endif
+
+                    <span class="stock-badge {{ $item->stok > 0 ? 'stock-badge--available' : 'stock-badge--empty' }}">
+                        {{ $item->stok > 0 ? 'Tersedia' : 'Habis' }}
+                    </span>
                 </div>
 
                 <div class="product-info">
                     <div class="product-name">{{ $item->nama_barang }}</div>
-                    <div class="product-meta">
-                        <span><code>{{ $item->kode_barang }}</code></span>
-                        <span class="product-kategori">{{ $item->kategori->nama_kategori ?? '-' }}</span>
+                    <div class="product-cat">
+                        <i class="fas {{ $catIcon }}"></i>
+                        <span>{{ $item->kategori->nama_kategori ?? 'Lainnya' }}</span>
                     </div>
                     <div class="product-stok-kondisi">
-                        @if($item->stok > 0)
-                            <span class="badge bg-success badge-kondisi">Stok: {{ $item->stok }}</span>
-                        @else
-                            <span class="badge bg-danger badge-kondisi">Habis</span>
-                        @endif
-                        @if($item->kondisi == 'Baik')
-                            <span class="badge bg-success badge-kondisi"><i class="fas fa-check-circle me-1"></i>{{ $item->kondisi }}</span>
-                        @elseif($item->kondisi == 'Rusak Ringan')
-                            <span class="badge bg-warning text-dark badge-kondisi"><i class="fas fa-exclamation-triangle me-1"></i>{{ $item->kondisi }}</span>
-                        @else
-                            <span class="badge bg-danger badge-kondisi"><i class="fas fa-times-circle me-1"></i>{{ $item->kondisi }}</span>
-                        @endif
+                        <span><i class="fas fa-boxes-stacked me-1"></i>Stok: {{ $item->stok }}</span>
+                        <span class="meta-dot">•</span>
+                        <span>
+                            @if($item->kondisi == 'Baik')
+                                <i class="fas fa-circle-check me-1 text-success"></i>{{ $item->kondisi }}
+                            @elseif($item->kondisi == 'Rusak Ringan')
+                                <i class="fas fa-triangle-exclamation me-1 text-warning"></i>{{ $item->kondisi }}
+                            @else
+                                <i class="fas fa-circle-xmark me-1 text-danger"></i>{{ $item->kondisi }}
+                            @endif
+                        </span>
                     </div>
                 </div>
             </div>
@@ -205,42 +207,41 @@
     </div>
 </div>
 
-<section id="layanan" class="py-5">
+<section id="layanan" class="sp-section sp-section--muted">
     <div class="container">
-        <h3 class="text-center fw-bold mb-2 section-title fade-up">Layanan Peminjaman</h3>
-        <p class="text-center text-muted mb-4 fade-up">Langkah mudah untuk mengajukan peminjaman barang inventaris</p>
+        <div class="sp-section-head fade-up">
+            <div>
+                <h2 class="sp-section-head__title">Layanan Peminjaman</h2>
+                <p class="sp-section-head__sub">Langkah mudah untuk mengajukan peminjaman barang inventaris.</p>
+            </div>
+            <a href="{{ route('peminjam.form') }}" class="sp-link-more">Mulai Ajukan <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
 
         <div class="row g-4">
             <div class="col-md-4 fade-up">
-                <div class="card h-100 shadow-sm text-center step-card">
-                    <div class="card-body py-4">
-                        <div class="step-icon bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:75px;height:75px;">
-                            <i class="fas fa-file-alt fa-2x"></i>
-                        </div>
-                        <h5 class="fw-bold">1. Ajukan Permohonan</h5>
-                        <p class="text-muted mb-0">Isi formulir permohonan peminjaman dengan data yang valid dan lengkap.</p>
+                <div class="card h-100 sp-step-card">
+                    <div class="card-body">
+                        <div class="sp-step-icon sp-step-icon--blue"><i class="fas fa-file-alt"></i></div>
+                        <h5>1. Ajukan Permohonan</h5>
+                        <p class="mb-0">Isi formulir permohonan peminjaman dengan data yang valid dan lengkap.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4 fade-up" style="transition-delay:.15s">
-                <div class="card h-100 shadow-sm text-center step-card">
-                    <div class="card-body py-4">
-                        <div class="step-icon bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:75px;height:75px;">
-                            <i class="fas fa-clock fa-2x"></i>
-                        </div>
-                        <h5 class="fw-bold">2. Tunggu Persetujuan</h5>
-                        <p class="text-muted mb-0">Admin akan memproses dan menyetujui permohonan Anda.</p>
+                <div class="card h-100 sp-step-card">
+                    <div class="card-body">
+                        <div class="sp-step-icon sp-step-icon--amber"><i class="fas fa-clock"></i></div>
+                        <h5>2. Tunggu Persetujuan</h5>
+                        <p class="mb-0">Admin akan memproses dan menyetujui permohonan Anda.</p>
                     </div>
                 </div>
             </div>
             <div class="col-md-4 fade-up" style="transition-delay:.3s">
-                <div class="card h-100 shadow-sm text-center step-card">
-                    <div class="card-body py-4">
-                        <div class="step-icon bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:75px;height:75px;">
-                            <i class="fas fa-check-circle fa-2x"></i>
-                        </div>
-                        <h5 class="fw-bold">3. Ambil Barang</h5>
-                        <p class="text-muted mb-0">Setelah disetujui, silakan ambil barang sesuai jadwal yang ditentukan.</p>
+                <div class="card h-100 sp-step-card">
+                    <div class="card-body">
+                        <div class="sp-step-icon sp-step-icon--teal"><i class="fas fa-check-circle"></i></div>
+                        <h5>3. Ambil Barang</h5>
+                        <p class="mb-0">Setelah disetujui, silakan ambil barang sesuai jadwal yang ditentukan.</p>
                     </div>
                 </div>
             </div>
@@ -248,14 +249,19 @@
     </div>
 </section>
 
-<section id="cek-status" class="py-5 bg-light">
+<section id="cek-status" class="sp-section sp-section--light">
     <div class="container">
-        <h3 class="text-center fw-bold mb-2 section-title fade-up">Cek Status Peminjaman</h3>
-        <p class="text-center text-muted mb-4 fade-up">Masukkan nomor permohonan untuk mengecek status peminjaman Anda</p>
+        <div class="sp-section-head fade-up">
+            <div>
+                <h2 class="sp-section-head__title">Cek Status Peminjaman</h2>
+                <p class="sp-section-head__sub">Masukkan nomor permohonan untuk mengecek status peminjaman Anda.</p>
+            </div>
+            <a href="{{ route('peminjam.cek-status') }}" class="sp-link-more">Buka Halaman Status <i class="fas fa-arrow-right ms-1"></i></a>
+        </div>
 
         <div class="row justify-content-center fade-up">
-            <div class="col-md-6">
-                <div class="card shadow-sm cek-status-card">
+            <div class="col-lg-7">
+                <div class="card cek-status-card">
                     <div class="card-body">
                         <form id="formCekStatus">
                             <div class="input-group">
@@ -275,18 +281,22 @@
     </div>
 </section>
 
-<section id="kontak" class="py-5">
+<section id="kontak" class="sp-section sp-section--muted">
     <div class="container">
-        <h3 class="text-center fw-bold mb-2 section-title fade-up">Kontak</h3>
-        <p class="text-center text-muted mb-4 fade-up">Hubungi kami untuk informasi lebih lanjut</p>
+        <div class="sp-section-head fade-up">
+            <div>
+                <h2 class="sp-section-head__title">Kontak</h2>
+                <p class="sp-section-head__sub">Hubungi kami untuk informasi lebih lanjut.</p>
+            </div>
+        </div>
 
         <div class="row justify-content-center fade-up">
-            <div class="col-md-6">
-                <div class="card shadow-sm">
+            <div class="col-lg-7">
+                <div class="card">
                     <div class="card-body">
                         <ul class="list-unstyled mb-0">
                             <li class="d-flex align-items-start mb-3 contact-item">
-                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width:48px;height:48px;">
+                                <div class="sp-contact-icon sp-contact-icon--blue">
                                     <i class="fas fa-map-marker-alt"></i>
                                 </div>
                                 <div>
@@ -295,7 +305,7 @@
                                 </div>
                             </li>
                             <li class="d-flex align-items-start mb-3 contact-item">
-                                <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width:48px;height:48px;">
+                                <div class="sp-contact-icon sp-contact-icon--teal">
                                     <i class="fas fa-phone"></i>
                                 </div>
                                 <div>
@@ -304,7 +314,7 @@
                                 </div>
                             </li>
                             <li class="d-flex align-items-start contact-item">
-                                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0" style="width:48px;height:48px;">
+                                <div class="sp-contact-icon sp-contact-icon--amber">
                                     <i class="fas fa-envelope"></i>
                                 </div>
                                 <div>
@@ -320,16 +330,7 @@
     </div>
 </section>
 
-<footer class="text-white text-center py-4">
-    <div class="container">
-        <div class="d-flex justify-content-center mb-3">
-            <a href="#" class="text-white me-3 fs-5"><i class="fab fa-facebook"></i></a>
-            <a href="#" class="text-white me-3 fs-5"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="text-white fs-5"><i class="fab fa-whatsapp"></i></a>
-        </div>
-        <p class="mb-0">&copy; 2026 SILAPIN - Sistem Informasi Peminjaman Inventaris</p>
-    </div>
-</footer>
+@include('partials.public-footer')
 
 <button id="backToTop" class="btn btn-primary shadow">
     <i class="fas fa-arrow-up"></i>
@@ -359,13 +360,10 @@
     }
 
     // Navbar background on scroll
-    const mainNav = document.getElementById('mainNav');
+    const mainNav = document.getElementById('spNavbar');
     function handleNavScroll() {
-        if (window.scrollY > 50) {
-            mainNav.classList.add('navbar-scrolled');
-        } else {
-            mainNav.classList.remove('navbar-scrolled');
-        }
+        if (!mainNav) return;
+        mainNav.classList.toggle('sp-navbar--scrolled', window.scrollY > 40);
     }
 
     // Back to top
@@ -436,7 +434,7 @@
     // Close mobile nav on link click
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
-            const collapse = document.getElementById('navbarNav');
+            const collapse = document.getElementById('spNav');
             const bsCollapse = bootstrap.Collapse.getInstance(collapse);
             if (bsCollapse) bsCollapse.hide();
         });

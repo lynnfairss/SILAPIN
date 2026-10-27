@@ -1,6 +1,6 @@
 /* ===================== SIDEBAR ===================== */
 .sidebar-dark-custom {
-    background: linear-gradient(180deg, #1a1a2e 0%, #0f3460 100%);
+    background: linear-gradient(180deg, #0B2545 0%, #081F4D 100%);
 }
 
 .sidebar-dark-custom .nav-sidebar .nav-link {
@@ -10,7 +10,7 @@
 
 .sidebar-dark-custom .nav-sidebar > .nav-item > .nav-link.active,
 .sidebar-dark-custom .nav-sidebar > .nav-item.menu-open > .nav-link {
-    background: #1d4ed8 !important;
+    background: #2563EB !important;
     color: #fff !important;
     box-shadow: inset 3px 0 0 #93c5fd !important;
 }
@@ -18,19 +18,19 @@
 .sidebar-dark-custom .nav-sidebar > .nav-item:hover > .nav-link,
 .sidebar-dark-custom .nav-sidebar > .nav-item > .nav-link:hover,
 .sidebar-dark-custom .nav-sidebar > .nav-item > .nav-link:focus {
-    background: #1e40af !important;
+    background: #1D4ED8 !important;
     color: #fff !important;
 }
 
 .sidebar-dark-custom .nav-sidebar > .nav-item > .nav-link:active {
-    background: #172554 !important;
+    background: #081F4D !important;
     color: #fff !important;
 }
 
 /* Submenu treeview ikut sama */
 .sidebar-dark-custom .nav-sidebar .nav-treeview > .nav-item > .nav-link:hover,
 .sidebar-dark-custom .nav-sidebar .nav-treeview > .nav-item > .nav-link.active {
-    background: #1e40af !important;
+    background: #1D4ED8 !important;
     color: #fff !important;
 }
 
@@ -100,7 +100,7 @@
 
 /* ===================== NAVBAR ===================== */
 .navbar-dark-custom {
-    background: #1a1a2e !important;
+    background: #0A2353 !important;
     backdrop-filter: blur(8px);
     border-bottom: 1px solid rgba(255, 255, 255, .08);
 }

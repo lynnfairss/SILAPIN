@@ -6,17 +6,42 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login Admin - SILAPIN</title>
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            font-family: 'Segoe UI', sans-serif;
+            background:
+                radial-gradient(700px 340px at 82% 0%, rgba(59,130,246,.22), transparent 60%),
+                radial-gradient(600px 320px at 8% 100%, rgba(37,99,235,.18), transparent 62%),
+                linear-gradient(160deg, #0B2E6E 0%, #08224F 55%, #061A3F 100%);
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            right: 6%;
+            top: 12%;
+            width: 200px;
+            height: 240px;
+            background-image: radial-gradient(rgba(147,197,253,.5) 1.5px, transparent 1.6px);
+            background-size: 14px 14px;
+            opacity: .4;
+            pointer-events: none;
+            -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+            mask-image: radial-gradient(closest-side, #000 55%, transparent 100%);
+        }
+        @media (max-width: 767.98px) {
+            body::after { display: none; }
         }
 
         .login-container {
@@ -30,18 +55,15 @@
             color: #fff;
             margin-bottom: 30px;
         }
-        .login-brand .brand-icon {
-            width: 70px; height: 70px;
-            background: linear-gradient(135deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-            font-size: 30px;
-            color: #fff;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,.1);
+        .login-brand .brand-logo {
+            display: block;
+            width: 96px;
+            height: 96px;
+            margin: 0 auto 16px;
+            border-radius: 50%;
+            background: #fff;
+            padding: 8px;
+            box-shadow: 0 18px 44px rgba(3, 15, 40, .4);
         }
         .login-brand h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
         .login-brand p { opacity: .5; font-size: .85rem; }
@@ -55,7 +77,7 @@
 
         .card-top {
             height: 5px;
-            background: linear-gradient(90deg, #0d6efd, #6610f2, #d63384);
+            background: linear-gradient(90deg, #3B82F6, #2563EB);
         }
 
         .card-body-custom {
@@ -81,7 +103,7 @@
             transition: border .2s, box-shadow .2s;
         }
         .form-control:focus {
-            border-color: #0d6efd;
+            border-color: #2563EB;
             box-shadow: 0 0 0 .2rem rgba(13,110,253,.12);
         }
         .input-group-text {
@@ -97,7 +119,7 @@
         }
         .input-group:focus-within .input-group-text,
         .input-group:focus-within .form-control {
-            border-color: #0d6efd;
+            border-color: #2563EB;
         }
 
         .toggle-pw {
@@ -117,22 +139,22 @@
             padding: 11px;
             font-weight: 600;
             font-size: .95rem;
-            background: linear-gradient(135deg, #0d6efd, #0b5ed7);
+            background: linear-gradient(135deg, #3B82F6, #2563EB);
             border: none;
             color: #fff;
             transition: all .2s;
         }
         .btn-login:hover {
             transform: translateY(-1px);
-            box-shadow: 0 4px 15px rgba(13,110,253,.35);
-            background: linear-gradient(135deg, #0b5ed7, #0a58ca);
+            box-shadow: 0 4px 15px rgba(37,99,235,.35);
+            background: linear-gradient(135deg, #2563EB, #1D4ED8);
         }
 
         .form-links {
             font-size: .85rem;
         }
         .form-links a {
-            color: #0d6efd;
+            color: #2563EB;
             text-decoration: none;
             transition: color .2s;
         }
@@ -165,9 +187,7 @@
 <div class="login-container">
 
     <div class="login-brand">
-        <div class="brand-icon">
-            <i class="fas fa-user-shield"></i>
-        </div>
+        <img class="brand-logo" src="{{ asset('images/logosilapin.png') }}" alt="Logo SILAPIN">
         <h1>SILAPIN</h1>
         <p>Login Admin</p>
     </div>
@@ -247,7 +267,7 @@
 
                 <button type="button" id="btnPasskey" class="btn w-100"
                         style="border-radius:10px; padding:11px; font-weight:600; font-size:.95rem;
-                               border:1.5px solid #0d6efd; color:#0d6efd; background:#fff; transition:all .2s;">
+                               border:1.5px solid #2563EB; color:#2563EB; background:#fff; transition:all .2s;">
                     <i class="fas fa-fingerprint me-2"></i>Masuk dengan Passkey
                 </button>
             </form>

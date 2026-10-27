@@ -5,29 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cek Status - SILAPIN</title>
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-    <link href="{{ asset('css/peminjam.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/silapin-theme.css') }}?v={{ filemtime(public_path('css/silapin-theme.css')) }}" rel="stylesheet">
+    <link href="{{ asset('css/peminjam.css') }}?v={{ filemtime(public_path('css/peminjam.css')) }}" rel="stylesheet">
     <style>
         .badge-status { font-size: .85rem; padding: .4em .8em; }
     </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ route('website') }}">
-            <i class="fas fa-boxes-stacked me-2"></i>SILAPIN
-        </a>
-        <div>
-            <a href="{{ route('peminjam.form') }}" class="btn btn-outline-light btn-sm">
-                <i class="fas fa-plus me-1"></i>Ajukan Peminjaman
-            </a>
-        </div>
-    </div>
-</nav>
+@include('partials.public-navbar', ['active' => 'status'])
 
-<div class="container" style="margin-top: 100px;">
+<div class="sp-pagehead">
+    <div class="container position-relative" style="z-index:2;">
+        <div class="sp-pagehead__crumb">
+            <a href="{{ route('website') }}">Home</a>
+            <i class="fas fa-chevron-right mx-1" style="font-size:.6rem;"></i>
+            <span>Cek Status</span>
+        </div>
+        <h1>Cek Status Permohonan</h1>
+        <p>Masukkan nomor permohonan untuk melihat status terkini.</p>
+    </div>
+</div>
+
+<div class="container sp-page-body">
     <div class="row justify-content-center">
         <div class="col-lg-7">
 
@@ -36,11 +41,6 @@
                 <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
             </div>
             @endif
-
-            <div class="text-center mb-4">
-                <h3 class="fw-bold"><i class="fas fa-search text-primary me-2"></i>Cek Status Permohonan</h3>
-                <p class="text-muted">Masukkan nomor permohonan untuk melihat status terkini</p>
-            </div>
 
             <div class="card shadow-sm mb-4">
                 <div class="card-body p-4">
@@ -196,9 +196,7 @@
     </div>
 </div>
 
-<footer class="bg-dark text-white text-center py-3 mt-5">
-    <p class="mb-0 small">&copy; 2026 SILAPIN - Sistem Informasi Peminjaman Inventaris</p>
-</footer>
+@include('partials.public-footer', ['compact' => true])
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 @isset($permohonan)

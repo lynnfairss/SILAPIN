@@ -4,6 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sesi Berakhir (419)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -11,47 +14,52 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: #f4f5f7;
+            background:
+                radial-gradient(700px 340px at 82% 0%, rgba(59,130,246,.22), transparent 60%),
+                linear-gradient(160deg, #0B2E6E 0%, #08224F 55%, #061A3F 100%);
             color: #1f2937;
-            font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         .card {
             background: #fff;
             max-width: 520px;
             margin: 1.5rem;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, .08);
+            padding: 2.2rem 2rem;
+            border-radius: 18px;
+            box-shadow: 0 24px 60px rgba(3, 15, 40, .35);
             text-align: center;
         }
         .code {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #dc3545;
+            font-size: 3.4rem;
+            font-weight: 800;
+            color: #2563EB;
             margin: 0;
             line-height: 1;
         }
         h1 {
             font-size: 1.25rem;
             margin: .75rem 0 .5rem;
+            color: #0B2545;
         }
         p {
-            color: #6b7280;
+            color: #64748B;
             font-size: .9rem;
             line-height: 1.5;
             margin: 0 0 1.5rem;
         }
         a.btn {
             display: inline-block;
-            background: #0d6efd;
+            background: #2563EB;
             color: #fff;
             text-decoration: none;
-            padding: .5rem 1.25rem;
-            border-radius: 6px;
+            padding: .65rem 1.4rem;
+            border-radius: 10px;
             font-size: .9rem;
+            font-weight: 600;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, .32);
         }
         a.btn:hover {
-            background: #0b5ed7;
+            background: #1D4ED8;
         }
     </style>
 </head>

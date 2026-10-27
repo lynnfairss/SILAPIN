@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Ajukan Peminjaman - SILAPIN</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="{{ asset('css/silapin-theme.css') }}?v={{ filemtime(public_path('css/silapin-theme.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/peminjam.css') }}?v={{ filemtime(public_path('css/peminjam.css')) }}" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
@@ -14,18 +18,21 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fw-bold" href="{{ route('website') }}">
-            <i class="fas fa-boxes-stacked me-2"></i>SILAPIN
-        </a>
-        <a href="{{ route('peminjam.cek-status') }}" class="btn btn-outline-light btn-sm">
-            <i class="fas fa-search me-1"></i>Cek Status
-        </a>
-    </div>
-</nav>
+@include('partials.public-navbar', ['active' => 'form'])
 
-<div class="container" style="margin-top: 80px;">
+<div class="sp-pagehead">
+    <div class="container position-relative" style="z-index:2;">
+        <div class="sp-pagehead__crumb">
+            <a href="{{ route('website') }}">Home</a>
+            <i class="fas fa-chevron-right mx-1" style="font-size:.6rem;"></i>
+            <span>Ajukan Peminjaman</span>
+        </div>
+        <h1>Ajukan Peminjaman</h1>
+        <p>Isi data diri dan pilih barang yang akan dipinjam.</p>
+    </div>
+</div>
+
+<div class="container sp-page-body">
     <div class="row justify-content-center">
         <div class="col-lg-10">
 
@@ -48,11 +55,6 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             @endif
-
-            <div class="text-center mb-4">
-                <h3 class="fw-bold mb-1"><i class="fas fa-hand-holding-heart text-primary me-2"></i>Ajukan Peminjaman</h3>
-                <p class="text-muted">Isi data diri dan pilih barang yang akan dipinjam</p>
-            </div>
 
             <div class="step-indicator">
                 <div class="step-item active" data-step="1">
@@ -406,9 +408,7 @@
     </div>
 </div>
 
-<footer class="bg-dark text-white text-center py-3 mt-5">
-    <p class="mb-0 small">&copy; 2026 SILAPIN - Sistem Informasi Peminjaman Inventaris</p>
-</footer>
+@include('partials.public-footer', ['compact' => true])
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
