@@ -377,9 +377,9 @@ return [
     ],
 
     [
-        'text' => 'Status Sync Word',
-        'url'  => 'surat/sync-status',
-        'icon' => 'fas fa-sync-alt',
+        'text' => 'Upload Surat',
+        'url'  => 'surat/upload',
+        'icon' => 'fas fa-file-upload',
     ],
 
 

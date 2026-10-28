@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login Admin - SILAPIN</title>
+    @vite('resources/js/passkeys.js')
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -265,7 +266,7 @@
 
                 <div id="passkeyAlert" class="alert alert-danger d-none alert-custom mb-3"></div>
 
-                <button type="button" id="btnPasskey" class="btn w-100"
+                <button type="button" id="btnPasskey" data-role="admin" class="btn w-100"
                         style="border-radius:10px; padding:11px; font-weight:600; font-size:.95rem;
                                border:1.5px solid #2563EB; color:#2563EB; background:#fff; transition:all .2s;">
                     <i class="fas fa-fingerprint me-2"></i>Masuk dengan Passkey
@@ -281,7 +282,6 @@
 
 </div>
 
-<script src="{{ asset('vendor/webauthn/webauthn.js') }}"></script>
 <script>
     function togglePassword() {
         const input = document.getElementById('inputPassword');
@@ -295,96 +295,88 @@
         }
     }
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    document.addEventListener('DOMContentLoaded', function () {
+        const btn = document.getElementById('btnPasskey');
+        const alertBox = document.getElementById('passkeyAlert');
+        const role = btn.dataset.role || 'admin';
+        const passkeyRoutes = {
+            options: '{{ route('passkey.login-options', absolute: false) }}',
+            submit: '{{ route('passkey.login', absolute: false) }}',
+        };
 
-    function showPasskeyError(message) {
-        const alert = document.getElementById('passkeyAlert');
-        alert.textContent = message;
-        alert.classList.remove('d-none');
-    }
-
-    function reloadStale() {
-        sessionStorage.setItem('passkey_stale', '1');
-        window.location.reload();
-    }
-
-    if (sessionStorage.getItem('passkey_stale') === '1') {
-        sessionStorage.removeItem('passkey_stale');
-        showPasskeyError('Sesi halaman sudah diperbarui. Silakan klik "Masuk dengan Passkey" lagi.');
-    }
-
-    document.getElementById('btnPasskey').addEventListener('click', function () {
-        const btn = this;
-        const email = document.querySelector('input[name="email"]').value.trim();
-
-        if (!email) {
-            showPasskeyError('Masukkan email terlebih dahulu sebelum login dengan passkey.');
-            return;
+        function showPasskeyError(message) {
+            alertBox.textContent = message;
+            alertBox.classList.remove('d-none');
         }
 
-        const remember = document.getElementById('remember') ? document.getElementById('remember').checked : false;
-        btn.disabled = true;
+        function clearPasskeyError() {
+            alertBox.textContent = '';
+            alertBox.classList.add('d-none');
+        }
 
-        fetch('{{ route('passkey.options') }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-            body: JSON.stringify({ email: email, role: 'admin' }),
-        })
-        .then(r => {
-            if (r.status === 419) {
-                reloadStale();
-                return new Promise(() => {});
+        function ipHostHint() {
+            const host = location.hostname;
+            if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;
+            if (/^127\./.test(host)) {
+                return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat http://localhost' +
+                    (location.port ? ':' + location.port : '') + ' (bukan ' + host + ').';
             }
-            return r.json().then(d => ({ ok: r.ok, d }));
-        })
-        .then(({ ok, d }) => {
-            if (!ok) {
-                btn.disabled = false;
-                showPasskeyError(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Gagal memulai login passkey.'));
+            const dashed = host.split('.').join('-');
+            return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat https://' + dashed +
+                '.nip.io:8443 (domain pengganti untuk IP ' + host + ').';
+        }
+
+        function passkeyErrorMessage(error) {
+            if (typeof window.passkeyErrorMessage === 'function') {
+                return window.passkeyErrorMessage(error);
+            }
+            return error && error.message ? error.message : 'Terjadi kesalahan. Silakan coba lagi.';
+        }
+
+        btn.addEventListener('click', async function () {
+            clearPasskeyError();
+
+            const hint = ipHostHint();
+            if (hint) {
+                showPasskeyError(hint);
                 return;
             }
 
-            const webauthn = new WebAuthn();
-            webauthn.sign(d.publicKey, function (credential) {
-                credential.remember = remember;
-
-                fetch('{{ route('passkey.login') }}', {
-                    method: 'POST',
-                    headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-            },
-                    body: JSON.stringify(credential),
-                })
-                .then(r => {
-            if (r.status === 419) {
-                reloadStale();
-                return new Promise(() => {});
+            if (!window.Passkeys) {
+                showPasskeyError('Fitur passkey belum siap. Muat ulang halaman lalu coba lagi.');
+                return;
             }
-            return r.json().then(d => ({ ok: r.ok, d }));
-        })
-                .then(({ ok, d }) => {
-                    if (ok && d.callback) {
-                        window.location.href = d.callback;
-                        return;
-                    }
-                    btn.disabled = false;
-                    showPasskeyError(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Login passkey gagal.'));
-                })
-                .catch(() => {
-                    btn.disabled = false;
-                    showPasskeyError('Terjadi kesalahan saat login passkey. Silakan coba lagi.');
-                });
+
+            if (!window.Passkeys.isSupported()) {
+                showPasskeyError('Browser atau perangkat ini tidak mendukung passkey.');
+                return;
+            }
+
+            window.Passkeys.configure({
+                fetch: { headers: { 'X-Passkey-Role': role } },
             });
-        })
-        .catch(() => {
-            btn.disabled = false;
-            showPasskeyError('Terjadi kesalahan. Silakan coba lagi.');
+
+            const remember = document.getElementById('remember') ? document.getElementById('remember').checked : false;
+            const original = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Memproses...';
+
+            try {
+                const result = await window.Passkeys.verify({ remember, routes: passkeyRoutes });
+
+                if (result && result.redirect) {
+                    window.location.href = result.redirect;
+                    return;
+                }
+
+                showPasskeyError('Login passkey berhasil, tetapi halaman tujuan tidak ditemukan.');
+            } catch (error) {
+                showPasskeyError(passkeyErrorMessage(error));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
         });
     });
 </script>

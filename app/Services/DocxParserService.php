@@ -278,12 +278,23 @@ class DocxParserService
             if (count($rightTexts) >= 1) {
                 $result['ttd_kanan_nama'] = $rightTexts[0];
             }
+
+            // Template baru hanya mencetak nama penerima. Template lama masih
+            // mencetak "NIK. xxx" (dan kadang jabatan), jadi bedakan dari
+            // bentuk barisnya agar file Word lama & baru terbaca sama benar.
             if (count($rightTexts) >= 2) {
-                $nrpText = $rightTexts[1];
-                $result['ttd_kanan_nrp'] = preg_replace('/^(?:NRP|NIK)\.\s*/', '', $nrpText);
-            }
-            if (count($rightTexts) >= 3) {
-                $result['ttd_kanan_jabatan'] = $rightTexts[2];
+                $barisKedua = $rightTexts[1];
+                $berupaNrp = preg_match('/^(?:NRP|NIK)\./i', $barisKedua) === 1
+                    || preg_match('/^\d{6,}$/', $barisKedua) === 1;
+
+                if ($berupaNrp) {
+                    $result['ttd_kanan_nrp'] = preg_replace('/^(?:NRP|NIK)\.\s*/', '', $barisKedua);
+                    if (count($rightTexts) >= 3) {
+                        $result['ttd_kanan_jabatan'] = $rightTexts[2];
+                    }
+                } else {
+                    $result['ttd_kanan_jabatan'] = $barisKedua;
+                }
             }
         }
     }

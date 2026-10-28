@@ -167,127 +167,104 @@
 @stop
 
 @section('js')
-<script src="{{ asset('vendor/webauthn/webauthn.js') }}"></script>
+@vite('resources/js/passkeys.js')
 <script>
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    document.addEventListener('DOMContentLoaded', function () {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        const alertBox = document.getElementById('passkeyAlert');
+        const passkeyRoutes = {
+            options: '{{ route('passkey.registration-options', absolute: false) }}',
+            submit: '{{ route('passkey.store', absolute: false) }}',
+        };
 
-    function showAlert(message) {
-        const alert = document.getElementById('passkeyAlert');
-        alert.textContent = message;
-        alert.classList.remove('d-none');
-    }
-
-    function reloadStale() {
-        sessionStorage.setItem('passkey_stale', '1');
-        window.location.reload();
-    }
-
-    if (sessionStorage.getItem('passkey_stale') === '1') {
-        sessionStorage.removeItem('passkey_stale');
-        showAlert('Sesi halaman sudah diperbarui. Silakan coba tambahkan passkey lagi.');
-    }
-
-    function ipHostHint() {
-        const h = location.hostname;
-        if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(h) && h !== '127.0.0.1') return null;
-        if (/^127\./.test(h)) {
-            return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat http://localhost' +
-                (location.port ? ':' + location.port : '') + ' (bukan ' + h + ').';
-        }
-        const dashed = h.split('.').join('-');
-        return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat https://' + dashed +
-            '.nip.io:8443 (domain pengganti untuk IP ' + h + ').';
-    }
-
-    document.getElementById('btnAddPasskey').addEventListener('click', function () {
-        const hint = ipHostHint();
-        if (hint) {
-            showAlert(hint);
-            return;
+        function showAlert(message) {
+            alertBox.textContent = message;
+            alertBox.classList.remove('d-none');
         }
 
-        const name = prompt('Nama untuk passkey ini (contoh: HP Pribadi):') || 'Passkey';
-
-        fetch('{{ route('passkey.register.options', absolute: false) }}', {
-            method: 'POST',
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-        })
-        .then(r => {
-            if (r.status === 419) {
-                reloadStale();
-                return new Promise(() => {});
+        function ipHostHint() {
+            const host = location.hostname;
+            if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;
+            if (/^127\./.test(host)) {
+                return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat http://localhost' +
+                    (location.port ? ':' + location.port : '') + ' (bukan ' + host + ').';
             }
-            return r.json().then(d => ({ ok: r.ok, d }));
-        })
-        .then(({ ok, d }) => {
-            if (!ok) {
-                showAlert(d.message || 'Gagal mempersiapkan registrasi passkey.');
+            const dashed = host.split('.').join('-');
+            return 'Passkey tidak mendukung alamat IP. Buka halaman ini lewat https://' + dashed +
+                '.nip.io:8443 (domain pengganti untuk IP ' + host + ').';
+        }
+
+        function passkeyErrorMessage(error) {
+            if (typeof window.passkeyErrorMessage === 'function') {
+                return window.passkeyErrorMessage(error);
+            }
+            return error && error.message ? error.message : 'Terjadi kesalahan. Silakan coba lagi.';
+        }
+
+        document.getElementById('btnAddPasskey').addEventListener('click', async function () {
+            const btn = this;
+            alertBox.classList.add('d-none');
+
+            const hint = ipHostHint();
+            if (hint) {
+                showAlert(hint);
                 return;
             }
 
-            const webauthn = new WebAuthn(function (message, detail) {
-                showAlert(typeof detail === 'string' && detail ? message + ': ' + detail : message);
-            });
+            if (!window.Passkeys) {
+                showAlert('Fitur passkey belum siap. Muat ulang halaman lalu coba lagi.');
+                return;
+            }
+
+            if (!window.Passkeys.isSupported()) {
+                showAlert('Browser atau perangkat ini tidak mendukung passkey.');
+                return;
+            }
+
+            const name = prompt('Nama untuk passkey ini (contoh: HP Pribadi):') || 'Passkey';
+            const original = btn.innerHTML;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Memproses...';
 
             try {
-                webauthn.register(d.publicKey, function (credential) {
-                    credential.name = name;
-                    fetch('{{ route('passkey.register', absolute: false) }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                        },
-                        body: JSON.stringify(credential),
-                    })
-                    .then(r => {
-                        if (r.status === 419) {
-                            reloadStale();
-                            return new Promise(() => {});
-                        }
-                        return r.json().then(d => ({ ok: r.ok, d }));
-                    })
-                    .then(({ ok, d }) => {
-                        if (ok && d.callback) {
-                            window.location.href = d.callback;
-                        } else {
-                            showAlert(d.errors && d.errors.error ? d.errors.error[0] : (d.message || 'Registrasi passkey gagal.'));
-                        }
-                    })
-                    .catch(() => showAlert('Terjadi kesalahan saat registrasi passkey.'));
-                });
-            } catch (e) {
-                showAlert('Gagal memulai dialog passkey: ' + e.message);
-            }
-        })
-        .catch(() => showAlert('Terjadi kesalahan saat mempersiapkan registrasi.'));
-    });
-
-    function deletePasskey(url) {
-        if (!confirm('Hapus passkey ini? Anda tidak akan bisa masuk tanpa kata sandi dari perangkat ini.')) {
-            return;
-        }
-
-        fetch(url, {
-            method: 'DELETE',
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken },
-        })
-        .then(r => {
-            if (r.status === 419) {
-                reloadStale();
-                return new Promise(() => {});
-            }
-            return r.json();
-        })
-        .then(d => {
-            if (d.result) {
+                await window.Passkeys.register({ name, routes: passkeyRoutes });
                 window.location.reload();
-            } else {
-                showAlert('Gagal menghapus passkey.');
+            } catch (error) {
+                showAlert(passkeyErrorMessage(error));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
             }
-        })
-        .catch(() => showAlert('Terjadi kesalahan saat menghapus passkey.'));
-    }
+        });
+
+        window.deletePasskey = async function (url) {
+            if (!confirm('Hapus passkey ini? Anda tidak akan bisa masuk tanpa kata sandi dari perangkat ini.')) {
+                return;
+            }
+
+            alertBox.classList.add('d-none');
+
+            try {
+                const response = await fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                });
+
+                const data = await response.json().catch(() => ({}));
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Gagal menghapus passkey.');
+                }
+
+                window.location.reload();
+            } catch (error) {
+                showAlert(error.message || 'Terjadi kesalahan saat menghapus passkey.');
+            }
+        };
+    });
 </script>
 @stop

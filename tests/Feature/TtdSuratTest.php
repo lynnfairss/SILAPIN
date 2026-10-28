@@ -167,6 +167,26 @@ it('shows both signatures on the rendered letter', function () {
         ->and($html)->toContain('<strong>Rahma</strong>');
 });
 
+it('prints no NIK or position under the receiving name', function () {
+    $admin = User::factory()->create([
+        'name' => 'Siti Aminah',
+        'nik' => '3500000000000010',
+        'role' => 'admin',
+        'status' => 'approved',
+    ]);
+    $permohonan = suratPermohonan();
+    disetujuiOleh($admin, $permohonan);
+
+    $html = view('peminjam.surat', ['permohonan' => $permohonan->fresh(), 'forPdf' => true])->render();
+
+    // Pihak yang menyerahkan tetap mencetak NIK admin.
+    expect($html)->toContain('NIK. 3500000000000010')
+        // Kolom penerima hanya berisi nama: paragraf nama langsung ditutup
+        // sel, tanpa baris NIK maupun jabatan di bawahnya.
+        ->and($html)->toMatch('/<strong>Rahma<\/strong><\/p>\s*<\/td>/')
+        ->and($html)->not->toContain('NIK. 3500000000000009');
+});
+
 it('writes the approver into the generated docx signature column', function () {
     $admin = User::factory()->create([
         'name' => 'Siti Aminah',
@@ -191,8 +211,6 @@ it('writes the approver into the generated docx signature column', function () {
     $processor->setValue('ttd_kiri_jabatan', $ttd['kiri_jabatan']);
     $processor->setValue('ttd_kanan_label', $sc['ttd_kanan_label']);
     $processor->setValue('ttd_kanan_nama', $ttd['kanan_nama']);
-    $processor->setValue('ttd_kanan_nrp', $ttd['kanan_nrp']);
-    $processor->setValue('ttd_kanan_jabatan', $ttd['kanan_jabatan']);
 
     $sementara = tempnam(sys_get_temp_dir(), 'ttd').'.docx';
     $processor->saveAs($sementara);
@@ -207,7 +225,9 @@ it('writes the approver into the generated docx signature column', function () {
         // Prefix "NIK." harus dilepas parser, jadi yang tersimpan NIK bersih.
         ->and($terbaca['ttd_kiri_nrp'])->toBe('3500000000000010')
         ->and($terbaca['ttd_kanan_nama'])->toBe('Rahma')
-        ->and($terbaca['ttd_kanan_nrp'])->toBe('3500000000000009');
+        // Sisi "Yang menerima" tidak lagi mencetak NIK maupun jabatan.
+        ->and($terbaca['ttd_kanan_nrp'] ?? '')->toBe('')
+        ->and($terbaca['ttd_kanan_jabatan'] ?? '')->toBe('');
 });
 
 it('still reads a letter that was saved back with the old NRP label', function () {

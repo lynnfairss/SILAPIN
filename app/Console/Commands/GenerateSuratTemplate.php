@@ -102,7 +102,7 @@ class GenerateSuratTemplate extends Command
         $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
         $identitasTable->addCell(5600)->addText('${nama_peminjam}', $fTNR, $pIdentitas);
         $identitasTable->addRow();
-        $identitasTable->addCell(2000)->addText('NIK', $fTNR, $pIdentitas);
+        $identitasTable->addCell(2000)->addText('No. Identitas', $fTNR, $pIdentitas);
         $identitasTable->addCell(400)->addText(':', $fTNR, $pIdentitas);
         $identitasTable->addCell(5600)->addText('${nrp}', $fTNR, $pIdentitas);
         $identitasTable->addRow();
@@ -200,8 +200,6 @@ class GenerateSuratTemplate extends Command
             $rightCell->addTextBreak();
         }
         $rightCell->addText('${ttd_kanan_nama}', $fTNR + ['bold' => true], $pTtd);
-        $rightCell->addText('NIK. ${ttd_kanan_nrp}', $fTNR, $pTtd);
-        $rightCell->addText('${ttd_kanan_jabatan}', $fTNR, $pTtd);
 
         $outputPath = public_path('templates/template_peminjaman.docx');
         $writer = IOFactory::createWriter($phpWord, 'Word2007');

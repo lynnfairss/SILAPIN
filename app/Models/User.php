@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use LaravelWebauthn\WebauthnAuthenticatable;
+use Laravel\Passkeys\Contracts\PasskeyUser;
+use Laravel\Passkeys\PasskeyAuthenticatable;
 use PragmaRX\Google2FALaravel\Facade as Google2FA;
 
-class User extends Authenticatable
+class User extends Authenticatable implements PasskeyUser
 {
-    use HasFactory, Notifiable, WebauthnAuthenticatable;
+    use HasFactory, Notifiable, PasskeyAuthenticatable;
 
     protected $fillable = [
         'name',

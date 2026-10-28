@@ -19,11 +19,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\CheckRole::class,
             'peminjam.access' => \App\Http\Middleware\VerifyPemohonanAccess::class,
         ]);
-
-        $middleware->validateCsrfTokens(except: [
-            'passkey/options',
-            'passkey/login',
-        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {

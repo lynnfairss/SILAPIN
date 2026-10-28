@@ -5,7 +5,6 @@ use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
-use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\VerifyEmailController;
@@ -37,13 +36,6 @@ Route::middleware('guest')->group(function () {
     Route::post('login/2fa', [AuthenticatedSessionController::class, 'storeTwoFactor'])
         ->middleware('throttle:6,1')
         ->name('login.2fa.post');
-
-    // Passkey login (tanpa kata sandi)
-    Route::post('passkey/options', [PasskeyController::class, 'options'])
-        ->name('passkey.options');
-
-    Route::post('passkey/login', [PasskeyController::class, 'login'])
-        ->name('passkey.login');
 
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');

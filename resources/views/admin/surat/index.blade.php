@@ -5,8 +5,8 @@
 @section('content_header')
     <h1>Surat Permohonan</h1>
     <div class="float-right">
-        <a href="{{ route('surat.sync-status') }}" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-sync-alt"></i> Status Sync Word
+        <a href="{{ route('surat.upload') }}" class="btn btn-outline-primary btn-sm">
+            <i class="fas fa-file-upload"></i> Upload Surat
         </a>
     </div>
 @stop
@@ -78,12 +78,9 @@
                     <a href="{{ route('surat.download.docx', $item->id) }}" class="btn btn-success btn-sm" title="Download .docx">
                         <i class="fas fa-file-word"></i>
                     </a>
-                    <form action="{{ route('surat.generate-word', $item->id) }}" method="POST" style="display:inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-primary btn-sm" title="Kirim ke Word (OneDrive)">
-                            <i class="fas fa-cloud-upload-alt"></i>
-                        </button>
-                    </form>
+                    <a href="{{ route('surat.upload', ['permohonan' => $item->id]) }}#form-upload" class="btn btn-primary btn-sm" title="Upload surat (DOCX)">
+                        <i class="fas fa-upload"></i>
+                    </a>
                 </td>
             </tr>
             @empty

@@ -54,8 +54,6 @@
         $ttdKiriNrp  = $ttd['kiri_nrp'];
         $ttdKiriJab  = $ttd['kiri_jabatan'];
         $ttdKananNama = $ttd['kanan_nama'];
-        $ttdKananNrp  = $ttd['kanan_nrp'];
-        $ttdKananJab  = $ttd['kanan_jabatan'];
 
         $datePinjam = \Carbon\Carbon::parse($permohonan->tanggal_pinjam);
         $hariNames = [
@@ -153,7 +151,7 @@
             <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $vNama }}</td>
         </tr>
         <tr>
-            <td style="padding:0; font-size:12pt; line-height:1.5;">NIK</td>
+            <td style="padding:0; font-size:12pt; line-height:1.5;">No. Identitas</td>
             <td style="padding:0; font-size:12pt; line-height:1.5;">:</td>
             <td style="padding:0; font-size:12pt; line-height:1.5;">{{ $vNrp }}</td>
         </tr>
@@ -267,8 +265,6 @@
             </td>
             <td width="50%" valign="top" align="center" style="padding:0;">
                 <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;"><strong>{{ $ttdKananNama }}</strong></p>
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NIK. {{ $ttdKananNrp }}</p>
-                @if($ttdKananJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">{{ $ttdKananJab }}</p>@endif
             </td>
         </tr>
     </table>

@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WebsiteController;
-use App\Http\Controllers\Auth\PasskeyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\PdfController;
@@ -78,14 +77,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/security/2fa/disable', [SecurityController::class, 'disableTwoFactor'])
         ->name('security.2fa.disable');
 
-    // Passkey management
-    Route::post('/passkey/register/options', [PasskeyController::class, 'registerOptions'])
-        ->name('passkey.register.options');
-    Route::post('/passkey/register', [PasskeyController::class, 'register'])
-        ->name('passkey.register');
-    Route::delete('/passkey/{key}', [PasskeyController::class, 'destroy'])
-        ->name('passkey.destroy');
-
     // Master Data (hanya Super Admin)
     Route::middleware('role:super_admin')->group(function () {
         Route::resource('instansi', InstansiController::class)->except(['create', 'edit', 'show']);
@@ -123,9 +114,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('surat/{permohonan}/download/pdf', [PdfController::class, 'download'])
             ->name('surat.download.pdf');
 
-        Route::post('surat/{permohonan}/generate-word', [SuratController::class, 'generateWord'])->name('surat.generate-word');
-        Route::post('surat/sync-now', [SuratController::class, 'syncNow'])->name('surat.sync-now');
-        Route::get('surat/sync-status', [SuratController::class, 'syncStatus'])->name('surat.sync-status');
+        Route::get('surat/upload', [SuratController::class, 'upload'])->name('surat.upload');
+        Route::post('surat/upload', [SuratController::class, 'uploadSurat'])->name('surat.upload.store');
+        Route::post('surat/templates', [SuratController::class, 'uploadTemplate'])->name('surat.templates.store');
+        Route::delete('surat/templates/{template}', [SuratController::class, 'destroyTemplate'])->name('surat.templates.destroy');
+        Route::get('surat/{permohonan}/berkas', [SuratController::class, 'berkas'])->name('surat.berkas');
+
+        // Alamat lama dibukukan admin; arahkan ke halaman baru.
+        Route::redirect('surat/sync-status', 'surat/upload');
 
         // Pengembalian Barang (Super Admin + Admin)
         Route::get('pengembalian', [App\Http\Controllers\Admin\PengembalianController::class, 'index'])->name('pengembalian.index');

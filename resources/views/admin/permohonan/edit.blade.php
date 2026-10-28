@@ -75,9 +75,9 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="nik">NIK <span class="text-danger">*</span></label>
+                        <label for="nik">Nomor Identitas <span class="text-danger">*</span></label>
                         <input type="text" name="nik" id="nik" class="form-control"
-                               value="{{ old('nik', $permohonan->nik) }}" required placeholder="Nomor Induk Kependudukan" maxlength="20">
+                               value="{{ old('nik', $permohonan->nik) }}" required placeholder="NIK / No. SIM / NIM" maxlength="20">
                     </div>
                 </div>
             </div>

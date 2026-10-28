@@ -7,7 +7,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\View\View;
-use LaravelWebauthn\Models\WebauthnKey;
 use PragmaRX\Google2FALaravel\Facade as Google2FA;
 
 class SecurityController extends Controller
@@ -15,7 +14,7 @@ class SecurityController extends Controller
     public function index(Request $request): Response
     {
         $user = $request->user();
-        $passkeys = WebauthnKey::where('user_id', $user->getAuthIdentifier())
+        $passkeys = $user->passkeys()
             ->orderByDesc('created_at')
             ->get();
 

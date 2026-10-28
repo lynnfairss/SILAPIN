@@ -87,8 +87,8 @@
                                     <input type="text" name="nama_peminjam" class="form-control" value="{{ old('nama_peminjam') }}" required placeholder="Masukkan nama lengkap">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium"><span id="labelIdentitas">NIK</span> <span class="text-danger">*</span></label>
-                                    <input type="text" name="nik" id="nikField" class="form-control" value="{{ old('nik') }}" required placeholder="Nomor Induk Kependudukan" maxlength="30">
+                                    <label class="form-label fw-medium"><span id="labelIdentitas">Nomor Identitas</span> <span class="text-danger">*</span></label>
+                                    <input type="text" name="nik" id="nikField" class="form-control" value="{{ old('nik') }}" required placeholder="NIK / No. SIM / NIM / No. Paspor" maxlength="20">
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Jabatan</label>
@@ -119,28 +119,28 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-medium">Alamat</label>
-                                    <textarea name="alamat" id="alamatField" class="form-control" rows="2" placeholder="Masukkan alamat sesuai KTP" maxlength="255">{{ old('alamat') }}</textarea>
+                                    <textarea name="alamat" id="alamatField" class="form-control" rows="2" placeholder="Masukkan alamat sesuai identitas" maxlength="255">{{ old('alamat') }}</textarea>
                                 </div>
                                 <div class="col-12">
                                     <hr>
                                     <h6 class="fw-bold text-primary"><i class="fas fa-upload me-2"></i>Upload Dokumen</h6>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-medium">Foto KTP <span class="text-danger">*</span> <small class="text-muted">(max 2MB, jpg/png)</small></label>
+                                    <label class="form-label fw-medium">Foto Identitas <small class="text-muted">(opsional — KTP / SIM / Kartu Pelajar / Kartu Mahasiswa / Paspor; max 2MB, jpg/png)</small></label>
                                     <div class="input-group">
                                         <input type="file" name="foto_ktp" id="fotoKtpInput" class="form-control" accept="image/*">
-                                        <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Scan / foto KTP">
+                                        <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Scan / foto kartu identitas">
                                             <i class="fas fa-camera me-1"></i>Scan
                                         </button>
                                     </div>
                                     <div class="d-flex align-items-center gap-2 mt-2">
                                         <div class="scan-preview"></div>
-                                        <button type="button" class="btn btn-sm btn-outline-info" id="btnOcrKtp" onclick="runOcrKtp()" disabled title="Deteksi otomatis Nama, NIK, Alamat & TTL dari foto KTP">
-                                            <i class="fas fa-magic me-1"></i>Deteksi Data KTP
+                                        <button type="button" class="btn btn-sm btn-outline-info" id="btnOcrKtp" onclick="runOcrKtp()" disabled title="Deteksi otomatis Nama, Nomor Identitas, Alamat & TTL dari foto identitas">
+                                            <i class="fas fa-magic me-1"></i>Deteksi Data Identitas
                                         </button>
                                     </div>
                                     <div class="ocr-status" id="ocrStatus"></div>
-                                    <div class="form-text">Upload atau scan/foto KTP sebagai bukti.</div>
+                                    <div class="form-text">Upload atau scan/foto kartu identitas sebagai bukti (opsional).</div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-medium">Surat Tugas <small class="text-muted">(opsional, max 2MB)</small></label>
@@ -370,7 +370,7 @@
 <div class="image-modal-overlay" id="cameraModal" onclick="if(event.target===this)closeCamera()">
     <div class="image-modal-content camera-modal-content">
         <button type="button" class="modal-close" onclick="closeCamera()">&times;</button>
-        <h6 class="fw-bold mb-3 text-center"><i class="fas fa-camera me-2 text-primary"></i><span id="cameraModalTitle">Scan Dokumen</span></h6>
+        <h6 class="fw-bold mb-3 text-center"><i class="fas fa-camera me-2 text-primary"></i><span id="cameraModalTitle">Scan Identitas</span></h6>
         <div class="camera-frame">
             <video id="cameraPreview" autoplay playsinline muted></video>
             <canvas id="cameraCanvas" class="d-none"></canvas>
@@ -388,7 +388,7 @@
                     <span class="ktp-face-label">Wajah</span>
                     <span class="ktp-face-box"></span>
                 </div>
-                <span class="ktp-label"><i class="fas fa-id-card me-1"></i>Letakkan KTP di dalam bingkai, wajah di dalam kotak</span>
+                <span class="ktp-label"><i class="fas fa-id-card me-1"></i>Letakkan kartu identitas di dalam bingkai, wajah di dalam kotak</span>
             </div>
         </div>
         <div id="cameraStatus" class="text-center text-muted small py-2"></div>
@@ -714,14 +714,14 @@
         }
     });
 
-    // ========== IDENTITAS: selalu NIK ==========
-    (function initIdentitasNik() {
+    // ========== IDENTITAS: nomor identitas (NIK / SIM / NIM / Paspor) ==========
+    (function initIdentitas() {
         const label = document.getElementById('labelIdentitas');
         const field = document.getElementById('nikField');
-        if (label) label.textContent = 'NIK';
+        if (label) label.textContent = 'Nomor Identitas';
         if (field) {
-            field.placeholder = 'Nomor Induk Kependudukan';
-            field.maxLength = 30;
+            field.placeholder = 'NIK / No. SIM / NIM / No. Paspor';
+            field.maxLength = 20;
         }
     })();
 
@@ -786,16 +786,16 @@
     // ========== SCAN DOKUMEN (KAMERA) ==========
 
     let cameraStream = null;
-    const KTP_RATIO = 85.6 / 53.98; // rasio ukuran KTP standar
+    const KTP_RATIO = 85.6 / 53.98; // rasio kartu identitas standar (ISO ID-1: KTP/SIM/KTM)
 
-    // ===== AUTO-CAPTURE KTP =====
+    // ===== AUTO-CAPTURE KARTU IDENTITAS =====
     const AUTO_DETECT = {
         interval: 100,       // ms antar sampling
         sampleWidth: 96,     // lebar canvas sampling (px)
         stableFrames: 2,     // jumlah sampel stabil berturut-turut sebelum capture (±0,2 detik)
         minBrightness: 120,  // kecerahan rata-rata minimum area bingkai
         maxBrightness: 235,  // kecerahan rata-rata maksimum
-        minEdge: 0.08,       // rasio piksel tepi minimum (teks KTP)
+        minEdge: 0.08,       // rasio piksel tepi minimum (teks pada kartu)
         maxEdge: 0.55,       // rasio piksel tepi maksimum
         maxDiff: 7,          // selisih rata-rata antar frame (stabilitas)
     };
@@ -897,14 +897,14 @@
         if (brightnessOk && edgeOk && stableOk) {
             autoDetectStable++;
             if (autoDetectStable >= AUTO_DETECT.stableFrames) {
-                status.textContent = 'KTP terdeteksi — mengambil foto…';
+                status.textContent = 'Kartu identitas terdeteksi — mengambil foto…';
                 autoCapture();
             } else if (autoDetectStable === 1) {
-                status.textContent = 'KTP terdeteksi…';
+                status.textContent = 'Kartu identitas terdeteksi…';
             }
         } else {
             autoDetectStable = 0;
-            status.textContent = 'Arahkan KTP ke bingkai, biarkan foto otomatis…';
+            status.textContent = 'Arahkan kartu identitas ke bingkai, biarkan foto otomatis…';
         }
     }
 
@@ -975,10 +975,10 @@
         closeCamera();
         video.dataset.target = btn.dataset.scan;
         document.getElementById('ktpFrame').classList.toggle('hidden', !isKtp);
-        document.getElementById('cameraModalTitle').textContent = isKtp ? 'Scan KTP' : 'Scan Dokumen';
+        document.getElementById('cameraModalTitle').textContent = isKtp ? 'Scan Identitas' : 'Scan Dokumen';
         document.getElementById('cameraModal').classList.add('active');
         btnCapture.disabled = true;
-        status.textContent = isKtp ? 'Aktifkan kamera, lalu letakkan KTP di dalam bingkai…' : 'Mengaktifkan kamera…';
+        status.textContent = isKtp ? 'Aktifkan kamera, lalu letakkan kartu identitas di dalam bingkai…' : 'Mengaktifkan kamera…';
 
         if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             if (window.isSecureContext) {
@@ -1009,7 +1009,7 @@
             btnCapture.disabled = false;
             if (isKtp) {
                 startAutoDetect();
-                status.textContent = 'Arahkan KTP ke bingkai, foto otomatis saat posisi pas.';
+                status.textContent = 'Arahkan kartu identitas ke bingkai, foto otomatis saat posisi pas.';
             } else {
                 status.textContent = 'Arahkan kamera ke dokumen, lalu klik "Ambil Foto".';
             }
@@ -1024,7 +1024,7 @@
         const btn = document.querySelector('[name="foto_ktp"]');
         if (btn) btn.value = '';
         const lbl = document.getElementById('labelIdentitas');
-        if (lbl) lbl.textContent = 'NIK';
+        if (lbl) lbl.textContent = 'Nomor Identitas';
         showError('Silakan isi data diri secara manual.');
     }
 
@@ -1039,7 +1039,7 @@
         const isKtp = field === 'foto_ktp' && frame;
 
         if (isKtp) {
-            // Mode KTP: crop tepat sesuai bingkai yang terlihat di viewfinder.
+            // Mode kartu identitas: crop tepat sesuai bingkai yang terlihat di viewfinder.
             // Mapping "cover": video memenuhi frame penuh, hitung wilayah sumber.
             const frameW = frame.offsetWidth;
             const frameH = frame.offsetHeight;
@@ -1136,7 +1136,7 @@
         document.getElementById('cameraModal').classList.remove('active');
     }
 
-    // ========== OCR KTP (TESSERACT.JS) ==========
+    // ========== OCR KARTU IDENTITAS (TESSERACT.JS) ==========
 
     let ocrWorker = null;
     let ocrBusy = false;
@@ -1254,7 +1254,7 @@
 
         ocrBusy = true;
         updateOcrButton();
-        setOcrStatus('Mendeteksi data KTP…', 'busy');
+        setOcrStatus('Mendeteksi data identitas…', 'busy');
 
         try {
             const url = URL.createObjectURL(file);
@@ -1278,9 +1278,9 @@
             if (parsed.tempatTglLahir) { document.querySelector('[name="tempat_tanggal_lahir"]').value = parsed.tempatTglLahir; filled++; }
 
             if (filled === 0) {
-                setOcrStatus('Data KTP tidak terdeteksi. Perbaiki foto lalu coba lagi, atau isi manual.', 'error');
+                setOcrStatus('Data identitas tidak terdeteksi. Perbaiki foto lalu coba lagi, atau isi manual.', 'error');
             } else {
-                setOcrStatus('Data terisi dari KTP (Nama, NIK, Alamat, TTL). Mohon periksa kembali sebelum lanjut.', 'success');
+                setOcrStatus('Data terisi dari identitas (Nama, Nomor Identitas, Alamat, TTL). Mohon periksa kembali sebelum lanjut.', 'success');
             }
         } catch (e) {
             setOcrStatus('OCR gagal: ' + (e && e.message ? e.message : e) + '. Isi manual saja.', 'error');
@@ -1316,8 +1316,8 @@
             }).catch(() => {});
     }, 30 * 60 * 1000);
 
-    // Buka modal scan KTP otomatis saat pertama kali halaman form dimuat,
-    // agar user memindai KTP terlebih dahulu sebelum mengisi form.
+    // Buka modal scan kartu identitas otomatis saat pertama kali halaman form dimuat,
+    // agar user memindai identitas terlebih dahulu sebelum mengisi form.
     window.addEventListener('load', function() {
         const scanBtn = document.querySelector('[data-scan="foto_ktp"]');
         if (scanBtn) {

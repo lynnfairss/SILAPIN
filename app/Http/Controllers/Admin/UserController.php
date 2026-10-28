@@ -96,7 +96,7 @@ class UserController extends Controller
         }
 
         DB::transaction(function () use ($user) {
-            $user->webauthnKeys()->delete();
+            $user->passkeys()->delete();
 
             DB::table('sessions')->where('user_id', $user->id)->delete();
 

@@ -307,7 +307,7 @@
                         <div class="detail-value">{{ $permohonan->instansi?->nama_instansi ?? $permohonan->nama_instansi_lain ?? '-' }}</div>
                     </div>
                     <div class="col-md-6">
-                        <div class="detail-label">NIK</div>
+                        <div class="detail-label">Nomor Identitas</div>
                         <div class="detail-value">{{ $permohonan->nik }}</div>
                     </div>
                     <div class="col-md-6">
@@ -358,20 +358,20 @@
 
                 <div class="lampiran-flex">
                     <div>
-                        <div class="detail-label mb-2">Foto KTP</div>
+                        <div class="detail-label mb-2">Foto Identitas <span class="text-muted">(opsional)</span></div>
                         @if($permohonan->foto_ktp && in_array($ktpExt, ['jpg', 'jpeg', 'png', 'webp']))
                         <img src="{{ asset('storage/'.$permohonan->foto_ktp) }}"
                             class="ktp-thumb mb-3" data-full="{{ asset('storage/'.$permohonan->foto_ktp) }}"
-                            alt="Foto KTP" title="Klik untuk memperbesar">
+                            alt="Foto Identitas" title="Klik untuk memperbesar">
                         @elseif($permohonan->foto_ktp)
                         <a href="{{ asset('storage/'.$permohonan->foto_ktp) }}" target="_blank" class="lampiran-box mb-3">
                             <i class="fas fa-file mb-1"></i>
-                            <div class="fw-semibold">File KTP</div>
+                            <div class="fw-semibold">File Identitas</div>
                         </a>
                         @else
                         <div class="lampiran-box mb-3 opacity-50">
                             <i class="fas fa-id-card mb-1"></i>
-                            <div class="fw-semibold">Foto KTP <small>(tidak ada)</small></div>
+                            <div class="fw-semibold">Foto Identitas <small>(tidak ada)</small></div>
                         </div>
                         @endif
                     </div>

@@ -212,7 +212,7 @@
                                 <div class="detail-value" id="detailNama">-</div>
                             </div>
                             <div class="col-md-6">
-                                <div class="detail-label">NIK</div>
+                                <div class="detail-label">Nomor Identitas</div>
                                 <div class="detail-value" id="detailNik">-</div>
                             </div>
                             <div class="col-md-6">
@@ -281,7 +281,7 @@
                     <div class="card-body">
                         <div class="lampiran-flex">
                             <div>
-                                <div class="detail-label mb-2">Foto KTP</div>
+                                <div class="detail-label mb-2">Foto Identitas <span class="text-muted">(opsional)</span></div>
                                 <div id="lampiranKtp"></div>
                             </div>
                             <div>
@@ -583,7 +583,7 @@
                             .text(response.status);
 
                         renderBarang(response.items, response.total_jumlah);
-                        renderLampiran('lampiranKtp', response.foto_ktp, 'Foto KTP', 'Tidak ada foto KTP');
+                        renderLampiran('lampiranKtp', response.foto_ktp, 'Foto Identitas', 'Tidak ada foto identitas');
                         renderLampiran('lampiranSuratTugas', response.surat_tugas, 'Surat Tugas', 'Tidak ada surat tugas');
 
                         $('#permohonanDetail').show();

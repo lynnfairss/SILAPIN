@@ -73,7 +73,7 @@
                     <th style="min-width:40px">No</th>
                     <th>Instansi</th>
                     <th>Nama</th>
-                    <th>NIK</th>
+                    <th>Nomor Identitas</th>
                     <th>Tanggal Pinjam</th>
                     <th>Tanggal Kembali</th>
                     <th>Status</th>

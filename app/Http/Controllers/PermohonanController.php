@@ -57,6 +57,11 @@ class PermohonanController extends Controller
             'inventaris.*'     => 'integer|distinct|exists:inventaris,id',
             'jumlah'           => 'required|array',
             'jumlah.*'         => 'integer|min:1',
+        ], [], [
+            // Nama field ramah dibaca pada pesan validasi: identitas boleh
+            // berupa KTP/SIM/KTM/Paspor, jadi jangan sebut "foto ktp".
+            'foto_ktp' => 'foto identitas',
+            'nik'      => 'nomor identitas',
         ]);
 
         // instansi_id bisa berupa id yang sudah ada atau nama baru yang diketik
@@ -277,8 +282,10 @@ class PermohonanController extends Controller
         $penutupText = str_replace("\n", ' ', $sc['penutup']);
         $terimaKasihText = str_replace("\n", ' ', $sc['terima_kasih']);
 
-        // --- Load template ---
-        $templatePath = public_path('templates/template_peminjaman.docx');
+        // --- Load template: pakai template tahun surat dibuat, jika ada ---
+        $templatePath = \App\Services\SuratTemplateResolver::pathFor(
+            \App\Services\SuratTemplateResolver::tahun($permohonan)
+        );
         if (!file_exists($templatePath)) {
             return response()->json(['error' => 'Template surat tidak ditemukan.'], 500);
         }
