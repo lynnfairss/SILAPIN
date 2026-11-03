@@ -94,22 +94,35 @@
             </div>
             <div class="card-body">
                 <p class="text-muted mb-3">
-                    Surat memakai template sesuai tahun surat dibuat. Contoh: surat tahun 2026
-                    memakai <code>template_peminjaman_2026.docx</code>. Kalau tahun itu belum
-                    punya template, surat memakai template default.
+                    Setiap tahun boleh punya beberapa versi template. Unggahan baru otomatis
+                    aktif, sedangkan versi lama <strong>tetap tersimpan</strong> dan bisa
+                    diaktifkan kembali. Surat yang sudah dibuat tetap memakai template yang
+                    dipakai saat surat itu dibuat.
                 </p>
 
                 <form action="{{ route('surat.templates.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
-                    <div class="form-group">
-                        <label for="tahun">Tahun</label>
-                        <input type="number" name="tahun" id="tahun" min="2000" max="2100"
-                               value="{{ old('tahun', now()->year) }}"
-                               class="form-control @error('tahun') is-invalid @enderror" required>
-                        @error('tahun')
-                            <small class="text-danger">{{ $message }}</small>
-                        @enderror
+                    <div class="form-row">
+                        <div class="form-group col-5">
+                            <label for="tahun">Tahun</label>
+                            <input type="number" name="tahun" id="tahun" min="2000" max="2100"
+                                   value="{{ old('tahun', now()->year) }}"
+                                   class="form-control @error('tahun') is-invalid @enderror" required>
+                            @error('tahun')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                        <div class="form-group col-7">
+                            <label for="catatan">Catatan (opsional)</label>
+                            <input type="text" name="catatan" id="catatan" maxlength="255"
+                                   value="{{ old('catatan') }}"
+                                   class="form-control @error('catatan') is-invalid @enderror"
+                                   placeholder="mis. revisi kop surat">
+                            @error('catatan')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -122,7 +135,8 @@
                         </div>
                         <small class="text-muted">
                             Wajib memuat placeholder surat (nomor, identitas, item barang, QR,
-                            dan tanda tangan).
+                            dan tanda tangan). Berkas disimpan dengan nama acak agar versi lama
+                            tidak tertimpa.
                         </small>
                         @error('template_file')
                             <div><small class="text-danger">{{ $message }}</small></div>
@@ -134,6 +148,17 @@
                     </button>
                 </form>
 
+                <form action="{{ route('surat.templates.scan') }}" method="POST" class="mt-2">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-search"></i> Pindai Folder Template
+                    </button>
+                    <small class="text-muted d-block mt-1">
+                        Mendaftarkan file <code>.docx</code> yang sudah ada di folder template.
+                        File asli tidak dihapus.
+                    </small>
+                </form>
+
                 <hr>
 
                 <div class="table-responsive">
@@ -141,36 +166,70 @@
                         <thead class="text-center">
                             <tr>
                                 <th>Tahun</th>
+                                <th>Versi</th>
                                 <th>Berkas</th>
+                                <th>Status</th>
                                 <th>Diunggah</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($templates as $template)
-                                <tr>
+                                @php($arsip = $template->trashed())
+                                <tr class="{{ $arsip ? 'text-muted' : '' }}">
                                     <td class="text-center"><strong>{{ $template->tahun }}</strong></td>
+                                    <td class="text-center">v{{ $template->versi }}</td>
                                     <td>
-                                        <span title="{{ $template->nama_file }}">{{ $template->nama_file }}</span>
-                                        <br>
-                                        <small class="text-muted">{{ $template->uploader?->name ?? '-' }}</small>
+                                        <span title="{{ $template->nama_file }}">{{ \Illuminate\Support\Str::limit($template->nama_file, 24) }}</span>
+                                        @if($template->catatan)
+                                            <br><small class="text-muted">{{ $template->catatan }}</small>
+                                        @endif
+                                        <br><small class="text-muted">{{ $template->uploader?->name ?? '-' }}</small>
                                     </td>
-                                    <td class="text-nowrap">{{ $template->updated_at?->format('d M Y') ?? '-' }}</td>
                                     <td class="text-center">
-                                        <form action="{{ route('surat.templates.destroy', $template) }}"
-                                              method="POST" style="display:inline;"
-                                              onsubmit="return confirm('Hapus template tahun {{ $template->tahun }}? Surat tahun itu akan memakai template default.');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-danger btn-sm" title="Hapus template">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        @if($arsip)
+                                            <span class="badge badge-dark">Arsip</span>
+                                        @elseif($template->is_active)
+                                            <span class="badge badge-success">Aktif</span>
+                                        @else
+                                            <span class="badge badge-secondary">Tidak aktif</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-nowrap">{{ $template->created_at?->format('d M Y') ?? '-' }}</td>
+                                    <td class="text-center text-nowrap">
+                                        @if($arsip)
+                                            <form action="{{ route('surat.templates.restore', $template->id) }}"
+                                                  method="POST" style="display:inline;">
+                                                @csrf
+                                                <button type="submit" class="btn btn-outline-success btn-sm" title="Pulihkan dari arsip">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            @if(! $template->is_active)
+                                                <form action="{{ route('surat.templates.activate', $template) }}"
+                                                      method="POST" style="display:inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm" title="Aktifkan versi ini">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                            <form action="{{ route('surat.templates.destroy', $template) }}"
+                                                  method="POST" style="display:inline;"
+                                                  onsubmit="return confirm('Arsipkan template tahun {{ $template->tahun }} versi {{ $template->versi }}? File tetap tersimpan dan bisa dipulihkan.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-outline-warning btn-sm" title="Arsipkan (file tidak dihapus)">
+                                                    <i class="fas fa-archive"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted">
+                                    <td colspan="6" class="text-center text-muted">
                                         Belum ada template tahunan. Semua surat memakai template default.
                                     </td>
                                 </tr>
@@ -178,6 +237,40 @@
                         </tbody>
                     </table>
                 </div>
+
+                @if($suratTerpilih)
+                    <hr>
+                    <h5 class="mt-3"><i class="fas fa-file-signature"></i> Template untuk Surat Terpilih</h5>
+                    <p class="text-muted small mb-2">
+                        <code>{{ $suratTerpilih->nomor_permohonan }}</code> —
+                        {{ $suratTerpilih->nama_peminjam }}
+                        ({{ $suratTerpilih->created_at?->format('d M Y') }})
+                    </p>
+                    <form action="{{ route('surat.template.assign', $suratTerpilih) }}" method="POST">
+                        @csrf
+                        <div class="form-group">
+                            <select name="surat_template_id" class="form-control">
+                                <option value="">Otomatis (template aktif tahun surat)</option>
+                                @foreach($templates as $t)
+                                    <option value="{{ $t->id }}"
+                                        @selected((int) old('surat_template_id', $suratTerpilih->surat_template_id) === $t->id)>
+                                        {{ $t->tahun }} v{{ $t->versi }} — {{ $t->nama_file }}
+                                        {{ $t->trashed() ? '(arsip)' : ($t->is_active ? '(aktif)' : '') }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">
+                                Pilih template lama untuk surat ini saja. Surat lain tidak terpengaruh.
+                            </small>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="fas fa-save"></i> Simpan Pilihan
+                        </button>
+                        <a href="{{ route('surat.upload') }}" class="btn btn-outline-secondary btn-sm">
+                            Batal
+                        </a>
+                    </form>
+                @endif
             </div>
         </div>
     </div>
@@ -197,6 +290,7 @@
                     <th>Peminjam</th>
                     <th>Instansi</th>
                     <th>Tahun</th>
+                    <th>Template</th>
                     <th>DOCX</th>
                     <th>PDF</th>
                     <th>Terakhir Diunggah</th>
@@ -212,6 +306,18 @@
                         <td>{{ $p->nama_peminjam }}</td>
                         <td>{{ $p->instansi?->nama_instansi ?? $p->nama_instansi_lain ?? '-' }}</td>
                         <td class="text-center">{{ $p->created_at?->year ?? '-' }}</td>
+                        <td class="text-center">
+                            @if($p->suratTemplate)
+                                <span class="badge badge-info" title="{{ $p->suratTemplate->nama_file }}">
+                                    {{ $p->suratTemplate->tahun }} v{{ $p->suratTemplate->versi }}
+                                </span>
+                                @if($p->suratTemplate->trashed())
+                                    <span class="badge badge-dark">Arsip</span>
+                                @endif
+                            @else
+                                <span class="badge badge-secondary">Otomatis</span>
+                            @endif
+                        </td>
                         <td class="text-center">
                             @if($berkasAda)
                                 <a href="{{ route('surat.berkas', $p) }}" class="badge badge-success" title="Unduh DOCX yang diunggah">
@@ -249,7 +355,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="9" class="text-center text-muted">Belum ada data permohonan.</td>
+                        <td colspan="10" class="text-center text-muted">Belum ada data permohonan.</td>
                     </tr>
                 @endforelse
             </tbody>

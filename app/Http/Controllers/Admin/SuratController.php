@@ -7,8 +7,10 @@ use App\Models\Permohonan;
 use App\Models\SuratTemplate;
 use App\Services\DocxParserService;
 use App\Services\SuratPdfService;
+use App\Services\SuratTemplateScanner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use PhpOffice\PhpWord\TemplateProcessor;
 
 class SuratController extends Controller
@@ -122,7 +124,7 @@ class SuratController extends Controller
 
     public function index()
     {
-        $permohonan = Permohonan::with('instansi')->latest()->get();
+        $permohonan = Permohonan::with('instansi', 'suratTemplate')->latest()->get();
         return view('admin.surat.index', compact('permohonan'));
     }
 
@@ -137,15 +139,18 @@ class SuratController extends Controller
      */
     public function upload()
     {
-        $permohonan = Permohonan::with('instansi')->latest()->get();
-        $templates = SuratTemplate::with('uploader')
+        $permohonan = Permohonan::with('instansi', 'suratTemplate')->latest()->get();
+        $templates = SuratTemplate::withTrashed()
+            ->with('uploader')
             ->whereNotNull('tahun')
             ->orderByDesc('tahun')
+            ->orderByDesc('versi')
             ->get();
 
         $terpilih = (int) request('permohonan', 0);
+        $suratTerpilih = $terpilih ? $permohonan->firstWhere('id', $terpilih) : null;
 
-        return view('admin.surat.upload', compact('permohonan', 'templates', 'terpilih'));
+        return view('admin.surat.upload', compact('permohonan', 'templates', 'terpilih', 'suratTerpilih'));
     }
 
     /**
@@ -205,17 +210,21 @@ class SuratController extends Controller
     }
 
     /**
-     * Simpan template DOCX untuk satu tahun (menggantikan template tahun itu
-     * bila sudah ada).
+     * Simpan template DOCX sebagai versi baru untuk satu tahun.
+     *
+     * Versi baru otomatis aktif. Versi lama tidak dihapus dan tetap bisa
+     * diaktifkan kembali kapan saja.
      */
     public function uploadTemplate(Request $request)
     {
         $data = $request->validate([
             'tahun'         => ['required', 'integer', 'between:2000,2100'],
             'template_file' => ['required', 'file', 'mimes:docx', 'max:10240'],
+            'catatan'       => ['nullable', 'string', 'max:255'],
         ], [], [
             'tahun'         => 'tahun template',
             'template_file' => 'berkas template',
+            'catatan'       => 'catatan',
         ]);
 
         $berkas = $request->file('template_file');
@@ -236,34 +245,119 @@ class SuratController extends Controller
             ]);
         }
 
+        $hash = hash_file('sha256', $berkas->getRealPath());
+        $duplikat = SuratTemplate::withTrashed()->where('hash', $hash)->first();
+        if ($duplikat) {
+            return back()->withInput()->withErrors([
+                'template_file' => 'Berkas ini identik dengan template tahun '
+                    . $duplikat->tahun . ' versi ' . $duplikat->versi . '.',
+            ]);
+        }
+
+        $tahun = (int) $data['tahun'];
+        $versi = SuratTemplate::nextVersi($tahun);
+
+        // Nama acak supaya file versi lama tidak tertimpa.
         $relative = $berkas->storeAs(
             'surat-templates',
-            'template_peminjaman_' . $data['tahun'] . '.docx',
+            (string) Str::uuid() . '.docx',
             'local'
         );
 
-        SuratTemplate::updateOrCreate(
-            ['tahun' => (int) $data['tahun']],
-            [
-                'nama_file'   => $berkas->getClientOriginalName(),
-                'path'        => $relative,
-                'uploaded_by' => auth()->id(),
-            ]
-        );
+        // Hanya satu template aktif per tahun.
+        SuratTemplate::where('tahun', $tahun)->update(['is_active' => false]);
 
-        return back()->with('success', 'Template surat tahun ' . $data['tahun'] . ' berhasil disimpan.');
+        SuratTemplate::create([
+            'tahun'       => $tahun,
+            'versi'       => $versi,
+            'is_active'   => true,
+            'nama_file'   => $berkas->getClientOriginalName(),
+            'path'        => $relative,
+            'hash'        => $hash,
+            'ukuran'      => $berkas->getSize(),
+            'catatan'     => $data['catatan'] ?? null,
+            'uploaded_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Template surat tahun ' . $tahun . ' versi ' . $versi
+            . ' berhasil disimpan dan diaktifkan. Versi lama tetap tersimpan.');
     }
 
+    /**
+     * Aktifkan kembali template versi lama untuk tahunnya.
+     */
+    public function activateTemplate(SuratTemplate $template)
+    {
+        SuratTemplate::where('tahun', $template->tahun)->update(['is_active' => false]);
+        $template->update(['is_active' => true]);
+
+        return back()->with('success', 'Template tahun ' . $template->tahun
+            . ' versi ' . $template->versi . ' diaktifkan.');
+    }
+
+    /**
+     * Arsipkan template. File fisik tidak dihapus dan surat lama tetap bisa
+     * memakainya karena template dipin per surat.
+     */
     public function destroyTemplate(SuratTemplate $template)
     {
-        if (filled($template->path)) {
-            Storage::disk('local')->delete($template->path);
-        }
-
         $tahun = $template->tahun;
+        $versi = $template->versi;
+
+        $template->update(['is_active' => false]);
         $template->delete();
 
-        return back()->with('success', 'Template surat tahun ' . $tahun . ' dihapus. Surat tahun itu akan memakai template default.');
+        return back()->with('success', 'Template tahun ' . $tahun . ' versi ' . $versi
+            . ' diarsipkan. File tetap tersimpan dan bisa dipulihkan.');
+    }
+
+    /**
+     * Pulihkan template yang diarsipkan.
+     */
+    public function restoreTemplate(int $template)
+    {
+        $data = SuratTemplate::withTrashed()->findOrFail($template);
+        $data->restore();
+
+        if (! SuratTemplate::aktif()->where('tahun', $data->tahun)->exists()) {
+            $data->update(['is_active' => true]);
+        }
+
+        return back()->with('success', 'Template tahun ' . $data->tahun
+            . ' versi ' . $data->versi . ' dipulihkan.');
+    }
+
+    /**
+     * Pindai folder template lama dan daftarkan ke database.
+     */
+    public function scanTemplates(SuratTemplateScanner $scanner)
+    {
+        $hasil = $scanner->scan(auth()->id());
+
+        return back()->with('success', 'Pemindaian selesai: ' . $hasil['baru']
+            . ' template baru, ' . $hasil['dilewati'] . ' dilewati (duplikat).');
+    }
+
+    /**
+     * Pilih template tertentu untuk satu surat.
+     */
+    public function assignTemplate(Request $request, Permohonan $permohonan)
+    {
+        $data = $request->validate([
+            'surat_template_id' => ['nullable', 'integer', 'exists:surat_templates,id'],
+        ], [], [
+            'surat_template_id' => 'template surat',
+        ]);
+
+        $permohonan->update([
+            'surat_template_id' => $data['surat_template_id'] ?: null,
+        ]);
+
+        $pesan = $permohonan->surat_template_id
+            ? 'Template surat ' . $permohonan->nomor_permohonan . ' berhasil diubah.'
+            : 'Template surat ' . $permohonan->nomor_permohonan . ' dikembalikan ke otomatis.';
+
+        return back()->with('success', $pesan);
     }
 
     /**

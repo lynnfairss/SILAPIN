@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full bg-slate-50">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,349 +10,644 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <link href="{{ asset('css/silapin-theme.css') }}?v={{ filemtime(public_path('css/silapin-theme.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/peminjam.css') }}?v={{ filemtime(public_path('css/peminjam.css')) }}" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="{{ asset('css/peminjam-form.css') }}?v={{ filemtime(public_path('css/peminjam-form.css')) }}" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
 </head>
-<body>
+<body class="font-sans antialiased text-slate-800 bg-slate-50 min-h-full flex flex-col justify-between">
 
 @include('partials.public-navbar', ['active' => 'form'])
 
-<div class="sp-pagehead">
-    <div class="container position-relative" style="z-index:2;">
-        <div class="sp-pagehead__crumb">
-            <a href="{{ route('website') }}">Home</a>
-            <i class="fas fa-chevron-right mx-1" style="font-size:.6rem;"></i>
-            <span>Ajukan Peminjaman</span>
-        </div>
-        <h1>Ajukan Peminjaman</h1>
-        <p>Isi data diri dan pilih barang yang akan dipinjam.</p>
+{{-- HERO --}}
+<section class="bg-gradient-to-b from-brand-950 via-brand-900 to-slate-900 text-white pt-32 pb-24 relative overflow-hidden">
+    <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+        <nav class="flex justify-center mb-4" aria-label="Breadcrumb">
+            <ol class="inline-flex items-center space-x-2 text-xs font-medium text-slate-400 list-none p-0 m-0">
+                <li><a href="{{ route('website') }}" class="hover:text-blue-300 transition-colors">Home</a></li>
+                <li><i class="fa-solid fa-chevron-right text-[10px] text-slate-600"></i></li>
+                <li class="text-blue-400 font-semibold">Ajukan Peminjaman</li>
+            </ol>
+        </nav>
+
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-2">
+            Ajukan Peminjaman Inventaris
+        </h1>
+        <p class="text-slate-300 text-sm sm:text-base max-w-xl mx-auto">
+            Lengkapi form data diri dan unggah dokumen pendukung untuk memulai proses peminjaman fasilitas.
+        </p>
     </div>
-</div>
+</section>
 
-<div class="container sp-page-body">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
+<main class="relative z-10 -mt-16 pb-20 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
 
-            @if (session('error'))
-            <div class="alert alert-warning alert-dismissible fade show">
-                <i class="fas fa-clock me-2"></i>{{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            @endif
+        @if (session('error'))
+        <div class="js-alert mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 flex items-start gap-3">
+            <i class="fas fa-clock mt-0.5"></i>
+            <div class="flex-1">{{ session('error') }}</div>
+            <button type="button" class="text-amber-500 hover:text-amber-700 text-lg leading-none" onclick="this.closest('.js-alert').remove()">&times;</button>
+        </div>
+        @endif
 
-            @if ($errors->any())
-            <div class="alert alert-danger alert-dismissible fade show">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <strong>Mohon perbaiki kesalahan berikut:</strong>
-                <ul class="mb-0 mt-1">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            @endif
-
-            <div class="step-indicator">
-                <div class="step-item active" data-step="1">
-                    <div class="step-number">1</div>
-                    <div class="step-label">Data Diri</div>
+        @if ($errors->any())
+        <div class="js-alert mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-circle mt-0.5"></i>
+                <div class="flex-1">
+                    <strong class="font-bold">Mohon perbaiki kesalahan berikut:</strong>
+                    <ul class="mt-1 list-disc list-inside space-y-0.5">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
-                <div class="step-item" data-step="2">
-                    <div class="step-number">2</div>
-                    <div class="step-label">Pilih Barang</div>
+                <button type="button" class="text-red-400 hover:text-red-600 text-lg leading-none" onclick="this.closest('.js-alert').remove()">&times;</button>
+            </div>
+        </div>
+        @endif
+
+        {{-- STEPPER --}}
+        <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-4 sm:p-6 mb-6">
+            <div class="relative flex items-center justify-between max-w-2xl mx-auto">
+                <div class="absolute left-[16.6667%] top-1/2 -translate-y-1/2 w-[66.6667%] h-1 bg-slate-100 -z-0 rounded-full"></div>
+                <div id="stepProgress" class="absolute left-[16.6667%] top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 -z-0 transition-all duration-500 rounded-full" style="width:0%"></div>
+
+                <div class="step-item active relative z-10 flex flex-col items-center group cursor-pointer" data-step="1" onclick="goToStep(1)">
+                    <div class="step-number w-12 h-12 rounded-xl flex items-center justify-center font-bold transition-transform group-hover:scale-105">
+                        <i class="fa-solid fa-user text-lg"></i>
+                    </div>
+                    <span class="step-label mt-2 text-xs font-semibold">1. Data Diri</span>
                 </div>
-                <div class="step-item" data-step="3">
-                    <div class="step-number">3</div>
-                    <div class="step-label">Preview</div>
+
+                <div class="step-item relative z-10 flex flex-col items-center group cursor-pointer" data-step="2" onclick="goToStep(2)">
+                    <div class="step-number w-12 h-12 rounded-xl flex items-center justify-center font-bold transition-all group-hover:scale-105">
+                        <i class="fa-solid fa-box-open text-lg"></i>
+                    </div>
+                    <span class="step-label mt-2 text-xs font-semibold">2. Pilih Barang</span>
+                </div>
+
+                <div class="step-item relative z-10 flex flex-col items-center group cursor-pointer" data-step="3" onclick="goToStep(3)">
+                    <div class="step-number w-12 h-12 rounded-xl flex items-center justify-center font-bold transition-all group-hover:scale-105">
+                        <i class="fa-solid fa-file-circle-check text-lg"></i>
+                    </div>
+                    <span class="step-label mt-2 text-xs font-semibold">3. Preview &amp; Submit</span>
                 </div>
             </div>
+        </div>
 
             <form method="POST" action="{{ route('peminjam.store') }}" enctype="multipart/form-data" id="formPeminjaman">
                 @csrf
 
                 {{-- STEP 1: Data Diri --}}
                 <div class="step-content active" data-step="1">
-                    <div class="card form-card">
-                        <div class="card-header bg-white">
-                            <i class="fas fa-user me-2 text-primary"></i>Data Diri Pemohon
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Nama Lengkap <span class="text-danger">*</span></label>
-                                    <input type="text" name="nama_peminjam" class="form-control" value="{{ old('nama_peminjam') }}" required placeholder="Masukkan nama lengkap">
+                    <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
+                        <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm">
+                                    <i class="fa-solid fa-id-card"></i>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium"><span id="labelIdentitas">Nomor Identitas</span> <span class="text-danger">*</span></label>
-                                    <input type="text" name="nik" id="nikField" class="form-control" value="{{ old('nik') }}" required placeholder="NIK / No. SIM / NIM / No. Paspor" maxlength="20">
+                                <div>
+                                    <h2 class="text-base font-bold text-slate-800">Informasi Pemohon</h2>
+                                    <p class="text-xs text-slate-500">Isi data identitas diri Anda dengan benar</p>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Jabatan</label>
-                                    <input type="text" name="jabatan" class="form-control" value="{{ old('jabatan') }}" placeholder="Contoh: Kepala Subbag, Staf">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Telepon <span class="text-danger">*</span></label>
-                                    <input type="tel" name="telepon" class="form-control" value="{{ old('telepon') }}" required placeholder="08xxxxxxxxxx" maxlength="15" oninput="this.value = this.value.replace(/\D/g, '')">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Instansi</label>
-                                    <select name="instansi_id" class="form-control" id="instansiSelect">
-                                        <option value="">-- Pilih atau ketik instansi --</option>
-                                        @foreach($instansi as $item)
-                                            <option value="{{ $item->id }}" {{ old('instansi_id')==$item->id ? 'selected' : '' }}>{{ $item->nama_instansi }}</option>
-                                        @endforeach
-                                    </select>
-                                    <small class="text-muted">Jika instansi belum ada, silahkan tambahkan manual</small>
-                                </div>
-                                <div class="col-md-6" id="instansiLainWrapper" style="display:none">
-                                    <label class="form-label fw-medium">Nama Instansi <span class="text-danger">*</span></label>
-                                    <input type="text" name="nama_instansi_lain" class="form-control" value="{{ old('nama_instansi_lain') }}" placeholder="Masukkan nama instansi">
-                                    <input type="hidden" name="instansi_nama_text" id="instansiNamaText">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Tempat / Tgl Lahir</label>
-                                    <input type="text" name="tempat_tanggal_lahir" id="ttlField" class="form-control" value="{{ old('tempat_tanggal_lahir') }}" placeholder="Contoh: Jakarta, 12-08-1990" maxlength="120">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-medium">Alamat</label>
-                                    <textarea name="alamat" id="alamatField" class="form-control" rows="2" placeholder="Masukkan alamat sesuai identitas" maxlength="255">{{ old('alamat') }}</textarea>
-                                </div>
-                                <div class="col-12">
-                                    <hr>
-                                    <h6 class="fw-bold text-primary"><i class="fas fa-upload me-2"></i>Upload Dokumen</h6>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Foto Identitas <small class="text-muted">(opsional — KTP / SIM / Kartu Pelajar / Kartu Mahasiswa / Paspor; max 2MB, jpg/png)</small></label>
-                                    <div class="input-group">
-                                        <input type="file" name="foto_ktp" id="fotoKtpInput" class="form-control" accept="image/*">
-                                        <button type="button" class="btn btn-outline-primary" data-scan="foto_ktp" onclick="openCamera(this)" title="Scan / foto kartu identitas">
-                                            <i class="fas fa-camera me-1"></i>Scan
-                                        </button>
-                                    </div>
-                                    <div class="d-flex align-items-center gap-2 mt-2">
-                                        <div class="scan-preview"></div>
-                                        <button type="button" class="btn btn-sm btn-outline-info" id="btnOcrKtp" onclick="runOcrKtp()" disabled title="Deteksi otomatis Nama, Nomor Identitas, Alamat & TTL dari foto identitas">
-                                            <i class="fas fa-magic me-1"></i>Deteksi Data Identitas
-                                        </button>
-                                    </div>
-                                    <div class="ocr-status" id="ocrStatus"></div>
-                                    <div class="form-text">Upload atau scan/foto kartu identitas sebagai bukti (opsional).</div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Surat Tugas <small class="text-muted">(opsional, max 2MB)</small></label>
-                                    <div class="input-group">
-                                        <input type="file" name="surat_tugas" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                        <button type="button" class="btn btn-outline-primary" data-scan="surat_tugas" onclick="openCamera(this)" title="Scan / foto surat tugas">
-                                            <i class="fas fa-camera me-1"></i>Scan
-                                        </button>
-                                    </div>
-                                    <div class="scan-preview"></div>
-                                    <div class="form-text">Upload atau scan surat tugas jika ada.</div>
                             </div>
-                            <div class="no-results" id="noResults">
-                                <i class="fas fa-search d-block"></i>
-                                <p>Barang tidak ditemukan</p>
-                                <small>Coba ubah filter atau kata kunci pencarian</small>
+                            <span class="text-xs font-medium text-slate-400"><span class="text-red-500">*</span> Wajib diisi</span>
+                        </div>
+
+                        <div class="p-6 sm:p-8 space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                {{-- Nama Lengkap --}}
+                                <div>
+                                    <label for="nama_peminjam" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Nama Lengkap <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-user text-sm"></i>
+                                        </div>
+                                        <input type="text" name="nama_peminjam" id="nama_peminjam" value="{{ old('nama_peminjam') }}" required
+                                               placeholder="Masukkan nama lengkap"
+                                               class="pf-input pf-input-icon w-full text-sm @error('nama_peminjam') pf-invalid @enderror">
+                                    </div>
+                                    @error('nama_peminjam')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+
+                                {{-- Nomor Identitas --}}
+                                <div>
+                                    <label for="nikField" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        <span id="labelIdentitas">Nomor Identitas</span> <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-id-badge text-sm"></i>
+                                        </div>
+                                        <input type="text" name="nik" id="nikField" value="{{ old('nik') }}" required
+                                               placeholder="NIK / No. SIM / NIM / No. Paspor" maxlength="20"
+                                               class="pf-input pf-input-icon w-full text-sm @error('nik') pf-invalid @enderror">
+                                    </div>
+                                    @error('nik')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+
+                                {{-- Jabatan --}}
+                                <div>
+                                    <label for="jabatan" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Jabatan / Posisi
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-briefcase text-sm"></i>
+                                        </div>
+                                        <input type="text" name="jabatan" id="jabatan" value="{{ old('jabatan') }}"
+                                               placeholder="Contoh: Staf IT, Mahasiswa, Kepala Subbag"
+                                               class="pf-input pf-input-icon w-full text-sm @error('jabatan') pf-invalid @enderror">
+                                    </div>
+                                    @error('jabatan')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+
+                                {{-- Telepon --}}
+                                <div>
+                                    <label for="telepon" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Nomor Telepon / WhatsApp <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-phone text-sm"></i>
+                                        </div>
+                                        <input type="tel" name="telepon" id="telepon" value="{{ old('telepon') }}" required
+                                               placeholder="08xxxxxxxxxx" maxlength="15"
+                                               oninput="this.value = this.value.replace(/\D/g, '')"
+                                               class="pf-input pf-input-icon w-full text-sm @error('telepon') pf-invalid @enderror">
+                                    </div>
+                                    @error('telepon')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+
+                                {{-- Instansi --}}
+                                <div>
+                                    <label for="instansiSelect" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Instansi / Unit Kerja
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 z-10">
+                                            <i class="fa-solid fa-building text-sm"></i>
+                                        </div>
+                                        <select name="instansi_id" id="instansiSelect" class="pf-input pf-input-icon pf-select w-full text-sm @error('instansi_id') pf-invalid @enderror">
+                                            <option value="">-- Pilih atau ketik instansi --</option>
+                                            @foreach($instansi as $item)
+                                                <option value="{{ $item->id }}" {{ old('instansi_id')==$item->id ? 'selected' : '' }}>{{ $item->nama_instansi }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <p class="mt-1.5 text-[11px] text-slate-400">Jika instansi tidak terdaftar, ketik nama baru pada kolom ini.</p>
+                                    @error('instansi_id')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+
+                                {{-- Instansi manual --}}
+                                <div id="instansiLainWrapper" style="display:none">
+                                    <label for="nama_instansi_lain" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Nama Instansi <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-building-circle-check text-sm"></i>
+                                        </div>
+                                        <input type="text" name="nama_instansi_lain" id="nama_instansi_lain" value="{{ old('nama_instansi_lain') }}"
+                                               placeholder="Masukkan nama instansi"
+                                               class="pf-input pf-input-icon w-full text-sm @error('nama_instansi_lain') pf-invalid @enderror">
+                                        <input type="hidden" name="instansi_nama_text" id="instansiNamaText">
+                                    </div>
+                                    @error('nama_instansi_lain')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+
+                                {{-- Tempat / Tanggal Lahir --}}
+                                <div>
+                                    <label for="ttlField" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Tempat / Tgl Lahir
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-calendar-days text-sm"></i>
+                                        </div>
+                                        <input type="text" name="tempat_tanggal_lahir" id="ttlField" value="{{ old('tempat_tanggal_lahir') }}"
+                                               placeholder="Contoh: Jakarta, 12-08-1990" maxlength="120"
+                                               class="pf-input pf-input-icon w-full text-sm @error('tempat_tanggal_lahir') pf-invalid @enderror">
+                                    </div>
+                                    @error('tempat_tanggal_lahir')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+
+                                {{-- Alamat --}}
+                                <div class="md:col-span-2">
+                                    <label for="alamatField" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Alamat Lengkap (Sesuai Identitas)
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-location-dot text-sm"></i>
+                                        </div>
+                                        <textarea name="alamat" id="alamatField" rows="2" maxlength="255"
+                                                  placeholder="Masukkan alamat domisili atau alamat sesuai KTP/SIM..."
+                                                  class="pf-input pf-input-icon pf-textarea w-full text-sm @error('alamat') pf-invalid @enderror">{{ old('alamat') }}</textarea>
+                                    </div>
+                                    @error('alamat')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
+                                </div>
+                            </div>
+
+                            {{-- Upload Dokumen --}}
+                            <div class="border-t border-slate-100 pt-6">
+                                <div class="flex items-center space-x-3 mb-6">
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center font-semibold text-sm">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-base font-bold text-slate-800">Unggah Dokumen Pendukung</h3>
+                                        <p class="text-xs text-slate-500">Format yang diterima: JPG, PNG, atau PDF (Maks. 2MB)</p>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                    {{-- Foto Identitas --}}
+                                    <div class="upload-field space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Foto Identitas (KTP/NIM)</span>
+                                            <button type="button" id="btnOcrKtp" onclick="runOcrKtp()" disabled
+                                                    title="Deteksi otomatis Nama, Nomor Identitas, Alamat & TTL dari foto identitas"
+                                                    class="inline-flex items-center space-x-1 text-[11px] font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed px-2.5 py-1 rounded-lg transition-colors">
+                                                <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                                                <span>Deteksi OCR</span>
+                                            </button>
+                                        </div>
+
+                                        <label for="fotoKtpInput" id="dropFotoKtp"
+                                               class="file-drop-zone rounded-2xl p-5 text-center cursor-pointer flex flex-col items-center justify-center min-h-[140px] group">
+                                            <input type="file" name="foto_ktp" id="fotoKtpInput" class="hidden" accept="image/*">
+                                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-camera text-base"></i>
+                                            </div>
+                                            <p class="text-xs font-medium text-slate-700">
+                                                <span class="text-blue-600 font-semibold">Klik untuk unggah</span> atau seret file ke sini
+                                            </p>
+                                            <p id="namaFotoKtp" class="text-[11px] text-slate-400 mt-1">KTP / SIM / Kartu Pelajar (Maks. 2MB)</p>
+                                        </label>
+
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <div class="scan-preview"></div>
+                                            <button type="button" data-scan="foto_ktp" onclick="openCamera(this)"
+                                                    title="Scan / foto kartu identitas"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors">
+                                                <i class="fa-solid fa-camera"></i> Scan Kamera
+                                            </button>
+                                        </div>
+                                        <div class="ocr-status" id="ocrStatus"></div>
+                                        <p class="text-[11px] text-slate-400">Upload atau scan/foto kartu identitas sebagai bukti (opsional).</p>
+                                    </div>
+
+                                    {{-- Surat Tugas --}}
+                                    <div class="upload-field space-y-3">
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Surat Tugas / Rekomendasi</span>
+                                            <span class="text-[11px] font-medium text-slate-400 bg-slate-100 px-2 py-0.5 rounded">Opsional</span>
+                                        </div>
+
+                                        <label for="suratTugasInput" id="dropSuratTugas"
+                                               class="file-drop-zone rounded-2xl p-5 text-center cursor-pointer flex flex-col items-center justify-center min-h-[140px] group">
+                                            <input type="file" name="surat_tugas" id="suratTugasInput" class="hidden" accept=".pdf,.jpg,.jpeg,.png">
+                                            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                                                <i class="fa-solid fa-file-pdf text-base"></i>
+                                            </div>
+                                            <p class="text-xs font-medium text-slate-700">
+                                                <span class="text-blue-600 font-semibold">Klik untuk unggah</span> atau seret file ke sini
+                                            </p>
+                                            <p id="namaSuratTugas" class="text-[11px] text-slate-400 mt-1">PDF atau Gambar (Maks. 2MB)</p>
+                                        </label>
+
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <div class="scan-preview"></div>
+                                            <button type="button" data-scan="surat_tugas" onclick="openCamera(this)"
+                                                    title="Scan / foto surat tugas"
+                                                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold transition-colors">
+                                                <i class="fa-solid fa-camera"></i> Scan Kamera
+                                            </button>
+                                        </div>
+                                        <p class="text-[11px] text-slate-400">Upload atau scan surat tugas jika ada.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Navigasi Step 1 --}}
+                            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <a href="{{ route('website') }}"
+                                   class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                    <span>Kembali ke Beranda</span>
+                                </a>
+
+                                <button type="button" onclick="goToStep(2)"
+                                        class="w-full sm:w-auto px-7 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs tracking-wider shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2">
+                                    <span>Selanjutnya: Pilih Barang</span>
+                                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                                </button>
                             </div>
                         </div>
-                    </div>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mt-3 step-nav">
-                        <a href="{{ route('website') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i> Kembali ke Halaman Utama
-                        </a>
-                        <button type="button" class="btn btn-primary btn-next px-4" onclick="goToStep(2)">
-                            Selanjutnya <i class="fas fa-arrow-right ms-1"></i>
-                        </button>
                     </div>
                 </div>
 
                 {{-- STEP 2: Pilih Barang --}}
                 <div class="step-content" data-step="2">
-                    <div class="card form-card">
-                        <div class="card-header bg-white">
-                            <i class="fas fa-boxes me-2 text-primary"></i>Pilih Barang & Jadwal Peminjaman
+                    <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
+                        <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm">
+                                    <i class="fa-solid fa-box-open"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-base font-bold text-slate-800">Jadwal &amp; Pilihan Barang</h2>
+                                    <p class="text-xs text-slate-500">Tentukan tanggal pinjam, keperluan, dan barang yang dipinjam</p>
+                                </div>
+                            </div>
+                            <span class="text-xs font-medium text-slate-400"><span class="text-red-500">*</span> Wajib diisi</span>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Tanggal Pinjam <span class="text-danger">*</span></label>
-                                    <input type="date" name="tanggal_pinjam" class="form-control" value="{{ old('tanggal_pinjam', now('Asia/Jakarta')->format('Y-m-d')) }}" required>
+
+                        <div class="p-6 sm:p-8 space-y-8">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="tanggal_pinjam" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Tanggal Pinjam <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-calendar-plus text-sm"></i>
+                                        </div>
+                                        <input type="date" name="tanggal_pinjam" id="tanggal_pinjam" value="{{ old('tanggal_pinjam', now('Asia/Jakarta')->format('Y-m-d')) }}" required
+                                               class="pf-input pf-input-icon w-full text-sm @error('tanggal_pinjam') pf-invalid @enderror">
+                                    </div>
+                                    @error('tanggal_pinjam')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label fw-medium">Tanggal Kembali <span class="text-danger">*</span></label>
-                                    <input type="date" name="tanggal_kembali" class="form-control" value="{{ old('tanggal_kembali', now('Asia/Jakarta')->format('Y-m-d')) }}" required>
+
+                                <div>
+                                    <label for="tanggal_kembali" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Tanggal Kembali <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-calendar-check text-sm"></i>
+                                        </div>
+                                        <input type="date" name="tanggal_kembali" id="tanggal_kembali" value="{{ old('tanggal_kembali', now('Asia/Jakarta')->format('Y-m-d')) }}" required
+                                               class="pf-input pf-input-icon w-full text-sm @error('tanggal_kembali') pf-invalid @enderror">
+                                    </div>
+                                    @error('tanggal_kembali')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                                 </div>
-                                <div class="col-12">
-                                    <label class="form-label fw-medium">Keperluan <span class="text-danger">*</span></label>
-                                    <textarea name="keperluan" class="form-control" rows="3" required placeholder="Jelaskan keperluan peminjaman">{{ old('keperluan') }}</textarea>
+
+                                <div class="md:col-span-2">
+                                    <label for="keperluan" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+                                        Keperluan <span class="text-red-500">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <div class="absolute top-3 left-0 pl-3.5 flex items-start pointer-events-none text-slate-400">
+                                            <i class="fa-solid fa-pen-to-square text-sm"></i>
+                                        </div>
+                                        <textarea name="keperluan" id="keperluan" rows="3" required placeholder="Jelaskan keperluan peminjaman"
+                                                  class="pf-input pf-input-icon pf-textarea w-full text-sm @error('keperluan') pf-invalid @enderror">{{ old('keperluan') }}</textarea>
+                                    </div>
+                                    @error('keperluan')<p class="mt-1 text-xs text-red-500">{{ $message }}</p>@enderror
                                 </div>
                             </div>
 
-                            <hr>
-                            <h6 class="fw-bold mb-3"><i class="fas fa-box me-2 text-primary"></i>Pilih Barang</h6>
-
-                            {{-- Filter Search --}}
-                            <div class="filter-search mb-3">
-                                <i class="fas fa-search filter-search-icon"></i>
-                                <input type="text" id="searchInput" class="form-control" placeholder="Cari kategori, jenis, atau nama barang..." oninput="filterBarang(this.value)">
-                            </div>
-
-                            {{-- Filter Kategori --}}
-                            <div class="filter-group">
-                                <span class="filter-label"><i class="fas fa-tags me-1"></i>Kategori</span>
-                                <div class="filter-chips" id="filterChips">
-                                    <span class="filter-chip active" data-filter="" onclick="filterByKategori(this,'')">Semua</span>
-                                    @foreach($kategori as $kat)
-                                    <span class="filter-chip filter-chip-cat" data-filter="{{ $kat->nama_kategori }}" onclick="filterByKategori(this,'{{ $kat->nama_kategori }}')">{{ $kat->nama_kategori }}</span>
-                                    @endforeach
+                            <div class="border-t border-slate-100 pt-6">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-box-open mr-2 text-blue-600"></i>Pilih Barang</h3>
+                                    <span class="text-xs text-slate-400">Pilih satu atau lebih barang</span>
                                 </div>
-                            </div>
 
-                            {{-- Filter Jenis --}}
-                            <div class="filter-group">
-                                <span class="filter-label"><i class="fas fa-layer-group me-1"></i>Jenis</span>
-                                <div class="filter-chips" id="filterJenisChips">
-                                    <span class="filter-chip active" data-filter="" onclick="filterByJenis(this,'')">Semua</span>
-                                    @foreach($jenisList as $j)
-                                    <span class="filter-chip filter-chip-jenis" data-filter="{{ $j }}" onclick="filterByJenis(this,'{{ $j }}')">{{ $j }}</span>
-                                    @endforeach
+                                {{-- Filter Search --}}
+                                <div class="relative mb-4">
+                                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none"></i>
+                                    <input type="text" id="searchInput" placeholder="Cari kategori, jenis, atau nama barang..." oninput="filterBarang(this.value)"
+                                           class="pf-input pf-input-icon w-full text-sm">
                                 </div>
-                            </div>
 
-                            <div class="row g-3" id="barangContainer">
-                                @forelse($inventaris as $item)
-                                 <div class="col-md-4 col-sm-6 barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-jenis="{{ $item->jenis?->nama_jenis ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
-                                    <div class="product-card{{ $item->stok <= 0 ? ' out-of-stock' : '' }}" data-stok="{{ (int) $item->stok }}" onclick="toggleBarang(this, {{ $item->id }})">
-                                        <div class="img-slider" id="slider_{{ $item->id }}">
-                                            @php $fotos = $item->fotos; @endphp
-                                            @if($fotos->count() > 0)
-                                                @foreach($fotos as $idx => $f)
-                                                <div class="slider-img {{ $idx === 0 ? 'active' : '' }}" data-img="{{ asset('storage/'.$f->foto) }}">
-                                                    <img src="{{ asset('storage/'.$f->foto) }}" alt="{{ $item->nama_barang }}" onclick="event.stopPropagation(); openLightbox({{ $item->id }})">
-                                                </div>
-                                                @endforeach
-                                                @if($fotos->count() > 1)
-                                                <button type="button" class="slider-btn slider-prev" onclick="event.stopPropagation(); slideImg({{ $item->id }}, -1)"><i class="fas fa-chevron-left"></i></button>
-                                                <button type="button" class="slider-btn slider-next" onclick="event.stopPropagation(); slideImg({{ $item->id }}, 1)"><i class="fas fa-chevron-right"></i></button>
-                                                <div class="slider-dots">
+                                {{-- Filter Kategori --}}
+                                <div class="filter-group mb-4">
+                                    <span class="filter-label"><i class="fas fa-tags mr-1"></i>Kategori</span>
+                                    <div class="filter-chips" id="filterChips">
+                                        <span class="filter-chip active" data-filter="" onclick="filterByKategori(this,'')">Semua</span>
+                                        @foreach($kategori as $kat)
+                                        <span class="filter-chip filter-chip-cat" data-filter="{{ $kat->nama_kategori }}" onclick="filterByKategori(this,'{{ $kat->nama_kategori }}')">{{ $kat->nama_kategori }}</span>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                {{-- Filter Jenis --}}
+                                <div class="filter-group mb-6">
+                                    <span class="filter-label"><i class="fas fa-layer-group mr-1"></i>Jenis</span>
+                                    <div class="filter-chips" id="filterJenisChips">
+                                        <span class="filter-chip active" data-filter="" onclick="filterByJenis(this,'')">Semua</span>
+                                        @foreach($jenisList as $j)
+                                        <span class="filter-chip filter-chip-jenis" data-filter="{{ $j }}" onclick="filterByJenis(this,'{{ $j }}')">{{ $j }}</span>
+                                        @endforeach
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="barangContainer">
+                                    @forelse($inventaris as $item)
+                                     <div class="barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-jenis="{{ $item->jenis?->nama_jenis ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
+                                        <div class="product-card{{ $item->stok <= 0 ? ' out-of-stock' : '' }}" data-stok="{{ (int) $item->stok }}" onclick="toggleBarang(this, {{ $item->id }})">
+                                            <div class="img-slider" id="slider_{{ $item->id }}">
+                                                @php $fotos = $item->fotos; @endphp
+                                                @if($fotos->count() > 0)
                                                     @foreach($fotos as $idx => $f)
-                                                    <span class="dot {{ $idx === 0 ? 'active' : '' }}" onclick="event.stopPropagation(); goToSlide({{ $item->id }}, {{ $idx }})"></span>
+                                                    <div class="slider-img {{ $idx === 0 ? 'active' : '' }}" data-img="{{ asset('storage/'.$f->foto) }}">
+                                                        <img src="{{ asset('storage/'.$f->foto) }}" alt="{{ $item->nama_barang }}" onclick="event.stopPropagation(); openLightbox({{ $item->id }})">
+                                                    </div>
                                                     @endforeach
-                                                </div>
-                                                @endif
-                                            @else
-                                                <div class="slider-img active no-foto">
-                                                    <i class="fas fa-box-open"></i>
-                                                    <span>Tidak ada foto</span>
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        <div class="product-info">
-                                            <div class="product-name">{{ $item->nama_barang }}</div>
-                                            <div class="product-meta">
-                                                <span>Kode: <code>{{ $item->kode_barang }}</code></span>
-                                                <span class="product-kategori">{{ $item->kategori->nama_kategori ?? '-' }}</span>
-                                                @if($item->jenis?->nama_jenis)
-                                                <span class="product-jenis">{{ $item->jenis->nama_jenis }}</span>
-                                                @endif
-                                            </div>
-                                            <div class="product-stok">
-                                                @if($item->stok <= 0)
-                                                    <span class="badge badge-stok-empty"><i class="fas fa-ban me-1"></i>Stok Habis</span>
+                                                    @if($fotos->count() > 1)
+                                                    <button type="button" class="slider-btn slider-prev" onclick="event.stopPropagation(); slideImg({{ $item->id }}, -1)"><i class="fas fa-chevron-left"></i></button>
+                                                    <button type="button" class="slider-btn slider-next" onclick="event.stopPropagation(); slideImg({{ $item->id }}, 1)"><i class="fas fa-chevron-right"></i></button>
+                                                    <div class="slider-dots">
+                                                        @foreach($fotos as $idx => $f)
+                                                        <span class="dot {{ $idx === 0 ? 'active' : '' }}" onclick="event.stopPropagation(); goToSlide({{ $item->id }}, {{ $idx }})"></span>
+                                                        @endforeach
+                                                    </div>
+                                                    @endif
                                                 @else
-                                                    <span class="badge badge-stok-{{ $item->stok > 5 ? 'ample' : ($item->stok >= 2 ? 'moderate' : 'low') }}" data-stok-badge>
-                                                        <i class="fas {{ $item->stok > 5 ? 'fa-check-circle' : ($item->stok >= 2 ? 'fa-exclamation-circle' : 'fa-times-circle') }} me-1"></i>Stok: <span data-stok-value>{{ (int) $item->stok }}</span><span data-stok-sisa></span>
-                                                    </span>
+                                                    <div class="slider-img active no-foto">
+                                                        <i class="fas fa-box-open"></i>
+                                                        <span>Tidak ada foto</span>
+                                                    </div>
                                                 @endif
                                             </div>
-                                        </div>
 
-                                        <div class="product-action">
-                                            <div class="form-check" onclick="event.stopPropagation()">
-                                                <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})" @disabled($item->stok <= 0)>
-                                                <label class="form-check-label" for="barang_{{ $item->id }}">{{ $item->stok <= 0 ? 'Stok Habis' : 'Pilih Barang' }}</label>
+                                            <div class="product-info">
+                                                <div class="product-name">{{ $item->nama_barang }}</div>
+                                                <div class="product-meta">
+                                                    <span>Kode: <code>{{ $item->kode_barang }}</code></span>
+                                                    <span class="product-kategori">{{ $item->kategori->nama_kategori ?? '-' }}</span>
+                                                    @if($item->jenis?->nama_jenis)
+                                                    <span class="product-jenis">{{ $item->jenis->nama_jenis }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="product-stok">
+                                                    @if($item->stok <= 0)
+                                                        <span class="badge badge-stok-empty"><i class="fas fa-ban me-1"></i>Stok Habis</span>
+                                                    @else
+                                                        <span class="badge badge-stok-{{ $item->stok > 5 ? 'ample' : ($item->stok >= 2 ? 'moderate' : 'low') }}" data-stok-badge>
+                                                            <i class="fas {{ $item->stok > 5 ? 'fa-check-circle' : ($item->stok >= 2 ? 'fa-exclamation-circle' : 'fa-times-circle') }} me-1"></i>Stok: <span data-stok-value>{{ (int) $item->stok }}</span><span data-stok-sisa></span>
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <div class="qty-stepper" onclick="event.stopPropagation()">
-                                                <button type="button" class="qty-btn qty-minus" onclick="changeQty(this, -1)" disabled>&minus;</button>
-                                                <input type="text" name="jumlah[{{ $item->id }}]" class="qty-input" value="1" min="1" max="{{ max(1, (int) $item->stok) }}" disabled oninput="validateQty(this)" onkeydown="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 96 && event.keyCode <= 105) || event.keyCode === 8 || event.keyCode === 46">
-                                                <button type="button" class="qty-btn qty-plus" onclick="changeQty(this, 1)">+</button>
+
+                                            <div class="product-action">
+                                                <div class="form-check" onclick="event.stopPropagation()">
+                                                    <input class="form-check-input" type="checkbox" name="inventaris[]" value="{{ $item->id }}" id="barang_{{ $item->id }}" onchange="toggleSelect(this, {{ $item->id }})" @disabled($item->stok <= 0)>
+                                                    <label class="form-check-label" for="barang_{{ $item->id }}">{{ $item->stok <= 0 ? 'Stok Habis' : 'Pilih Barang' }}</label>
+                                                </div>
+                                                <div class="qty-stepper" onclick="event.stopPropagation()">
+                                                    <button type="button" class="qty-btn qty-minus" onclick="changeQty(this, -1)" disabled>&minus;</button>
+                                                    <input type="text" name="jumlah[{{ $item->id }}]" class="qty-input" value="1" min="1" max="{{ max(1, (int) $item->stok) }}" disabled oninput="validateQty(this)" onkeydown="return (event.keyCode >= 48 && event.keyCode <= 57) || (event.keyCode >= 96 && event.keyCode <= 105) || event.keyCode === 8 || event.keyCode === 46">
+                                                    <button type="button" class="qty-btn qty-plus" onclick="changeQty(this, 1)">+</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                    @empty
+                                    <div class="col-span-full text-center py-12 text-slate-400">
+                                        <i class="fas fa-inbox text-4xl block mb-3"></i>
+                                        Belum ada barang tersedia.
+                                    </div>
+                                    @endforelse
                                 </div>
-                                @empty
-                                <div class="col-12 text-center py-5 text-muted">
-                                    <i class="fas fa-inbox fa-3x d-block mb-2"></i>
-                                    Belum ada barang tersedia.
+
+                                <div class="no-results" id="noResults">
+                                    <i class="fas fa-search"></i>
+                                    <p>Barang tidak ditemukan</p>
+                                    <small>Coba ubah filter atau kata kunci pencarian</small>
                                 </div>
-                                @endforelse
+                            </div>
+
+                            {{-- Navigasi Step 2 --}}
+                            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <button type="button" onclick="goToStep(1)"
+                                        class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                    <span>Sebelumnya</span>
+                                </button>
+                                <button type="button" onclick="goToStep(3)"
+                                        class="w-full sm:w-auto px-7 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs tracking-wider shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 transition-all transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2">
+                                    <span>Selanjutnya: Preview</span>
+                                    <i class="fa-solid fa-arrow-right text-xs"></i>
+                                </button>
                             </div>
                         </div>
-                    </div>
-                    <div class="d-flex justify-content-between mt-3 step-nav">
-                        <button type="button" class="btn btn-secondary btn-prev px-4" onclick="goToStep(1)">
-                            <i class="fas fa-arrow-left me-1"></i> Sebelumnya
-                        </button>
-                        <button type="button" class="btn btn-primary btn-next px-4" onclick="goToStep(3)">
-                            Selanjutnya <i class="fas fa-arrow-right ms-1"></i>
-                        </button>
                     </div>
                 </div>
 
                 {{-- STEP 3: Preview & Submit --}}
                 <div class="step-content" data-step="3">
-                    <div class="card form-card">
-                        <div class="card-header bg-white">
-                            <i class="fas fa-eye me-2 text-primary"></i>Preview Data Permohonan
+                    <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
+                        <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-semibold text-sm">
+                                    <i class="fa-solid fa-file-circle-check"></i>
+                                </div>
+                                <div>
+                                    <h2 class="text-base font-bold text-slate-800">Preview Data Permohonan</h2>
+                                    <p class="text-xs text-slate-500">Periksa kembali data sebelum dikirim</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="card-body p-4">
-                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-user me-2"></i>Data Diri</h6>
-                            <table class="table table-bordered preview-table mb-4">
-                                <tbody id="previewDataDiri"></tbody>
-                            </table>
 
-                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-calendar me-2"></i>Jadwal Peminjaman</h6>
-                            <table class="table table-bordered preview-table mb-4">
-                                <tbody id="previewJadwal"></tbody>
-                            </table>
+                        <div class="p-6 sm:p-8 space-y-6">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 mb-3"><i class="fa-solid fa-user mr-2 text-blue-600"></i>Data Diri</h3>
+                                <div class="overflow-hidden rounded-xl border border-slate-200">
+                                    <table class="w-full text-sm">
+                                        <tbody id="previewDataDiri" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
 
-                            <h6 class="fw-bold text-primary mb-3"><i class="fas fa-boxes me-2"></i>Barang yang Dipinjam</h6>
-                            <table class="table table-bordered table-striped">
-                                <thead class="table-dark">
-                                    <tr>
-                                        <th>No</th>
-                                        <th>Nama Barang</th>
-                                        <th>Jumlah</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="previewBarang"></tbody>
-                            </table>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 mb-3"><i class="fa-solid fa-calendar-days mr-2 text-blue-600"></i>Jadwal Peminjaman</h3>
+                                <div class="overflow-hidden rounded-xl border border-slate-200">
+                                    <table class="w-full text-sm">
+                                        <tbody id="previewJadwal" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
 
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle me-2"></i>
-                                Dengan mengirimkan permohonan ini, saya menyatakan bahwa data yang diisi adalah benar.
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 mb-3"><i class="fa-solid fa-boxes-stacked mr-2 text-blue-600"></i>Barang yang Dipinjam</h3>
+                                <div class="overflow-hidden rounded-xl border border-slate-200">
+                                    <table class="w-full text-sm">
+                                        <thead class="bg-slate-800 text-white">
+                                            <tr>
+                                                <th class="px-4 py-3 text-left font-semibold">No</th>
+                                                <th class="px-4 py-3 text-left font-semibold">Nama Barang</th>
+                                                <th class="px-4 py-3 text-left font-semibold">Jumlah</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="previewBarang" class="divide-y divide-slate-100"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800 flex items-start gap-3">
+                                <i class="fas fa-info-circle mt-0.5"></i>
+                                <span>Dengan mengirimkan permohonan ini, saya menyatakan bahwa data yang diisi adalah benar.</span>
+                            </div>
+                        </div>
+
+                        <div class="px-6 sm:px-8 pb-6 sm:pb-8">
+                            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <button type="button" onclick="goToStep(2)"
+                                        class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-arrow-left text-xs"></i>
+                                    <span>Sebelumnya</span>
+                                </button>
+                                <button type="submit" id="btnSubmit"
+                                        class="w-full sm:w-auto px-7 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-bold text-xs tracking-wider shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all transform hover:-translate-y-0.5 inline-flex items-center justify-center gap-2">
+                                    <i class="fas fa-paper-plane"></i>
+                                    <span>Kirim Permohonan</span>
+                                </button>
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between mt-3 step-nav">
-                        <button type="button" class="btn btn-secondary btn-prev px-4" onclick="goToStep(2)">
-                            <i class="fas fa-arrow-left me-1"></i> Sebelumnya
-                        </button>
-                        <button type="submit" class="btn btn-success btn-lg px-5" id="btnSubmit">
-                            <i class="fas fa-paper-plane me-2"></i>Kirim Permohonan
-                        </button>
-                    </div>
                 </div>
             </form>
-        </div>
     </div>
-</div>
+</main>
 
 {{-- Lightbox Modal --}}
 <div class="image-modal-overlay" id="imageModal" onclick="closeLightbox(event)">
@@ -408,8 +703,6 @@
     </div>
 </div>
 
-@include('partials.public-footer', ['compact' => true])
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -434,6 +727,11 @@
 
         document.querySelector(`.step-content[data-step="${step}"]`).classList.add('active');
         currentStep = step;
+
+        const progress = document.getElementById('stepProgress');
+        if (progress) {
+            progress.style.width = ((step - 1) * 100 / 3) + '%';
+        }
 
         if (step === 3) updatePreview();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1089,7 +1387,7 @@
     function showScanPreview(field, url) {
         const input = document.querySelector('input[name="' + field + '"]');
         if (!input) return;
-        const preview = input.closest('.col-md-6').querySelector('.scan-preview');
+        const preview = input.closest('.upload-field').querySelector('.scan-preview');
         preview.innerHTML =
             '<div class="scan-thumb">' +
                 '<img src="' + url + '" alt="Hasil scan" onclick="viewScan(\'' + field + '\')" title="Klik untuk lihat besar">' +
@@ -1097,12 +1395,13 @@
                     '<i class="fas fa-trash"></i>' +
                 '</button>' +
             '</div>';
+        updateUploadLabel(field);
     }
 
     function viewScan(field) {
         const input = document.querySelector('input[name="' + field + '"]');
         if (!input) return;
-        const img = input.closest('.col-md-6').querySelector('.scan-thumb img');
+        const img = input.closest('.upload-field').querySelector('.scan-thumb img');
         if (!img || !img.src) return;
         lightboxData = [img.src];
         lightboxIndex = 0;
@@ -1114,8 +1413,9 @@
     function removeScan(field) {
         const input = document.querySelector('input[name="' + field + '"]');
         if (input) input.value = '';
-        const preview = input ? input.closest('.col-md-6').querySelector('.scan-preview') : null;
+        const preview = input ? input.closest('.upload-field').querySelector('.scan-preview') : null;
         if (preview) preview.innerHTML = '';
+        updateUploadLabel(field);
         if (field === 'foto_ktp') {
             setOcrStatus('', 'idle');
             updateOcrButton();
@@ -1290,6 +1590,67 @@
         }
     }
 
+    // ========== DROP ZONE UPLOAD ==========
+    const uploadLabels = {
+        foto_ktp: { nameId: 'namaFotoKtp', empty: 'KTP / SIM / Kartu Pelajar (Maks. 2MB)' },
+        surat_tugas: { nameId: 'namaSuratTugas', empty: 'PDF atau Gambar (Maks. 2MB)' }
+    };
+
+    function updateUploadLabel(field) {
+        const input = document.querySelector('input[name="' + field + '"]');
+        const cfg = uploadLabels[field];
+        if (!input || !cfg) return;
+        const nameEl = document.getElementById(cfg.nameId);
+        const zone = input.closest('.file-drop-zone');
+        const file = input.files && input.files[0];
+        if (nameEl) {
+            nameEl.textContent = file ? file.name : cfg.empty;
+            nameEl.classList.toggle('text-blue-600', !!file);
+            nameEl.classList.toggle('font-semibold', !!file);
+            nameEl.classList.toggle('text-slate-400', !file);
+        }
+        if (zone) zone.classList.toggle('has-file', !!file);
+    }
+
+    function setupDropZone(field) {
+        const input = document.querySelector('input[name="' + field + '"]');
+        if (!input) return;
+        const zone = input.closest('.file-drop-zone');
+        if (!zone) return;
+
+        input.addEventListener('change', function() {
+            updateUploadLabel(field);
+        });
+
+        ['dragenter', 'dragover'].forEach(function(evt) {
+            zone.addEventListener(evt, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'dragend', 'drop'].forEach(function(evt) {
+            zone.addEventListener(evt, function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                zone.classList.remove('dragover');
+            });
+        });
+
+        zone.addEventListener('drop', function(e) {
+            const files = e.dataTransfer && e.dataTransfer.files;
+            if (!files || !files.length) return;
+            const dt = new DataTransfer();
+            dt.items.add(files[0]);
+            input.files = dt.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+    }
+
+    setupDropZone('foto_ktp');
+    setupDropZone('surat_tugas');
+
     const fotoKtpInputEl = document.getElementById('fotoKtpInput');
     if (fotoKtpInputEl) {
         fotoKtpInputEl.addEventListener('change', function() {
@@ -1343,6 +1704,8 @@
         }
     });
 </script>
+
+@include('partials.public-footer', ['compact' => true])
 
 </body>
 </html>

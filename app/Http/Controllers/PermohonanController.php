@@ -110,6 +110,9 @@ class PermohonanController extends Controller
                 }
             }
 
+            $templateAktif = \App\Services\SuratTemplateResolver::activeForYear((int) now()->year)
+                ?? \App\Services\SuratTemplateResolver::latestActive();
+
             $permohonan = Permohonan::create([
                 'nomor_permohonan'   => $nomor,
                 'instansi_id'        => $instansiId,
@@ -126,6 +129,7 @@ class PermohonanController extends Controller
                 'status'             => 'Menunggu',
                 'foto_ktp'           => $fotoKtp,
                 'surat_tugas'        => $suratTugas,
+                'surat_template_id'  => $templateAktif?->id,
             ]);
 
             foreach ($validated['inventaris'] as $inventarisId) {
@@ -282,15 +286,28 @@ class PermohonanController extends Controller
         $penutupText = str_replace("\n", ' ', $sc['penutup']);
         $terimaKasihText = str_replace("\n", ' ', $sc['terima_kasih']);
 
-        // --- Load template: pakai template tahun surat dibuat, jika ada ---
-        $templatePath = \App\Services\SuratTemplateResolver::pathFor(
-            \App\Services\SuratTemplateResolver::tahun($permohonan)
-        );
-        if (!file_exists($templatePath)) {
+        // --- Load template: template yang dipin ke surat ini, atau yang aktif ---
+        $templateModel = \App\Services\SuratTemplateResolver::forPermohonan($permohonan);
+
+        // Pin sekali saja: setelah dipin, surat ini tidak ikut berubah walaupun
+        // admin mengunggah template baru untuk tahun yang sama.
+        if (! $permohonan->surat_template_id && $templateModel) {
+            $permohonan->forceFill(['surat_template_id' => $templateModel->id])->saveQuietly();
+        }
+
+        $templatePath = $templateModel?->absolutePath()
+            ?? \App\Services\SuratTemplateResolver::defaultPath();
+
+        if (!is_file($templatePath)) {
             return response()->json(['error' => 'Template surat tidak ditemukan.'], 500);
         }
 
         $template = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+        // Placeholder yang benar-benar ada di file. Hanya itu yang diisi, jadi
+        // template lama yang tidak punya placeholder opsional tetap bisa dipakai.
+        $vars = $template->getVariables();
+        $ada = fn(string $nama): bool => in_array($nama, $vars, true);
 
         // Helper: escape XML entities to prevent broken DOCX (& < > etc.)
         $xv = fn(string $val) => htmlspecialchars($val, ENT_XML1 | ENT_QUOTES, 'UTF-8');
@@ -307,67 +324,92 @@ class PermohonanController extends Controller
                 break;
             }
         }
-        if ($logoKiriPath) {
+        if ($logoKiriPath && $ada('LOGO')) {
             $template->setImageValue('LOGO', $logoKiriPath);
         }
 
         $qrPath = \App\Services\QrCodeService::pngFile((string) $permohonan->nomor_permohonan);
-        if ($qrPath) {
+        if ($qrPath && $ada('QR')) {
             $template->setImageValue('QR', ['path' => $qrPath, 'width' => '2.1cm', 'height' => '2.1cm']);
         }
-        $template->setValue('nomor', $xv((string) $permohonan->nomor_permohonan));
 
         // --- Simple placeholder replacements (escape XML entities) ---
-        $template->setValue('hal', $xv($halText));
-        $template->setValue('tanggal', $xv($dateText));
-        $template->setValue('kepada_yth', $xv($sc['kepada_yth']));
-        $template->setValue('kepada_kab', $xv($sc['kepada_kab']));
-        $template->setValue('kepada_tempat', $xv($sc['kepada_tempat']));
-        $template->setValue('pembuka', $xv($sc['pembuka']));
-        $template->setValue('saya_yang', $xv($sc['saya_yang']));
-        $template->setValue('nama_peminjam', $xv($vNama));
-        $template->setValue('nrp', $xv($vNrp));
-        $template->setValue('pangkat', $xv($vJab));
-        $template->setValue('telepon', $xv($permohonan->telepon));
-        $template->setValue('bermaksud', $xv($sc['bermaksud']));
-        $template->setValue('keperluan', $xv($permohonan->keperluan));
-        $template->setValue('isi', $xv($isiText));
-        $template->setValue('rencana', $xv($sc['rencana']));
-        $template->setValue('hari_label', $xv($sc['hari_label']));
-        $template->setValue('hari', $xv($hari));
-        $template->setValue('tanggal_label', $xv($sc['tanggal_label']));
-        $template->setValue('tanggal_pinjam', $xv($datePinjam->format('d F Y')));
-        $template->setValue('tempat_label', $xv($sc['tempat_label']));
-        $template->setValue('instansi', $xv($vInst));
-        $template->setValue('penutup', $xv($penutupText));
-        $template->setValue('terima_kasih', $xv($terimaKasihText));
-        $template->setValue('ttd_kiri_label', $xv($sc['ttd_kiri_label']));
-        $template->setValue('ttd_kiri_nama', $xv($ttdKiriNama));
-        $template->setValue('ttd_kiri_nrp', $xv($ttdKiriNrp));
-        $template->setValue('ttd_kiri_jabatan', $xv($ttdKiriJab));
-        $template->setValue('ttd_kanan_label', $xv($sc['ttd_kanan_label']));
-        $template->setValue('ttd_kanan_nama', $xv($ttdKananNama));
-        $template->setValue('ttd_kanan_nrp', $xv($ttdKananNrp));
-        $template->setValue('ttd_kanan_jabatan', $xv($ttdKananJab));
+        $nilai = [
+            'nomor'             => (string) $permohonan->nomor_permohonan,
+            'hal'               => $halText,
+            'tanggal'           => $dateText,
+            'kepada_yth'        => $sc['kepada_yth'],
+            'kepada_kab'        => $sc['kepada_kab'],
+            'kepada_tempat'     => $sc['kepada_tempat'],
+            'pembuka'           => $sc['pembuka'],
+            'saya_yang'         => $sc['saya_yang'],
+            'nama_peminjam'     => $vNama,
+            'nrp'               => $vNrp,
+            'nik'               => $vNrp,
+            'pangkat'           => $vJab,
+            'jabatan'           => $vJab,
+            'telepon'           => (string) $permohonan->telepon,
+            'bermaksud'         => $sc['bermaksud'],
+            'keperluan'         => (string) $permohonan->keperluan,
+            'isi'               => $isiText,
+            'rencana'           => $sc['rencana'],
+            'hari_label'        => $sc['hari_label'],
+            'hari'              => $hari,
+            'tanggal_label'     => $sc['tanggal_label'],
+            'tanggal_pinjam'    => $datePinjam->format('d F Y'),
+            'tempat_label'      => $sc['tempat_label'],
+            'instansi'          => $vInst,
+            'penutup'           => $penutupText,
+            'terima_kasih'      => $terimaKasihText,
+            'ttd_kiri_label'    => $sc['ttd_kiri_label'],
+            'ttd_kiri_nama'     => $ttdKiriNama,
+            'ttd_kiri_nrp'      => $ttdKiriNrp,
+            'ttd_kiri_jabatan'  => $ttdKiriJab,
+            'ttd_kanan_label'   => $sc['ttd_kanan_label'],
+            'ttd_kanan_nama'    => $ttdKananNama,
+            'ttd_kanan_nrp'     => $ttdKananNrp,
+            'ttd_kanan_jabatan' => $ttdKananJab,
+        ];
+
+        foreach ($nilai as $kunci => $isi) {
+            if ($ada($kunci)) {
+                $template->setValue($kunci, $xv((string) $isi));
+            }
+        }
 
         // --- Item table: cloneRow + indexed setValue (PhpWord uses #N notation) ---
-        $items = $permohonan->detailPermohonan;
-        $itemCount = $items->count();
-        if ($itemCount > 0) {
+        if ($ada('item_no')) {
+            $items = $permohonan->detailPermohonan;
+            $itemCount = max(1, $items->count());
+
             $template->cloneRow('item_no', $itemCount);
-            foreach ($items as $i => $detail) {
-                $idx = $i + 1;
-                $template->setValue('item_no#' . $idx, ($i + 1) . '.');
-                $template->setValue('item_nama#' . $idx, $xv($detail->inventaris?->nama_barang ?? '-'));
-                $template->setValue('item_jumlah#' . $idx, (string) $detail->jumlah);
-                $template->setValue('item_keterangan#' . $idx, $xv($detail->inventaris?->kondisi ?? '-'));
+
+            if ($items->isEmpty()) {
+                $template->setValue('item_no#1', '1.');
+                if ($ada('item_nama')) {
+                    $template->setValue('item_nama#1', '-');
+                }
+                if ($ada('item_jumlah')) {
+                    $template->setValue('item_jumlah#1', '1');
+                }
+                if ($ada('item_keterangan')) {
+                    $template->setValue('item_keterangan#1', '-');
+                }
+            } else {
+                foreach ($items as $i => $detail) {
+                    $idx = $i + 1;
+                    $template->setValue('item_no#' . $idx, ($i + 1) . '.');
+                    if ($ada('item_nama')) {
+                        $template->setValue('item_nama#' . $idx, $xv($detail->inventaris?->nama_barang ?? '-'));
+                    }
+                    if ($ada('item_jumlah')) {
+                        $template->setValue('item_jumlah#' . $idx, (string) $detail->jumlah);
+                    }
+                    if ($ada('item_keterangan')) {
+                        $template->setValue('item_keterangan#' . $idx, $xv($detail->inventaris?->kondisi ?? '-'));
+                    }
+                }
             }
-        } else {
-            $template->cloneRow('item_no', 1);
-            $template->setValue('item_no#1', '1.');
-            $template->setValue('item_nama#1', '-');
-            $template->setValue('item_jumlah#1', '1');
-            $template->setValue('item_keterangan#1', '-');
         }
 
         // --- Save & download ---

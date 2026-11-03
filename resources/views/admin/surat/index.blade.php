@@ -30,6 +30,7 @@
                     <th>Nama Peminjam</th>
                     <th>Instansi</th>
                     <th>Tanggal</th>
+                    <th>Template</th>
                     <th>Status</th>
                     <th>Word</th>
                     <th>PDF</th>
@@ -44,6 +45,18 @@
                 <td>{{ $item->nama_peminjam }}</td>
                 <td>{{ $item->instansi?->nama_instansi ?? $item->nama_instansi_lain ?? '-' }}</td>
                 <td>{{ $item->created_at->format('d M Y') }}</td>
+                <td class="text-center">
+                    @if($item->suratTemplate)
+                        <span class="badge badge-info" title="{{ $item->suratTemplate->nama_file }}">
+                            {{ $item->suratTemplate->tahun }} v{{ $item->suratTemplate->versi }}
+                        </span>
+                        @if($item->suratTemplate->trashed())
+                            <span class="badge badge-dark">Arsip</span>
+                        @endif
+                    @else
+                        <span class="badge badge-secondary">Otomatis</span>
+                    @endif
+                </td>
                 <td class="text-center">
                     @if($item->status == 'Menunggu')
                         <span class="badge badge-warning">Menunggu</span>
@@ -85,7 +98,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="9" class="text-center text-muted">
+                <td colspan="10" class="text-center text-muted">
                     Belum ada data permohonan.
                 </td>
             </tr>

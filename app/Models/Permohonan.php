@@ -31,6 +31,7 @@ class Permohonan extends Model
         'last_sync_at',
         'word_path',
         'pdf_path',
+        'surat_template_id',
     ];
 
     protected $casts = [
@@ -70,6 +71,15 @@ class Permohonan extends Model
     public function detailPermohonan()
     {
         return $this->hasMany(DetailPermohonan::class);
+    }
+
+    /**
+     * Template DOCX yang dipakai surat ini. Bisa berbeda dengan template
+     * aktif tahun berjalan bila admin memilih template lama.
+     */
+    public function suratTemplate()
+    {
+        return $this->belongsTo(SuratTemplate::class)->withTrashed();
     }
 
     public function statusLogs()

@@ -117,7 +117,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('surat/upload', [SuratController::class, 'upload'])->name('surat.upload');
         Route::post('surat/upload', [SuratController::class, 'uploadSurat'])->name('surat.upload.store');
         Route::post('surat/templates', [SuratController::class, 'uploadTemplate'])->name('surat.templates.store');
+        Route::post('surat/templates/scan', [SuratController::class, 'scanTemplates'])->name('surat.templates.scan');
+        Route::post('surat/templates/{template}/activate', [SuratController::class, 'activateTemplate'])->name('surat.templates.activate');
+        Route::post('surat/templates/{template}/restore', [SuratController::class, 'restoreTemplate'])->name('surat.templates.restore');
         Route::delete('surat/templates/{template}', [SuratController::class, 'destroyTemplate'])->name('surat.templates.destroy');
+        Route::post('surat/{permohonan}/template', [SuratController::class, 'assignTemplate'])->name('surat.template.assign');
         Route::get('surat/{permohonan}/berkas', [SuratController::class, 'berkas'])->name('surat.berkas');
 
         // Alamat lama dibukukan admin; arahkan ke halaman baru.
