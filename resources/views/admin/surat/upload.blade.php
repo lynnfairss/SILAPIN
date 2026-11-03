@@ -355,7 +355,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="10" class="text-center text-muted">Belum ada data permohonan.</td>
+                        <td colspan="10" class="text-center text-muted">Belum ada surat yang sudah disetujui.</td>
                     </tr>
                 @endforelse
             </tbody>

@@ -70,8 +70,10 @@
     @if(!$forPdf)
     {{-- Halaman ini hanya untuk Admin/Super Admin, jadi tidak ada parameter token. --}}
     <div class="no-print" style="text-align: right; margin-bottom: 8px;">
-        <a href="{{ route('surat.download.docx', $permohonan->id) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
-        <a href="{{ route('surat.download.pdf', $permohonan->id) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;">Unduh PDF</a>
+        @if($permohonan->bolehLihatSurat())
+            <a href="{{ route('surat.download.docx', $permohonan->id) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#28a745;color:#fff;">Download .docx</a>
+            <a href="{{ route('surat.download.pdf', $permohonan->id) }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#0d6efd;color:#fff;">Unduh PDF</a>
+        @endif
         <a href="{{ route('surat.index') }}" style="display:inline-block;padding:6px 12px;border-radius:4px;text-decoration:none;font-size:12px;font-family:Arial,sans-serif;background:#6c757d;color:#fff;">Kembali</a>
     </div>
     @endif
@@ -260,7 +262,7 @@
         <tr>
             <td width="50%" valign="top" align="center" style="padding:0;">
                 <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;"><strong>{{ $ttdKiriNama }}</strong></p>
-                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NIK. {{ $ttdKiriNrp }}</p>
+                <p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">NIP. {{ $ttdKiriNrp }}</p>
                 @if($ttdKiriJab)<p style="margin:0; padding:0; font-size:12pt; line-height:1.2; text-align:center;">{{ $ttdKiriJab }}</p>@endif
             </td>
             <td width="50%" valign="top" align="center" style="padding:0;">

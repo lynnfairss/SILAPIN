@@ -247,6 +247,8 @@ class PermohonanController extends Controller
      */
     public function downloadDocx(Permohonan $permohonan)
     {
+        abort_unless($permohonan->bolehLihatSurat(), 403, $permohonan->pesanSuratTidakTersedia());
+
         $permohonan->load('detailPermohonan.inventaris', 'instansi');
 
         $sc = \App\Http\Controllers\Admin\SuratController::getContent($permohonan);

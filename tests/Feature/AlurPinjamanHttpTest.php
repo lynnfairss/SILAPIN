@@ -187,7 +187,8 @@ it('creates a request from the public form with a usable token', function () {
     // Pengajuan tidak boleh menyentuh stok; stok hanya berubah saat disetujui.
     expect($barang->fresh()->stok)->toBe(5);
 
+    // Surat belum boleh diunduh sebelum permohonan disetujui.
     $this->actingAs(User::factory()->create(['role' => 'admin']))
         ->get(route('surat.download.docx', $permohonan))
-        ->assertOk();
+        ->assertForbidden();
 });

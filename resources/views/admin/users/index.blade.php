@@ -38,7 +38,7 @@
                 <tr>
                     <th width="50">No</th>
                     <th>Nama</th>
-                    <th>NIK</th>
+                    <th>NIP</th>
                     <th>Email</th>
                     <th>Role</th>
                     <th>Dibuat</th>
@@ -50,7 +50,7 @@
             <tr>
                 <td class="text-center">{{ $loop->iteration }}</td>
                 <td>{{ $item->name }}</td>
-                <td>{{ $item->nik ?: '-' }}</td>
+                <td>{{ $item->nip ?: '-' }}</td>
                 <td>{{ $item->email }}</td>
                 <td class="text-center">
                     @if($item->isSuperAdmin())

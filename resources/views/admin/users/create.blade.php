@@ -51,15 +51,15 @@
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label for="nik">NIK <span class="text-danger">*</span></label>
-                        <input type="text" name="nik" id="nik" inputmode="numeric" pattern="\d{16}"
-                               class="form-control @error('nik') is-invalid @enderror"
-                               value="{{ old('nik') }}" required maxlength="16" placeholder="3500000000000009">
-                        @error('nik')
+                        <label for="nip">NIP <span class="text-danger">*</span></label>
+                        <input type="text" name="nip" id="nip" inputmode="numeric" pattern="\d{16,18}"
+                               class="form-control @error('nip') is-invalid @enderror"
+                               value="{{ old('nip') }}" required maxlength="18" placeholder="198001012005011001">
+                        @error('nip')
                             <span class="invalid-feedback">{{ $message }}</span>
                         @enderror
                         <small class="form-text text-muted">
-                            16 digit. NIK ini yang dicetak pada kolom &ldquo;Yang menyerahkan&rdquo; di surat peminjaman.
+                            16-18 digit. NIP ini yang dicetak pada kolom &ldquo;Yang menyerahkan&rdquo; di surat peminjaman.
                         </small>
                     </div>
                 </div>

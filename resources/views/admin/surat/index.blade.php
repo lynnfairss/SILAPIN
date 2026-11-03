@@ -85,21 +85,23 @@
                     @endif
                 </td>
                 <td class="text-center">
-                    <a href="{{ route('surat.preview', $item->id) }}" class="btn btn-info btn-sm" title="Preview Surat" target="_blank">
-                        <i class="fas fa-eye"></i>
-                    </a>
-                    <a href="{{ route('surat.download.docx', $item->id) }}" class="btn btn-success btn-sm" title="Download .docx">
-                        <i class="fas fa-file-word"></i>
-                    </a>
-                    <a href="{{ route('surat.upload', ['permohonan' => $item->id]) }}#form-upload" class="btn btn-primary btn-sm" title="Upload surat (DOCX)">
-                        <i class="fas fa-upload"></i>
-                    </a>
+                    @if($item->bolehLihatSurat())
+                        <a href="{{ route('surat.preview', $item->id) }}" class="btn btn-info btn-sm" title="Preview Surat" target="_blank">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="{{ route('surat.download.docx', $item->id) }}" class="btn btn-success btn-sm" title="Download .docx">
+                            <i class="fas fa-file-word"></i>
+                        </a>
+                        <a href="{{ route('surat.upload', ['permohonan' => $item->id]) }}#form-upload" class="btn btn-primary btn-sm" title="Upload surat (DOCX)">
+                            <i class="fas fa-upload"></i>
+                        </a>
+                    @endif
                 </td>
             </tr>
             @empty
             <tr>
                 <td colspan="10" class="text-center text-muted">
-                    Belum ada data permohonan.
+                    Belum ada surat yang sudah disetujui.
                 </td>
             </tr>
             @endforelse

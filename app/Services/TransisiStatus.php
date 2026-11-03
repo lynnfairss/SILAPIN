@@ -36,6 +36,12 @@ class TransisiStatus
     public const SEDANG_DIPAKAI = [self::DISETUJUI, self::DIPINJAM];
 
     /**
+     * Status yang suratnya boleh dilihat/diunduh oleh Admin/Super Admin.
+     * Sebelum disetujui (Menunggu) atau setelah ditolak, surat belum tersedia.
+     */
+    public const SURAT_BISA_DILIHAT = [self::DISETUJUI, self::DIPINJAM, self::DIKEMBALIKAN];
+
+    /**
      * Efek stok per perpindahan status:
      *   'kurang' = barang keluar dari gudang
      *   'tambah' = barang kembali ke gudang

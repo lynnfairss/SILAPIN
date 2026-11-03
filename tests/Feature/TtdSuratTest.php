@@ -242,11 +242,9 @@ it('still reads a letter that was saved back with the old NRP label', function (
 it('keeps the applicant on both sides while the request is not approved yet', function () {
     $permohonan = suratPermohonan();
 
-    $html = $this->actingAs(User::factory()->create(['role' => 'admin', 'status' => 'approved']))
-        ->get(route('surat.preview', $permohonan))
-        ->assertOk()
-        ->getContent();
+    $ttd = SuratController::resolveTtd($permohonan, SuratController::getContent($permohonan));
 
     // Belum ada yang menyetujui, jadi nama peminjam mengisi kedua kolom.
-    expect(substr_count($html, '<strong>Rahma</strong>'))->toBe(2);
+    expect($ttd['kiri_nama'])->toBe('Rahma')
+        ->and($ttd['kanan_nama'])->toBe('Rahma');
 });

@@ -118,22 +118,24 @@
                             <a href="{{ route('permohonan.edit', $item->id) }}" class="btn btn-outline-warning" title="Edit Surat">
                                 <i class="fas fa-pen"></i>
                             </a>
-                            <a href="{{ route('surat.preview', $item->id) }}" target="_blank" class="btn btn-outline-secondary" title="Lihat Surat">
-                                <i class="fas fa-file-alt"></i>
-                            </a>
-                            <div class="dropdown d-inline">
-                                <button class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown" title="Download Surat">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-right">
-                                    <a class="dropdown-item" href="{{ route('surat.download.docx', $item->id) }}" target="_blank">
-                                        <i class="fas fa-file-word me-2 text-primary"></i>Download DOCX
-                                    </a>
-                                    <a class="dropdown-item" href="{{ route('surat.download.pdf', $item->id) }}" target="_blank">
-                                        <i class="fas fa-file-pdf me-2 text-danger"></i>Download PDF
-                                    </a>
+                            @if($item->bolehLihatSurat())
+                                <a href="{{ route('surat.preview', $item->id) }}" target="_blank" class="btn btn-outline-secondary" title="Lihat Surat">
+                                    <i class="fas fa-file-alt"></i>
+                                </a>
+                                <div class="dropdown d-inline">
+                                    <button class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown" title="Download Surat">
+                                        <i class="fas fa-download"></i>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right">
+                                        <a class="dropdown-item" href="{{ route('surat.download.docx', $item->id) }}" target="_blank">
+                                            <i class="fas fa-file-word me-2 text-primary"></i>Download DOCX
+                                        </a>
+                                        <a class="dropdown-item" href="{{ route('surat.download.pdf', $item->id) }}" target="_blank">
+                                            <i class="fas fa-file-pdf me-2 text-danger"></i>Download PDF
+                                        </a>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                             @if($item->status == 'Menunggu')
                                 <button type="button" class="btn btn-outline-success"
                                     data-toggle="modal" data-target="#modalACC"

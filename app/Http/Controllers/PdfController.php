@@ -9,6 +9,8 @@ class PdfController extends Controller
 {
     public function download(Permohonan $permohonan)
     {
+        abort_unless($permohonan->bolehLihatSurat(), 403, $permohonan->pesanSuratTidakTersedia());
+
         $permohonan->load('detailPermohonan.inventaris', 'instansi');
 
         $html = view('peminjam.surat', ['permohonan' => $permohonan, 'forPdf' => true])->render();

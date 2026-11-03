@@ -487,64 +487,68 @@
 </div>
 
 {{-- Aksi --}}
+@if($permohonan->bolehLihatSurat() || $permohonan->status == 'Menunggu')
 <div class="row g-3 mb-3">
-    {{-- Surat Permohonan --}}
-    <div class="col-lg-7">
-        <div class="card card-flat">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-file-alt me-2 text-primary"></i>Surat Permohonan</h3>
-            </div>
-            <div class="card-body">
-                <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ route('surat.preview', $permohonan->id) }}" target="_blank" class="btn btn-outline-primary">
-                        <i class="fas fa-eye me-1"></i>Lihat Surat
-                    </a>
-                    <div class="dropdown">
-                        <button class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
-                            <i class="fas fa-download me-1"></i>Download Surat
-                        </button>
-                        <div class="dropdown-menu">
-                            <a class="dropdown-item" href="{{ route('surat.download.docx', $permohonan->id) }}" target="_blank">
-                                <i class="fas fa-file-word me-2 text-primary"></i>Format DOCX
-                            </a>
-                            <a class="dropdown-item" href="{{ route('surat.download.pdf', $permohonan->id) }}" target="_blank">
-                                <i class="fas fa-file-pdf me-2 text-danger"></i>Format PDF
-                            </a>
+    @if($permohonan->bolehLihatSurat())
+        {{-- Surat Permohonan --}}
+        <div class="col-lg-7">
+            <div class="card card-flat">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-file-alt me-2 text-primary"></i>Surat Permohonan</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ route('surat.preview', $permohonan->id) }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>Lihat Surat
+                        </a>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown">
+                                <i class="fas fa-download me-1"></i>Download Surat
+                            </button>
+                            <div class="dropdown-menu">
+                                <a class="dropdown-item" href="{{ route('surat.download.docx', $permohonan->id) }}" target="_blank">
+                                    <i class="fas fa-file-word me-2 text-primary"></i>Format DOCX
+                                </a>
+                                <a class="dropdown-item" href="{{ route('surat.download.pdf', $permohonan->id) }}" target="_blank">
+                                    <i class="fas fa-file-pdf me-2 text-danger"></i>Format PDF
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 
-    {{-- Aksi --}}
-    <div class="col-lg-5">
-        @if($permohonan->status == 'Menunggu')
-        <div class="card card-flat">
-            <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-gavel me-2 text-primary"></i>Aksi</h3>
-            </div>
-            <div class="card-body d-flex flex-wrap gap-2">
-                <button type="button" class="btn btn-success"
-                    data-toggle="modal" data-target="#modalACC"
-                    data-id="{{ $permohonan->id }}"
-                    data-nama="{{ $permohonan->nama_peminjam }}"
-                    data-barang="{{ $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
-                    <i class="fas fa-check"></i> ACC / Setujui
-                </button>
+    @if($permohonan->status == 'Menunggu')
+        {{-- Aksi --}}
+        <div class="{{ $permohonan->bolehLihatSurat() ? 'col-lg-5' : 'col-lg-12' }}">
+            <div class="card card-flat">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="fas fa-gavel me-2 text-primary"></i>Aksi</h3>
+                </div>
+                <div class="card-body d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-success"
+                        data-toggle="modal" data-target="#modalACC"
+                        data-id="{{ $permohonan->id }}"
+                        data-nama="{{ $permohonan->nama_peminjam }}"
+                        data-barang="{{ $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
+                        <i class="fas fa-check"></i> ACC / Setujui
+                    </button>
 
-                <button type="button" class="btn btn-danger"
-                    data-toggle="modal" data-target="#modalTolak"
-                    data-id="{{ $permohonan->id }}"
-                    data-nama="{{ $permohonan->nama_peminjam }}"
-                    data-barang="{{ $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
-                    <i class="fas fa-times"></i> Tolak
-                </button>
+                    <button type="button" class="btn btn-danger"
+                        data-toggle="modal" data-target="#modalTolak"
+                        data-id="{{ $permohonan->id }}"
+                        data-nama="{{ $permohonan->nama_peminjam }}"
+                        data-barang="{{ $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->implode(', ') }}">
+                        <i class="fas fa-times"></i> Tolak
+                    </button>
+                </div>
             </div>
         </div>
-        @endif
-    </div>
+    @endif
 </div>
+@endif
 
 {{-- MODAL ACC --}}
 <div class="modal fade" id="modalACC" tabindex="-1" role="dialog" aria-hidden="true">

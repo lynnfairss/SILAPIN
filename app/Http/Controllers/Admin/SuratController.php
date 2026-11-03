@@ -8,6 +8,7 @@ use App\Models\SuratTemplate;
 use App\Services\DocxParserService;
 use App\Services\SuratPdfService;
 use App\Services\SuratTemplateScanner;
+use App\Services\TransisiStatus;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -82,7 +83,7 @@ class SuratController extends Controller
      * Urutan untuk kolom kiri:
      *   1. nilai yang sudah tersimpan di surat_content (hasil sync dari Word)
      *      -- isian manual itu yang menang;
-     *   2. nama akun penyetuju beserta NIK-nya; jabatan dikosongkan karena
+     *   2. nama akun penyetuju beserta NIP-nya; jabatan dikosongkan karena
      *      tabel users tidak menyimpannya;
      *   3. belum ada penyetuju (permohonan belum disetujui) -- kembali ke data
      *      peminjam supaya surat lama tetap sama seperti sebelumnya.
@@ -92,22 +93,30 @@ class SuratController extends Controller
         $namaPeminjam = $permohonan->nama_peminjam ?: '-';
         $penyetuju = $permohonan->penyetuju();
 
+        // Nilai lama dari Word bisa masih berlabel NRP./NIK./NIP.; buang
+        // prefix-nya karena view dan template sudah menambahkan label NIP.
+        $nrpTersimpan = preg_replace(
+            '/^(?:NRP|NIK|NIP)\.\s*/i',
+            '',
+            (string) ($sc['ttd_kiri_nrp'] ?? '')
+        );
+
         if (filled($sc['ttd_kiri_nama'])) {
             $kiri = [
                 'nama'    => $sc['ttd_kiri_nama'],
-                'nrp'     => $sc['ttd_kiri_nrp'] ?: '',
+                'nrp'     => $nrpTersimpan ?: '',
                 'jabatan' => $sc['ttd_kiri_jabatan'] ?: '',
             ];
         } elseif ($penyetuju?->name) {
             $kiri = [
                 'nama'    => $penyetuju->name,
-                'nrp'     => $sc['ttd_kiri_nrp'] ?: ($penyetuju->nik ?: ''),
+                'nrp'     => $nrpTersimpan ?: ($penyetuju->nip ?: ''),
                 'jabatan' => $sc['ttd_kiri_jabatan'] ?: '',
             ];
         } else {
             $kiri = [
                 'nama'    => $namaPeminjam,
-                'nrp'     => $sc['ttd_kiri_nrp'] ?: ($permohonan->nik ?: ''),
+                'nrp'     => $nrpTersimpan ?: ($permohonan->nik ?: ''),
                 'jabatan' => $sc['ttd_kiri_jabatan'] ?: ($permohonan->jabatan ?: ''),
             ];
         }
@@ -124,12 +133,18 @@ class SuratController extends Controller
 
     public function index()
     {
-        $permohonan = Permohonan::with('instansi', 'suratTemplate')->latest()->get();
+        $permohonan = Permohonan::with('instansi', 'suratTemplate')
+            ->whereIn('status', TransisiStatus::SURAT_BISA_DILIHAT)
+            ->latest()
+            ->get();
+
         return view('admin.surat.index', compact('permohonan'));
     }
 
     public function preview(Permohonan $permohonan)
     {
+        abort_unless($permohonan->bolehLihatSurat(), 403, $permohonan->pesanSuratTidakTersedia());
+
         $permohonan->load('detailPermohonan.inventaris', 'instansi');
         return view('peminjam.surat', compact('permohonan'));
     }
@@ -139,7 +154,11 @@ class SuratController extends Controller
      */
     public function upload()
     {
-        $permohonan = Permohonan::with('instansi', 'suratTemplate')->latest()->get();
+        $permohonan = Permohonan::with('instansi', 'suratTemplate')
+            ->whereIn('status', TransisiStatus::SURAT_BISA_DILIHAT)
+            ->latest()
+            ->get();
+
         $templates = SuratTemplate::withTrashed()
             ->with('uploader')
             ->whereNotNull('tahun')
@@ -169,6 +188,14 @@ class SuratController extends Controller
             'file'          => 'berkas DOCX',
         ]);
 
+        $permohonan = Permohonan::findOrFail($request->integer('permohonan_id'));
+
+        if (! $permohonan->bolehLihatSurat()) {
+            return back()->withInput()->withErrors([
+                'permohonan_id' => $permohonan->pesanSuratTidakTersedia(),
+            ]);
+        }
+
         $berkas = $request->file('file');
 
         try {
@@ -184,8 +211,6 @@ class SuratController extends Controller
                 'file' => 'Isi surat tidak terbaca dari DOCX. Pastikan berkas dibuat dari template surat aplikasi.',
             ]);
         }
-
-        $permohonan = Permohonan::findOrFail($request->integer('permohonan_id'));
 
         $relative = $berkas->storeAs(
             'surat-docx',
@@ -343,6 +368,10 @@ class SuratController extends Controller
      */
     public function assignTemplate(Request $request, Permohonan $permohonan)
     {
+        if (! $permohonan->bolehLihatSurat()) {
+            return back()->with('error', $permohonan->pesanSuratTidakTersedia());
+        }
+
         $data = $request->validate([
             'surat_template_id' => ['nullable', 'integer', 'exists:surat_templates,id'],
         ], [], [
@@ -365,6 +394,8 @@ class SuratController extends Controller
      */
     public function berkas(Permohonan $permohonan)
     {
+        abort_unless($permohonan->bolehLihatSurat(), 403, $permohonan->pesanSuratTidakTersedia());
+
         $path = $permohonan->word_path;
 
         abort_unless($path && is_file($path), 404);

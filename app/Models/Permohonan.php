@@ -63,6 +63,22 @@ class Permohonan extends Model
             && hash_equals($this->token, $token);
     }
 
+    /**
+     * Surat hanya tersedia setelah permohonan disetujui. Permohonan yang
+     * masih menunggu atau sudah ditolak tidak boleh menampilkan surat.
+     */
+    public function bolehLihatSurat(): bool
+    {
+        return in_array($this->status, TransisiStatus::SURAT_BISA_DILIHAT, true);
+    }
+
+    public function pesanSuratTidakTersedia(): string
+    {
+        return $this->status === TransisiStatus::DITOLAK
+            ? 'Surat tidak tersedia karena permohonan ditolak.'
+            : 'Surat belum tersedia. Permohonan harus disetujui terlebih dahulu.';
+    }
+
     public function instansi()
     {
         return $this->belongsTo(Instansi::class);
