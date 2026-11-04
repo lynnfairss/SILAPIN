@@ -4,16 +4,36 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Instansi;
+use App\Models\Permohonan;
 use App\Services\TransisiStatus;
 use Illuminate\Http\Request;
 
 class InstansiController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $instansi = Instansi::latest()->paginate(10);
+        $q = trim((string) $request->query('q', ''));
 
-        return view('admin.instansi.index', compact('instansi'));
+        $instansi = Instansi::query()
+            ->withCount('permohonan')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('nama_instansi', 'like', "%{$q}%")
+                        ->orWhere('alamat', 'like', "%{$q}%")
+                        ->orWhere('telepon', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $stats = [
+            'total' => Instansi::count(),
+            'kontak' => Instansi::whereNotNull('telepon')->where('telepon', '!=', '')->count(),
+            'peminjaman' => Permohonan::whereNotNull('instansi_id')->count(),
+        ];
+
+        return view('admin.instansi.index', compact('instansi', 'stats', 'q'));
     }
 
     public function store(Request $request)

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\DetailPermohonan;
 use App\Models\Inventaris;
 use App\Models\InventarisFoto;
 use App\Models\Jenis;
@@ -24,15 +25,38 @@ class InventarisController extends Controller
 
     public function index(Request $request)
     {
-        $query = Inventaris::with('kategori', 'jenis', 'fotos');
+        $query = Inventaris::with('kategori', 'jenis', 'fotos')
+            ->withSum(['detailPermohonan as dipinjam' => function ($query) {
+                $query->whereHas('permohonan', function ($permohonan) {
+                    $permohonan->whereIn('status', TransisiStatus::SEDANG_DIPAKAI);
+                });
+            }], 'jumlah');
 
         if ($request->filled('jenis')) {
             $query->where('jenis_id', $request->jenis);
         }
 
+        if ($request->filled('kategori')) {
+            $query->where('kategori_id', $request->kategori);
+        }
+
+        if ($request->filled('kondisi')) {
+            $query->where('kondisi', $request->kondisi);
+        }
+
+        $q = trim((string) $request->query('q', ''));
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('nama_barang', 'like', "%{$q}%")
+                    ->orWhere('kode_barang', 'like', "%{$q}%")
+                    ->orWhere('deskripsi', 'like', "%{$q}%");
+            });
+        }
+
         $inventaris = $query->latest()->paginate(10)->withQueryString();
 
         $jenisList = Jenis::orderBy('nama_jenis')->get();
+        $kategoriList = Kategori::orderBy('nama_kategori')->get();
 
         $jenisCount = Inventaris::select('jenis_id')
             ->whereNotNull('jenis_id')
@@ -40,13 +64,37 @@ class InventarisController extends Controller
             ->groupBy('jenis_id')
             ->pluck('total', 'jenis_id');
 
+        $kategoriCount = Inventaris::select('kategori_id')
+            ->whereNotNull('kategori_id')
+            ->selectRaw('count(*) as total')
+            ->groupBy('kategori_id')
+            ->pluck('total', 'kategori_id');
+
+        $dipinjam = (int) DetailPermohonan::whereHas('permohonan', function ($query) {
+            $query->whereIn('status', TransisiStatus::SEDANG_DIPAKAI);
+        })->sum('jumlah');
+
+        $tersedia = (int) Inventaris::sum('stok');
+
+        $stats = [
+            'total_barang' => Inventaris::count(),
+            'kondisi_baik' => Inventaris::where('kondisi', 'Baik')->count(),
+            'tersedia' => $tersedia,
+            'dipinjam' => $dipinjam,
+            'total_unit' => $tersedia + $dipinjam,
+        ];
+
         $kategori = Kategori::all();
 
         return view('admin.inventaris.index', compact(
             'inventaris',
             'kategori',
+            'kategoriList',
             'jenisList',
-            'jenisCount'
+            'jenisCount',
+            'kategoriCount',
+            'stats',
+            'q'
         ));
     }
 

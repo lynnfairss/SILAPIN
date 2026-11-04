@@ -3,16 +3,44 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inventaris;
 use App\Models\Jenis;
 use Illuminate\Http\Request;
 
 class JenisController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $jenis = Jenis::latest()->paginate(10);
+        $q = trim((string) $request->query('q', ''));
 
-        return view('admin.jenis.index', compact('jenis'));
+        $jenis = Jenis::query()
+            ->withCount('inventaris')
+            ->with(['inventaris' => function ($query) {
+                $query->select('id', 'jenis_id', 'kode_barang', 'nama_barang', 'stok', 'kondisi')
+                    ->orderBy('nama_barang');
+            }])
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('nama_jenis', 'like', "%{$q}%")
+                        ->orWhere('keterangan', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $terpopuler = Jenis::withCount('inventaris')
+            ->orderByDesc('inventaris_count')
+            ->first();
+
+        $stats = [
+            'total' => Jenis::count(),
+            'aset' => Inventaris::whereNotNull('jenis_id')->count(),
+            'terpopuler' => $terpopuler?->nama_jenis ?? '-',
+            'tanpa_aset' => Jenis::doesntHave('inventaris')->count(),
+        ];
+
+        return view('admin.jenis.index', compact('jenis', 'stats', 'q'));
     }
 
     public function store(Request $request)

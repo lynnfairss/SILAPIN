@@ -3,16 +3,40 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Inventaris;
 use App\Models\Kategori;
 use Illuminate\Http\Request;
 
 class KategoriController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $kategori = Kategori::latest()->paginate(10);
+        $q = trim((string) $request->query('q', ''));
 
-        return view('admin.kategori.index', compact('kategori'));
+        $kategori = Kategori::query()
+            ->withCount('inventaris')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('nama_kategori', 'like', "%{$q}%")
+                        ->orWhere('keterangan', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $terpopuler = Kategori::withCount('inventaris')
+            ->orderByDesc('inventaris_count')
+            ->first();
+
+        $stats = [
+            'total' => Kategori::count(),
+            'terpakai' => Kategori::has('inventaris')->count(),
+            'total_item' => Inventaris::whereNotNull('kategori_id')->count(),
+            'terpopuler' => $terpopuler?->nama_kategori ?? '-',
+        ];
+
+        return view('admin.kategori.index', compact('kategori', 'stats', 'q'));
     }
 
     public function store(Request $request)
