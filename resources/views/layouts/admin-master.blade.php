@@ -131,11 +131,11 @@
                     <i class="fas fa-bars text-lg"></i>
                 </button>
 
-                <form method="GET" action="{{ url()->current() }}" class="hidden w-64 items-center gap-2 rounded-lg border border-slate-200 bg-slate-100/80 px-3 py-1.5 text-xs text-slate-500 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500/20 sm:flex">
+                <form method="GET" action="@yield('topbar_search_action', url()->current())" class="hidden w-64 items-center gap-2 rounded-lg border border-slate-200 bg-slate-100/80 px-3 py-1.5 text-xs text-slate-500 transition focus-within:bg-white focus-within:ring-2 focus-within:ring-blue-500/20 sm:flex">
                     <i class="fas fa-search"></i>
-                    <input type="search" name="q" value="{{ request('q') }}" placeholder="Cari kata kunci cepat..."
+                    <input type="search" name="q" value="{{ request('q') }}" placeholder="@yield('topbar_search_placeholder', 'Cari kata kunci cepat...')"
                            class="w-full border-0 bg-transparent p-0 text-xs text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-0">
-                    @foreach(request()->except(['q', 'page']) as $key => $value)
+                    @foreach(request()->except(['q', 'page', 'scan']) as $key => $value)
                         @if(is_scalar($value) && filled($value))
                             <input type="hidden" name="{{ $key }}" value="{{ $value }}">
                         @endif

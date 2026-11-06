@@ -43,7 +43,6 @@ body {
     body.sidebar-collapsed .sidebar-brand-text,
     body.sidebar-collapsed .sidebar-group-title,
     body.sidebar-collapsed .sidebar-label,
-    body.sidebar-collapsed .sidebar-badge,
     body.sidebar-collapsed .sidebar-user-meta {
         display: none !important;
     }
@@ -66,20 +65,21 @@ body {
         width: auto;
     }
 
-    /* Badge angka digantikan titik merah di pojok ikon supaya antrean tetap terlihat. */
+    /* Saat sidebar diciutkan, badge tetap menampilkan angka di pojok ikon. */
     body.sidebar-collapsed .sidebar-link.has-badge {
         position: relative;
     }
 
-    body.sidebar-collapsed .sidebar-link.has-badge::after {
-        content: '';
+    body.sidebar-collapsed .sidebar-badge {
+        display: flex !important;
         position: absolute;
         top: 6px;
-        right: 10px;
-        width: 10px;
-        height: 10px;
-        border-radius: 9999px;
-        background: #ef4444;
+        right: 6px;
+        height: 16px;
+        min-width: 16px;
+        padding: 0 4px;
+        font-size: 9px;
+        line-height: 1;
         box-shadow: 0 0 0 2px #0f172a;
     }
 }

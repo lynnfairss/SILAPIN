@@ -19,19 +19,23 @@
         'Dipinjam' => 'fa-boxes',
         'Dikembalikan' => 'fa-undo',
     ];
+    $q = isset($q) ? trim((string) $q) : '';
+    $activeStatus = $activeStatus ?? 'Semua';
+    $tabCounts = $tabCounts ?? [];
+    $stats = $stats ?? [];
+
+    // Tab Menunggu memakai warna notifikasi merah saat ada antrean, dan
+    // kembali netral saat tidak ada yang perlu disetujui.
+    $menungguAda = ($tabCounts['Menunggu'] ?? 0) > 0;
+
     $tabDot = [
         'Semua' => 'bg-slate-400',
-        'Menunggu' => 'bg-amber-500',
+        'Menunggu' => $menungguAda ? 'bg-rose-500' : 'bg-slate-300',
         'Disetujui' => 'bg-emerald-500',
         'Ditolak' => 'bg-rose-500',
         'Dikembalikan' => 'bg-slate-400',
     ];
     $tabs = ['Semua', 'Menunggu', 'Disetujui', 'Ditolak', 'Dikembalikan'];
-
-    $q = isset($q) ? trim((string) $q) : '';
-    $activeStatus = $activeStatus ?? 'Semua';
-    $tabCounts = $tabCounts ?? [];
-    $stats = $stats ?? [];
 
     $tabHref = function (string $tab) use ($q) {
         $params = $q !== '' ? ['q' => $q] : [];
@@ -128,12 +132,15 @@
     {{-- ==================== TAB STATUS ==================== --}}
     <nav class="flex flex-wrap items-center gap-1 rounded-2xl border border-slate-200/80 bg-slate-100/70 p-1.5">
         @foreach($tabs as $tab)
-            @php $on = $activeStatus === $tab; @endphp
+            @php
+                $on = $activeStatus === $tab;
+                $isMenungguAlert = $tab === 'Menunggu' && $menungguAda;
+            @endphp
             <a href="{{ $tabHref($tab) }}"
                class="flex items-center gap-2 rounded-xl px-3.5 py-2 text-xs font-semibold transition-all {{ $on ? 'bg-white text-slate-900 shadow-sm ring-1 ring-slate-200' : 'text-slate-500 hover:bg-white/70 hover:text-slate-800' }}">
-                <span class="h-1.5 w-1.5 rounded-full {{ $tabDot[$tab] }}"></span>
+                <span class="h-1.5 w-1.5 rounded-full {{ $tabDot[$tab] }} {{ $isMenungguAlert ? 'ring-2 ring-rose-200' : '' }}"></span>
                 <span>{{ $tab }}</span>
-                <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $on ? 'bg-blue-50 text-blue-700' : 'bg-white text-slate-500' }}">
+                <span class="rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $isMenungguAlert ? 'bg-rose-100 text-rose-700 ring-1 ring-rose-200' : ($on ? 'bg-blue-50 text-blue-700' : 'bg-white text-slate-500') }}">
                     {{ $tabCounts[$tab] ?? 0 }}
                 </span>
             </a>

@@ -27,6 +27,7 @@ class Permohonan extends Model
         'surat_tugas',
         'surat_content',
         'bukti_pengembalian',
+        'kondisi_barang',
         'tanggal_pengembalian',
         'last_sync_at',
         'word_path',

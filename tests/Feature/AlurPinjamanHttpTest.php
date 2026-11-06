@@ -54,6 +54,7 @@ it('runs the full approve then return cycle through the HTTP endpoints', functio
     $this->actingAs($admin)
         ->post(route('pengembalian.proses'), [
             'nomor_permohonan' => $permohonan->nomor_permohonan,
+            'kondisi_barang' => 'Baik',
             'catatan' => 'Barang utuh dikembalikan.',
         ])
         ->assertRedirect(route('pengembalian.index'))
@@ -73,6 +74,7 @@ it('blocks a second return of the same request through the endpoint', function (
 
     $this->actingAs($admin)->post(route('pengembalian.proses'), [
         'nomor_permohonan' => $permohonan->nomor_permohonan,
+        'kondisi_barang' => 'Baik',
         'catatan' => 'Dikembalikan.',
     ])->assertSessionHas('success');
 
@@ -81,6 +83,7 @@ it('blocks a second return of the same request through the endpoint', function (
     // Pengembalian kedua harus ditolak dan stok tetap 3.
     $this->actingAs($admin)->post(route('pengembalian.proses'), [
         'nomor_permohonan' => $permohonan->nomor_permohonan,
+        'kondisi_barang' => 'Baik',
         'catatan' => 'Dikembalikan lagi.',
     ])->assertSessionHas('error');
 

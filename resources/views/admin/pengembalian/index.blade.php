@@ -1,458 +1,565 @@
-@extends('adminlte::page')
+@extends('layouts.admin-master')
 
 @section('title', 'Pengembalian Barang')
+@section('page_key', 'pengembalian')
 
-@section('content_header')
-    <h1>Pengembalian Barang</h1>
-@stop
+@section('topbar_search_action', route('permohonan.index'))
+@section('topbar_search_placeholder', 'Cari nomor permohonan, peminjam...')
+
+@php
+    $kondisiOptions = [
+        ['label' => 'Baik', 'desc' => 'Sesuai semula', 'icon' => 'fa-check-circle', 'tone' => 'emerald'],
+        ['label' => 'Rusak Ringan', 'desc' => 'Baret / lecet', 'icon' => 'fa-exclamation-circle', 'tone' => 'amber'],
+        ['label' => 'Rusak Berat', 'desc' => 'Tidak berfungsi', 'icon' => 'fa-times-circle', 'tone' => 'rose'],
+        ['label' => 'Hilang', 'desc' => 'Perlu ganti rugi', 'icon' => 'fa-question-circle', 'tone' => 'purple'],
+    ];
+    $oldKondisi = old('kondisi_barang', 'Baik');
+
+    $kondisiBadge = [
+        'Baik' => 'bg-emerald-100 text-emerald-700',
+        'Rusak Ringan' => 'bg-amber-100 text-amber-700',
+        'Rusak Berat' => 'bg-rose-100 text-rose-700',
+        'Hilang' => 'bg-purple-100 text-purple-700',
+    ];
+@endphp
+
+@push('css')
+<style>
+    #scanReader { min-height: 220px; }
+    #scanReader video { width: 100% !important; height: 100% !important; object-fit: cover; border-radius: .75rem; }
+    #scanReader img { display: none; }
+</style>
+@endpush
 
 @section('content')
+    {{-- ==================== HEADER ==================== --}}
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <div class="mb-1 flex items-center gap-2 text-xs text-slate-400">
+                <span>Transaksi</span>
+                <span>/</span>
+                <span class="font-medium text-slate-600">Pengembalian Barang</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">Pengembalian Barang</h1>
+                <span class="flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                    <i class="fas fa-check-circle text-[11px]"></i> Modul Aktif
+                </span>
+            </div>
+            <p class="mt-1 text-xs text-slate-500">
+                Proses konfirmasi fisik pengembalian barang inventaris dan unggah dokumen bukti serah terima.
+            </p>
+        </div>
+    </div>
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show">
-    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-    <button type="button" class="close" data-dismiss="alert">&times;</button>
-</div>
-@endif
-
-@if(session('error'))
-<div class="alert alert-danger alert-dismissible fade show">
-    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-    <button type="button" class="close" data-dismiss="alert">&times;</button>
-</div>
-@endif
-
-@if($errors->any())
-<div class="alert alert-danger alert-dismissible fade show">
-    <strong><i class="fas fa-exclamation-triangle me-1"></i>Pengembalian belum terkonfirmasi.</strong>
-    <ul class="mb-0 mt-1">
-        @foreach($errors->all() as $error)
-        <li>{{ $error }}</li>
+    {{-- ==================== STATISTIK ==================== --}}
+    @php
+        $tiles = [
+            [
+                'icon' => 'fa-box',
+                'box' => 'border-blue-100 bg-blue-50 text-blue-600',
+                'label' => 'Total Dipinjam',
+                'value' => $stats['dipinjam'] ?? 0,
+                'hint' => 'Aset di luar gudang',
+                'hintClass' => 'text-blue-600',
+            ],
+            [
+                'icon' => 'fa-clock',
+                'box' => 'border-amber-100 bg-amber-50 text-amber-600',
+                'label' => 'Menunggu Kembali',
+                'value' => $stats['menunggu_kembali'] ?? 0,
+                'hint' => 'Belum jatuh tempo',
+                'hintClass' => 'text-amber-600',
+            ],
+            [
+                'icon' => 'fa-file-circle-check',
+                'box' => 'border-emerald-100 bg-emerald-50 text-emerald-600',
+                'label' => 'Kembali Hari Ini',
+                'value' => $stats['kembali_hari_ini'] ?? 0,
+                'hint' => 'Sudah diverifikasi',
+                'hintClass' => 'text-emerald-600',
+            ],
+            [
+                'icon' => 'fa-exclamation-circle',
+                'box' => 'border-rose-100 bg-rose-50 text-rose-600',
+                'label' => 'Terlambat',
+                'value' => $stats['terlambat'] ?? 0,
+                'hint' => 'Melewati batas waktu',
+                'hintClass' => 'text-rose-600',
+            ],
+        ];
+    @endphp
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        @foreach($tiles as $tile)
+            <div class="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm">
+                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border {{ $tile['box'] }}">
+                    <i class="fas {{ $tile['icon'] }} text-lg"></i>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $tile['label'] }}</p>
+                    <h3 class="mt-0.5 text-xl font-bold text-slate-900">
+                        {{ number_format($tile['value'], 0, ',', '.') }}
+                        <span class="text-xs font-normal text-slate-400">Permohonan</span>
+                    </h3>
+                    <p class="mt-0.5 text-[10px] font-medium {{ $tile['hintClass'] }}">{{ $tile['hint'] }}</p>
+                </div>
+            </div>
         @endforeach
-    </ul>
-    <button type="button" class="close" data-dismiss="alert">&times;</button>
-</div>
-@endif
-
-<style>
-    .scan-input-wrap { display: flex; gap: .5rem; align-items: stretch; }
-    .scan-input-wrap .form-control { flex: 1; }
-    .btn-scan {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .35rem;
-        min-width: 120px;
-        height: 40px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: .875rem;
-        border: 1px solid #93c5fd;
-        background: #eff6ff;
-        color: #2563eb;
-        white-space: nowrap;
-        transition: all .15s ease;
-    }
-    .btn-scan:hover { background: #dbeafe; border-color: #60a5fa; color: #1d4ed8; }
-    #scanReader {
-        width: 100%;
-        min-height: 280px;
-        border-radius: 10px;
-        overflow: hidden;
-        background: #0f172a;
-    }
-    #scanReader video { border-radius: 10px; }
-    .scan-status { min-height: 1.4rem; }
-    .scan-guide {
-        text-align: center;
-        font-size: .75rem;
-        color: #64748b;
-        margin-top: .35rem;
-    }
-
-    /* ===== Panel hasil scan ===== */
-    .card-flat {
-        border-radius: 14px; border: 1px solid #eef0f4;
-        box-shadow: 0 2px 12px rgba(0,0,0,.05);
-    }
-    .card-flat .card-header {
-        background: transparent; border-bottom: 1px solid #eef0f4;
-        border-radius: 14px 14px 0 0;
-    }
-    .card-flat .card-title { font-weight: 700; color: #1a1a2e; font-size: .95rem; }
-    .detail-label {
-        font-size: .72rem; text-transform: uppercase; letter-spacing: .5px;
-        color: #6c757d; font-weight: 600;
-    }
-    .detail-value { font-size: .95rem; color: #1a1a2e; font-weight: 600; word-break: break-word; }
-    .table-modern thead th {
-        background: #1a1a2e; color: #fff; font-weight: 600; font-size: .78rem;
-        text-transform: uppercase; letter-spacing: .4px; border: none; padding: .7rem .9rem;
-    }
-    .table-modern tbody td { padding: .65rem .9rem; font-size: .88rem; vertical-align: middle; }
-    .table-modern tbody tr { border-bottom: 1px solid #f1f3f7; }
-    .table-modern tfoot th { background: #f8f9fc; font-size: .85rem; }
-
-    /* ===== Lampiran ===== */
-    .lampiran-flex { display: flex; flex-wrap: wrap; gap: 20px; }
-    .lampiran-flex > div { min-width: 130px; }
-    .lampiran-box {
-        border: 1px dashed #dee2e6; border-radius: 12px;
-        padding: 14px; text-align: center; background: #f8f9fc;
-        transition: all .2s ease; display: block; color: #495057;
-        text-decoration: none;
-    }
-    .lampiran-box:hover { border-color: #6610f2; background: #f3f0ff; color: #6610f2; text-decoration: none; }
-    .lampiran-box i { font-size: 1.8rem; }
-    .lampiran-box.is-empty { opacity: .5; }
-    .lampiran-box.is-empty:hover { border-color: #dee2e6; background: #f8f9fc; color: #495057; }
-
-    .ktp-thumb {
-        display: block; width: 150px; height: auto;
-        border-radius: 8px; border: 1px solid #e9ecef;
-        box-shadow: 0 2px 8px rgba(0,0,0,.08);
-        cursor: zoom-in; background: #fff;
-        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-    }
-    .ktp-thumb:hover {
-        transform: translateY(-2px); border-color: #6610f2;
-        box-shadow: 0 6px 16px rgba(102,16,242,.18);
-    }
-    .lampiran-hint { font-size: .72rem; color: #adb5bd; margin-top: .35rem; }
-
-    /* ===== Lightbox (gambar & PDF) ===== */
-    .lightbox-overlay {
-        position: fixed; inset: 0; z-index: 10500;
-        background: rgba(0,0,0,.9); display: none;
-        align-items: center; justify-content: center;
-        backdrop-filter: blur(3px);
-    }
-    .lightbox-overlay.active { display: flex; }
-    .lightbox-content {
-        max-width: 92vw; max-height: 92vh;
-        display: flex; align-items: center; justify-content: center;
-    }
-    .lightbox-content img {
-        max-width: 92vw; max-height: 92vh; object-fit: contain;
-        border-radius: 8px; box-shadow: 0 10px 50px rgba(0,0,0,.6);
-    }
-    .lightbox-content iframe {
-        width: 92vw; height: 92vh; border: 0; border-radius: 8px;
-        background: #fff; box-shadow: 0 10px 50px rgba(0,0,0,.6);
-    }
-    .lightbox-close {
-        position: absolute; top: 18px; right: 24px;
-        width: 44px; height: 44px; border-radius: 50%; border: none;
-        background: rgba(255,255,255,.15); color: #fff; font-size: 1.2rem;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; transition: all .2s;
-    }
-    .lightbox-close:hover { background: rgba(255,255,255,.35); transform: rotate(90deg); }
-</style>
-
-<div class="card card-flat">
-    <div class="card-header">
-        <h3 class="card-title"><i class="fas fa-exchange-alt me-2"></i>Konfirmasi Pengembalian</h3>
-        <div class="card-tools">
-            <span class="badge badge-primary" title="Akses Super Admin & Admin">
-                <i class="fas fa-user-shield me-1"></i>Super Admin / Admin
-            </span>
-        </div>
     </div>
-    <div class="card-body">
-        <form action="{{ route('pengembalian.proses') }}" method="POST">
-            @csrf
 
-            <div class="row g-3">
-                <div class="col-lg-6">
-                    <div class="form-group">
-                        <label>Nomor Permohonan <span class="text-danger">*</span></label>
-                        <div class="scan-input-wrap">
-                            <input type="text" name="nomor_permohonan" id="nomor_permohonan" class="form-control @error('nomor_permohonan') is-invalid @enderror"
-                                placeholder="Contoh: SP-220926-67ACAA"
-                                value="{{ old('nomor_permohonan') }}"
-                                autocomplete="off"
-                                required>
-                            <button type="button" class="btn-scan" id="btnOpenScanner"
-                                title="Buka kamera untuk scan QR nomor permohonan"
-                                data-toggle="modal" data-target="#scanModal">
-                                <i class="fas fa-qrcode"></i>
-                                Scan QR
-                            </button>
-                        </div>
-                        @error('nomor_permohonan')
-                        <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                        <small class="text-muted">Scan QR code dengan kamera, atau ketik manual nomor permohonan (mis. SP-220926-67ACAA).</small>
-                        <div id="lookupMsg" class="mt-2" style="display:none;"></div>
+    {{-- ==================== KONTEN UTAMA ==================== --}}
+    <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+
+        {{-- ---------- KOLOM KIRI: FORM KONFIRMASI ---------- --}}
+        <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm lg:col-span-7 xl:col-span-8">
+            <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-5">
+                <div class="flex items-center gap-2.5">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
+                        <i class="fas fa-undo text-sm"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Konfirmasi Pengembalian Barang</h2>
+                        <p class="text-[11px] text-slate-400">Isi nomor permohonan atau scan kode QR peminjaman</p>
                     </div>
                 </div>
+                <span class="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">
+                    {{ auth()->user()?->isSuperAdmin() ? 'Super Admin' : 'Admin' }}
+                </span>
             </div>
 
-            <div id="permohonanDetail" class="mt-3" style="display: none;">
-                <div class="alert alert-success py-2 mb-3" id="scanOkBanner">
-                    <i class="fas fa-check-circle me-1"></i>
-                    <strong>QR terbaca &amp; permohonan ditemukan.</strong>
-                    Periksa identitas peminjam dan barang, lalu isi <em>Catatan Admin</em> dan tekan
-                    <strong>Konfirmasi Pengembalian</strong>.
-                </div>
+            <form id="formPengembalian" action="{{ route('pengembalian.proses') }}" method="POST"
+                  enctype="multipart/form-data" class="space-y-5 p-6 text-xs" novalidate>
+                @csrf
 
-                {{-- Data Peminjam --}}
-                <div class="card card-flat mb-3">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-user me-2 text-primary"></i>Data Peminjam</h3>
-                        <div class="card-tools">
-                            <span id="detailStatus" class="badge badge-primary">-</span>
+                {{-- Nomor Permohonan --}}
+                <div>
+                    <div class="mb-1.5 flex items-center justify-between">
+                        <label for="nomor_permohonan" class="font-semibold text-slate-700">
+                            Nomor Permohonan <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[10px] text-slate-400">Pilih dari permohonan aktif</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <i class="fas fa-barcode absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" name="nomor_permohonan" id="nomor_permohonan"
+                                   value="{{ old('nomor_permohonan') }}"
+                                   placeholder="Contoh: SP-220926-67ACAA"
+                                   autocomplete="off" required
+                                   class="w-full rounded-xl border @error('nomor_permohonan') border-rose-400 @else border-slate-200 @enderror bg-slate-50 py-2.5 pl-9 pr-3.5 font-mono font-bold text-slate-800 transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                         </div>
+                        <button type="button" id="btnOpenScanner"
+                                class="flex shrink-0 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-2.5 font-medium text-blue-700 transition hover:bg-blue-100">
+                            <i class="fas fa-qrcode"></i>
+                            <span class="hidden sm:inline">Scan QR</span>
+                        </button>
                     </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="detail-label">Nama Peminjam</div>
-                                <div class="detail-value" id="detailNama">-</div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-label">Nomor Identitas</div>
-                                <div class="detail-value" id="detailNik">-</div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-label">Telepon</div>
-                                <div class="detail-value" id="detailTelepon">-</div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-label">Instansi</div>
-                                <div class="detail-value" id="detailInstansi">-</div>
-                            </div>
-                            <div class="col-12">
-                                <div class="detail-label">Alamat</div>
-                                <div class="detail-value" id="detailAlamat">-</div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-label">Tanggal Pinjam</div>
-                                <div class="detail-value" id="detailTglPinjam">-</div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="detail-label">Tanggal Kembali</div>
-                                <div class="detail-value" id="detailTglKembali">-</div>
-                            </div>
-                            <div class="col-12">
-                                <div class="detail-label">Keperluan</div>
-                                <div class="detail-value" id="detailKeperluan">-</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                {{-- Barang Dipinjam --}}
-                <div class="card card-flat mb-3">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-boxes me-2 text-primary"></i>Barang Dipinjam</h3>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-sm table-modern mb-0">
-                                <thead>
-                                    <tr>
-                                        <th style="width:48px;">No</th>
-                                        <th>Nama Barang</th>
-                                        <th>Kode</th>
-                                        <th class="text-center" style="width:90px;">Jumlah</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detailBarangBody">
-                                    <tr><td colspan="4" class="text-center text-muted py-3">Tidak ada barang.</td></tr>
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <th colspan="3" class="text-end">Total</th>
-                                        <th class="text-center" id="detailJumlah">0</th>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Lampiran --}}
-                <div class="card card-flat mb-3">
-                    <div class="card-header">
-                        <h3 class="card-title"><i class="fas fa-paperclip me-2 text-primary"></i>Lampiran</h3>
-                    </div>
-                    <div class="card-body">
-                        <div class="lampiran-flex">
-                            <div>
-                                <div class="detail-label mb-2">Foto Identitas <span class="text-muted">(opsional)</span></div>
-                                <div id="lampiranKtp"></div>
-                            </div>
-                            <div>
-                                <div class="detail-label mb-2">Surat Tugas <span class="text-muted">(opsional)</span></div>
-                                <div id="lampiranSuratTugas"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="detailWarn" class="alert alert-warning py-2 mb-0" style="display:none;"></div>
-            </div>
-
-            <div class="mt-3">
-                <div class="form-group">
-                    <label>Catatan Admin <span class="text-danger">*</span></label>
-                    <textarea name="catatan" id="catatan" class="form-control @error('catatan') is-invalid @enderror" rows="3"
-                        placeholder="Wajib diisi — mis. Barang diterima lengkap, kondisi baik">{{ old('catatan') }}</textarea>
-                    @error('catatan')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    @error('nomor_permohonan')
+                        <p class="mt-1 text-[11px] font-medium text-rose-600">{{ $message }}</p>
                     @enderror
-                    <small class="text-muted">Wajib diisi. Jika kosong, konfirmasi akan ditolak.</small>
+
+                    {{-- Quick pick dari permohonan aktif --}}
+                    @if($pinjamAktif->isNotEmpty())
+                        <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                            <span class="text-[10px] font-medium text-slate-400">Quick Pick:</span>
+                            @foreach($pinjamAktif as $aktif)
+                                <button type="button" data-quick-pick="{{ $aktif->nomor_permohonan }}"
+                                        title="{{ $aktif->nama_peminjam }} — {{ $aktif->instansi?->nama_instansi ?? $aktif->nama_instansi_lain ?? '-' }}"
+                                        class="quick-pick rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 font-mono text-[10px] text-slate-600 transition hover:bg-slate-200">
+                                    {{ $aktif->nomor_permohonan }}
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    <div id="lookupMsg" class="mt-2 hidden"></div>
+                </div>
+
+                {{-- Kondisi Barang --}}
+                <div>
+                    <label class="mb-1.5 block font-semibold text-slate-700">
+                        Kondisi Barang Saat Dikembalikan <span class="text-rose-500">*</span>
+                    </label>
+                    <div id="kondisiGrid" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                        @foreach($kondisiOptions as $opt)
+                            <label data-kondisi-card data-tone="{{ $opt['tone'] }}"
+                                   class="cursor-pointer rounded-xl border p-2.5 text-left transition-all">
+                                <input type="radio" name="kondisi_barang" value="{{ $opt['label'] }}"
+                                       class="sr-only" @checked($oldKondisi === $opt['label'])>
+                                <div class="flex items-center justify-between gap-1">
+                                    <span data-kondisi-title class="text-[11px] font-bold">{{ $opt['label'] }}</span>
+                                    <i data-kondisi-check class="fas fa-check-circle hidden text-blue-600"></i>
+                                </div>
+                                <span class="mt-0.5 block text-[10px] text-slate-400">{{ $opt['desc'] }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('kondisi_barang')
+                        <p class="mt-1 text-[11px] font-medium text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Catatan Admin --}}
+                <div>
+                    <div class="mb-1 flex items-center justify-between">
+                        <label for="catatan" class="font-semibold text-slate-700">
+                            Catatan Admin / Petugas <span class="text-rose-500">*</span>
+                        </label>
+                        <span class="text-[10px] text-slate-400">Wajib diisi untuk arsip</span>
+                    </div>
+                    <textarea name="catatan" id="catatan" rows="3" required
+                              placeholder="Wajib diisi — misal: Barang diterima lengkap, kondisi fisik mulus dan siap disimpan ke gudang."
+                              class="w-full rounded-xl border @error('catatan') border-rose-400 @else border-slate-200 @enderror bg-slate-50 px-3.5 py-2.5 leading-relaxed text-slate-800 transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20">{{ old('catatan') }}</textarea>
+                    @error('catatan')
+                        <p class="mt-1 text-[11px] font-medium text-rose-600">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Bukti Pengembalian --}}
+                <div>
+                    <label class="mb-1.5 block font-semibold text-slate-700">
+                        Bukti Serah Terima / Foto Barang <span class="font-normal text-slate-400">(Opsional)</span>
+                    </label>
+
+                    <label for="bukti_pengembalian"
+                           class="group block cursor-pointer rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-4 text-center transition hover:border-blue-400 hover:bg-blue-50/30">
+                        <i class="fas fa-cloud-upload-alt text-2xl text-slate-400 transition group-hover:text-blue-600"></i>
+                        <p class="mt-1 text-xs font-semibold text-slate-700">Unggah Foto Fisik Barang</p>
+                        <p class="text-[10px] text-slate-400">Format JPG, PNG, WEBP maks 2MB</p>
+                        <input type="file" name="bukti_pengembalian" id="bukti_pengembalian"
+                               accept="image/jpeg,image/png,image/webp" class="sr-only">
+                    </label>
+                    @error('bukti_pengembalian')
+                        <p class="mt-1 text-[11px] font-medium text-rose-600">{{ $message }}</p>
+                    @enderror
+
+                    <div id="buktiPreview" class="mt-3 hidden flex-wrap items-center gap-2"></div>
+                </div>
+
+                {{-- Tombol Aksi --}}
+                <div class="flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+                    <button type="button" id="btnReset"
+                            class="rounded-xl border border-slate-200 px-5 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
+                        Batal / Reset
+                    </button>
+                    <button type="submit" id="btnConfirmReturn"
+                            class="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-emerald-600/20 transition hover:bg-emerald-700">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Konfirmasi Pengembalian</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        {{-- ---------- KOLOM KANAN: DETAIL & RIWAYAT ---------- --}}
+        <div class="space-y-6 lg:col-span-5 xl:col-span-4">
+
+            {{-- Kartu Detail Peminjaman --}}
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-4">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                        <i class="fas fa-user-check text-blue-600"></i>
+                        Detail Peminjaman &amp; Item
+                    </span>
+                    <span id="detailStatus" class="hidden rounded-full px-2 py-0.5 text-[10px] font-bold"></span>
+                </div>
+
+                <div class="p-5 text-xs">
+                    {{-- Placeholder --}}
+                    <div id="detailEmpty" class="space-y-2 py-8 text-center text-slate-400">
+                        <i class="fas fa-qrcode text-3xl text-slate-300"></i>
+                        <p class="text-xs font-medium text-slate-500">
+                            Pilih atau scan nomor permohonan untuk melihat detail peminjam.
+                        </p>
+                    </div>
+
+                    {{-- Hasil lookup --}}
+                    <div id="permohonanDetail" class="hidden space-y-4">
+                        {{-- Identitas --}}
+                        <div class="space-y-1 rounded-xl border border-blue-100 bg-blue-50/60 p-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold uppercase text-blue-600">Instansi</span>
+                                <span id="detailNomor" class="font-mono text-[10px] text-slate-500"></span>
+                            </div>
+                            <h4 id="detailInstansi" class="text-sm font-bold text-slate-900">-</h4>
+                            <p class="font-medium text-slate-600">
+                                Peminjam: <span id="detailNama" class="font-bold text-slate-800">-</span>
+                            </p>
+                            <p class="text-[11px] text-slate-400">
+                                NIK: <span id="detailNik">-</span>
+                                &middot; Telp: <span id="detailTelepon">-</span>
+                            </p>
+                            <p class="text-[11px] text-slate-400">
+                                Alamat: <span id="detailAlamat">-</span>
+                            </p>
+                        </div>
+
+                        {{-- Tanggal --}}
+                        <div class="grid grid-cols-2 gap-2 rounded-xl border border-slate-100 bg-slate-50 p-2.5 text-[11px]">
+                            <div>
+                                <span class="block text-[10px] text-slate-400">Tgl Pinjam</span>
+                                <span id="detailTglPinjam" class="font-semibold text-slate-700">-</span>
+                            </div>
+                            <div>
+                                <span class="block text-[10px] text-slate-400">Jatuh Tempo</span>
+                                <span id="detailTglKembali" class="font-semibold text-slate-700">-</span>
+                            </div>
+                        </div>
+
+                        {{-- Keperluan --}}
+                        <div>
+                            <span class="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Keperluan</span>
+                            <p id="detailKeperluan" class="rounded-xl border border-slate-100 bg-slate-50 p-2.5 leading-relaxed text-slate-600">-</p>
+                        </div>
+
+                        {{-- Daftar Barang --}}
+                        <div>
+                            <div class="mb-2 flex items-center justify-between">
+                                <span class="text-[11px] font-bold text-slate-800">Daftar Barang Dipinjam</span>
+                                <span class="text-[10px] font-semibold text-slate-400">
+                                    Total: <span id="detailJumlah">0</span> unit
+                                </span>
+                            </div>
+                            <div class="space-y-2" id="detailBarangBody">
+                                <p class="rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 text-center text-slate-400">
+                                    Tidak ada barang.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Lampiran --}}
+                        <div>
+                            <span class="mb-2 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Lampiran</span>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <span class="mb-1 block text-[10px] text-slate-400">Foto Identitas</span>
+                                    <div id="lampiranKtp"></div>
+                                </div>
+                                <div>
+                                    <span class="mb-1 block text-[10px] text-slate-400">Surat Tugas</span>
+                                    <div id="lampiranSuratTugas"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="detailWarn" class="hidden rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-[11px] font-medium text-amber-700"></div>
+                    </div>
                 </div>
             </div>
 
-            <div class="mt-3">
-                <div class="form-group">
-                    <label>Bukti Pengembalian (opsional)</label>
-                    <input type="text" name="bukti_pengembalian" class="form-control"
-                        value="{{ old('bukti_pengembalian') }}"
-                        placeholder="Contoh: Foto barang yang dikembalikan">
+            {{-- Kartu Riwayat --}}
+            <div class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+                <div class="flex items-center justify-between border-b border-slate-100 bg-slate-50/50 p-4">
+                    <span class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                        <i class="fas fa-history text-emerald-600"></i>
+                        Riwayat Pengembalian Terbaru
+                    </span>
+                    <span class="text-[10px] font-medium text-slate-400">5 terakhir</span>
                 </div>
-            </div>
 
-            <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-success flex-grow-1" id="btnConfirmReturn">
-                    <i class="fas fa-check me-1"></i>Konfirmasi Pengembalian
-                </button>
-                <a href="{{ route('permohonan.index') }}" class="btn btn-outline-secondary flex-grow-1">Batal</a>
-            </div>
-        </form>
-    </div>
-</div>
-
-{{-- Lightbox lampiran: mendukung gambar dan PDF --}}
-<div class="lightbox-overlay" id="lightbox">
-    <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Tutup">
-        <i class="fas fa-times"></i>
-    </button>
-    <div class="lightbox-content">
-        <img src="" alt="Pratinjau lampiran" id="lightboxImg" style="display:none;">
-        <iframe src="" title="Pratinjau PDF" id="lightboxFrame" style="display:none;"></iframe>
-    </div>
-</div>
-
-{{-- Modal Scan QR --}}
-<div class="modal fade" id="scanModal" tabindex="-1" role="dialog" aria-hidden="true"
-     data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-qrcode me-2 text-primary"></i>Scan QR Code Nomor Permohonan</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Tutup" id="btnCloseScanTop">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div id="scanReader"></div>
-                <div id="scanStatus" class="scan-status text-center text-muted small mt-2">
-                    Siapkan kamera, lalu arahkan ke QR di atas nomor permohonan.
+                <div class="space-y-3 p-4">
+                    @forelse($riwayat as $log)
+                        <div class="space-y-1 rounded-xl border border-slate-200/70 bg-slate-50 p-3 text-xs transition hover:border-blue-200">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="truncate font-mono text-[11px] font-bold text-slate-900">{{ $log->nomor_permohonan }}</span>
+                                <span class="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold {{ $kondisiBadge[$log->kondisi_barang] ?? 'bg-slate-100 text-slate-600' }}">
+                                    {{ $log->kondisi_barang ?? 'Tidak dicatat' }}
+                                </span>
+                            </div>
+                            <p class="font-semibold text-slate-800">
+                                {{ $log->instansi?->nama_instansi ?? $log->nama_instansi_lain ?? '-' }}
+                                <span class="font-normal text-slate-500">({{ $log->nama_peminjam }})</span>
+                            </p>
+                            <p class="line-clamp-2 text-[10px] leading-relaxed text-slate-400">{{ $log->catatan_admin ?: 'Tanpa catatan.' }}</p>
+                            <p class="text-[10px] font-medium text-slate-400">
+                                <i class="far fa-calendar-check mr-1"></i>
+                                {{ $log->tanggal_pengembalian ? \Illuminate\Support\Carbon::parse($log->tanggal_pengembalian)->translatedFormat('d M Y, H:i') : '-' }}
+                            </p>
+                        </div>
+                    @empty
+                        <div class="space-y-2 py-8 text-center text-slate-400">
+                            <i class="fas fa-box-open text-3xl text-slate-300"></i>
+                            <p class="text-xs font-medium text-slate-500">Belum ada riwayat pengembalian.</p>
+                        </div>
+                    @endforelse
                 </div>
-                <div class="scan-guide">
-                    <i class="fas fa-info-circle me-1"></i>
-                    Mendukung QR code — contoh: SP-220926-67ACAA. Batal scan = isi manual.
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal" id="btnCancelScan">
-                    <i class="fas fa-times me-1"></i>Tutup
-                </button>
             </div>
         </div>
     </div>
-</div>
 
+    {{-- ==================== MODAL SCANNER QR ==================== --}}
+    <div id="scanModal" class="admin-modal hidden fixed inset-0 z-[80] items-center justify-center bg-slate-900/70 p-4 backdrop-blur-sm">
+        <div class="admin-modal-card w-full max-w-sm space-y-4 rounded-2xl bg-white p-6 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <span class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                    <i class="fas fa-qrcode text-blue-600"></i> Scanner QR Code
+                </span>
+                <button type="button" data-close-scan class="text-slate-400 transition hover:text-slate-600" aria-label="Tutup">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="relative h-56 overflow-hidden rounded-xl border-2 border-blue-500 bg-slate-900">
+                <div id="scanReader" class="h-full w-full"></div>
+                <div class="pointer-events-none absolute inset-4 rounded-lg border border-dashed border-blue-400/40">
+                    <div class="absolute left-0 top-1/2 h-0.5 w-full animate-pulse bg-rose-500 shadow-lg shadow-rose-500"></div>
+                </div>
+                <span class="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 rounded bg-slate-800/80 px-2 py-0.5 text-[10px] text-slate-300">
+                    Arahkan kamera ke kode QR
+                </span>
+            </div>
+
+            <div id="scanStatus" class="min-h-[1.25rem] text-center text-[11px] text-slate-500">
+                Siapkan kamera, lalu arahkan ke QR di atas nomor permohonan.
+            </div>
+
+            <p class="text-center text-[10px] leading-relaxed text-slate-400">
+                <i class="fas fa-info-circle mr-1"></i>
+                Mendukung QR berisi nomor permohonan, contoh: SP-220926-67ACAA.
+            </p>
+
+            <button type="button" data-close-scan
+                    class="w-full rounded-xl border border-slate-200 py-2.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-100">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    {{-- ==================== LIGHTBOX LAMPIRAN ==================== --}}
+    <div id="lightbox" class="fixed inset-0 z-[85] hidden items-center justify-center bg-black/90 p-4 backdrop-blur-sm">
+        <button type="button" id="lightboxClose"
+                class="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-white transition hover:rotate-90 hover:bg-white/30"
+                aria-label="Tutup pratinjau">
+            <i class="fas fa-times"></i>
+        </button>
+        <img id="lightboxImg" src="" alt="Pratinjau lampiran" class="hidden max-h-[90vh] max-w-[92vw] rounded-lg object-contain shadow-2xl">
+        <iframe id="lightboxFrame" src="" title="Pratinjau PDF" class="hidden h-[90vh] w-[92vw] rounded-lg bg-white shadow-2xl"></iframe>
+    </div>
+@endsection
+
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
     (function () {
-        var html5QrCode = null;
-        var isScanning = false;
-        var inited = false;
+        'use strict';
+
         var cekNomorUrl = @json(route('permohonan.cek-nomor'));
 
-        function setScanStatus(msg, isError) {
-            var el = document.getElementById('scanStatus');
+        var form = document.getElementById('formPengembalian');
+        var inputNomor = document.getElementById('nomor_permohonan');
+        var inputCatatan = document.getElementById('catatan');
+        var inputBukti = document.getElementById('bukti_pengembalian');
+        var detailWrap = document.getElementById('permohonanDetail');
+        var detailEmpty = document.getElementById('detailEmpty');
+        var detailStatus = document.getElementById('detailStatus');
+        var detailNomor = document.getElementById('detailNomor');
+        var lookupMsg = document.getElementById('lookupMsg');
+        var scanModal = document.getElementById('scanModal');
+        var scanStatus = document.getElementById('scanStatus');
+        var previewWrap = document.getElementById('buktiPreview');
+
+        var html5QrCode = null;
+        var isScanning = false;
+        var scanActive = false;
+        var currentStatus = '';
+        var previewUrl = null;
+
+        /* ---------------- Util ---------------- */
+        function setText(id, value) {
+            var el = document.getElementById(id);
             if (!el) return;
-            el.textContent = msg;
-            el.className = 'scan-status text-center small mt-2 ' + (isError ? 'text-danger' : 'text-muted');
+            el.textContent = (value === null || value === undefined || value === '') ? '-' : String(value);
         }
 
-        function stopScanner() {
-            if (!html5QrCode || !isScanning) {
-                if (html5QrCode) {
-                    try { html5QrCode.clear(); } catch (e) {}
-                    html5QrCode = null;
-                }
-                return Promise.resolve();
+        function setLookupMsg(message, type) {
+            if (!lookupMsg) return;
+            if (!message) {
+                lookupMsg.classList.add('hidden');
+                lookupMsg.textContent = '';
+                return;
             }
-            isScanning = false;
-            return html5QrCode.stop().then(function () {
-                try { html5QrCode.clear(); } catch (e) {}
-                html5QrCode = null;
-            }).catch(function () {
-                try { html5QrCode.clear(); } catch (e) {}
-                html5QrCode = null;
+            var tone = type === 'error'
+                ? 'border-rose-200 bg-rose-50 text-rose-700'
+                : (type === 'ok' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-blue-200 bg-blue-50 text-blue-700');
+            lookupMsg.className = 'mt-2 rounded-xl border px-3 py-2 text-[11px] font-medium ' + tone;
+            lookupMsg.textContent = message;
+        }
+
+        function toast(message, type) {
+            if (window.AdminUI && window.AdminUI.toast) {
+                window.AdminUI.toast(message, type || 'success');
+            }
+        }
+
+        /* ---------------- Kondisi barang ---------------- */
+        var kondisiCards = Array.prototype.slice.call(document.querySelectorAll('[data-kondisi-card]'));
+
+        function syncKondisi() {
+            kondisiCards.forEach(function (card) {
+                var radio = card.querySelector('input[type="radio"]');
+                var title = card.querySelector('[data-kondisi-title]');
+                var check = card.querySelector('[data-kondisi-check]');
+                var active = radio && radio.checked;
+
+                card.classList.toggle('border-blue-600', active);
+                card.classList.toggle('bg-blue-50/80', active);
+                card.classList.toggle('ring-2', active);
+                card.classList.toggle('ring-blue-500/20', active);
+                card.classList.toggle('border-slate-200', !active);
+                card.classList.toggle('bg-white', !active);
+
+                if (title) {
+                    title.classList.toggle('text-blue-700', active);
+                    title.classList.toggle('text-slate-800', !active);
+                }
+                if (check) check.classList.toggle('hidden', !active);
             });
         }
 
-        function setLookupMsg(msg, type) {
-            var el = document.getElementById('lookupMsg');
-            if (!el) return;
-            if (!msg) {
-                el.style.display = 'none';
-                el.innerHTML = '';
-                return;
-            }
-            var cls = type === 'error' ? 'alert-danger' : (type === 'ok' ? 'alert-success' : 'alert-info');
-            el.style.display = 'block';
-            el.className = 'alert py-2 mb-0 ' + cls;
-            el.innerHTML = msg;
-        }
+        kondisiCards.forEach(function (card) {
+            var radio = card.querySelector('input[type="radio"]');
+            if (radio) radio.addEventListener('change', syncKondisi);
+        });
+        syncKondisi();
 
-        // Isi teks dengan aman — data dari server tidak pernah masuk innerHTML.
-        function isiTeks(id, nilai) {
-            var el = document.getElementById(id);
-            if (!el) return;
-            el.textContent = (nilai === null || nilai === undefined || nilai === '') ? '-' : String(nilai);
-        }
-
+        /* ---------------- Render barang ---------------- */
         function renderBarang(items, total) {
             var body = document.getElementById('detailBarangBody');
             if (!body) return;
-
-            while (body.firstChild) body.removeChild(body.firstChild);
+            body.textContent = '';
 
             if (!items || !items.length) {
-                var kosong = document.createElement('tr');
-                var tdKosong = document.createElement('td');
-                tdKosong.colSpan = 4;
-                tdKosong.className = 'text-center text-muted py-3';
-                tdKosong.textContent = 'Tidak ada barang.';
-                kosong.appendChild(tdKosong);
+                var kosong = document.createElement('p');
+                kosong.className = 'rounded-xl border border-slate-200/80 bg-slate-50 p-2.5 text-center text-slate-400';
+                kosong.textContent = 'Tidak ada barang.';
                 body.appendChild(kosong);
             } else {
-                items.forEach(function (item, index) {
-                    var tr = document.createElement('tr');
-                    var sel = [
-                        String(index + 1),
-                        item.nama || '-',
-                        item.kode || '-',
-                        String(item.jumlah || 0)
-                    ];
+                items.forEach(function (item) {
+                    var row = document.createElement('div');
+                    row.className = 'flex items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-slate-50 p-2.5';
 
-                    sel.forEach(function (teks, i) {
-                        var td = document.createElement('td');
-                        td.textContent = teks;
-                        if (i === 3) td.className = 'text-center';
-                        tr.appendChild(td);
-                    });
+                    var info = document.createElement('div');
+                    info.className = 'min-w-0';
 
-                    body.appendChild(tr);
+                    var nama = document.createElement('p');
+                    nama.className = 'truncate font-bold text-slate-800';
+                    nama.textContent = item.nama || '-';
+                    info.appendChild(nama);
+
+                    var kode = document.createElement('span');
+                    kode.className = 'font-mono text-[10px] font-semibold text-rose-500';
+                    kode.textContent = item.kode || '-';
+                    info.appendChild(kode);
+
+                    var qty = document.createElement('span');
+                    qty.className = 'shrink-0 rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700';
+                    qty.textContent = (item.jumlah || 0) + ' Unit';
+
+                    row.appendChild(info);
+                    row.appendChild(qty);
+                    body.appendChild(row);
                 });
             }
 
@@ -460,25 +567,17 @@
             if (totalEl) totalEl.textContent = String(total || 0);
         }
 
-        /**
-         * Lampiran: gambar menjadi thumbnail yang bisa diperbesar,
-         * PDF dibuka di lightbox (iframe), berkas lain dibuka di tab baru.
-         */
-        function renderLampiran(targetId, info, label, kosongLabel) {
+        /* ---------------- Render lampiran ---------------- */
+        function renderLampiran(targetId, info, label) {
             var target = document.getElementById(targetId);
             if (!target) return;
-
-            while (target.firstChild) target.removeChild(target.firstChild);
+            target.textContent = '';
 
             if (!info || !info.url) {
-                var kosong = document.createElement('div');
-                kosong.className = 'lampiran-box is-empty';
-                kosong.innerHTML = '<i class="fas fa-file mb-1"></i>';
-                var judulKosong = document.createElement('div');
-                judulKosong.className = 'fw-semibold';
-                judulKosong.textContent = kosongLabel;
-                kosong.appendChild(judulKosong);
-                target.appendChild(kosong);
+                var empty = document.createElement('div');
+                empty.className = 'flex h-16 items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[10px] text-slate-400';
+                empty.textContent = 'Tidak ada';
+                target.appendChild(empty);
                 return;
             }
 
@@ -487,302 +586,416 @@
                 img.src = info.url;
                 img.alt = label;
                 img.title = 'Klik untuk memperbesar';
-                img.className = 'ktp-thumb';
+                img.className = 'h-16 w-full cursor-zoom-in rounded-xl border border-slate-200 object-cover shadow-sm transition hover:border-blue-400';
                 img.setAttribute('data-src', info.url);
                 img.setAttribute('data-type', 'image');
                 target.appendChild(img);
-
-                var hint = document.createElement('div');
-                hint.className = 'lampiran-hint';
-                hint.textContent = 'Klik untuk memperbesar';
-                target.appendChild(hint);
                 return;
             }
 
-            var tautan = document.createElement('a');
-            tautan.href = info.url;
-            tautan.target = '_blank';
-            tautan.rel = 'noopener';
-            tautan.className = 'lampiran-box';
-            tautan.innerHTML = info.is_pdf
-                ? '<i class="fas fa-file-pdf mb-1"></i>'
-                : '<i class="fas fa-file mb-1"></i>';
+            var link = document.createElement('a');
+            link.href = info.url;
+            link.target = '_blank';
+            link.rel = 'noopener';
+            link.className = 'flex h-16 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-slate-200 bg-slate-50 text-[10px] font-semibold text-slate-500 transition hover:border-blue-400 hover:text-blue-600';
+            link.innerHTML = '<i class="fas ' + (info.is_pdf ? 'fa-file-pdf' : 'fa-file') + ' text-lg"></i>';
 
             if (info.is_pdf) {
-                tautan.setAttribute('data-src', info.url);
-                tautan.setAttribute('data-type', 'pdf');
+                link.setAttribute('data-src', info.url);
+                link.setAttribute('data-type', 'pdf');
+                link.removeAttribute('target');
             }
 
-            var judul = document.createElement('div');
-            judul.className = 'fw-semibold';
-            judul.textContent = label;
-            tautan.appendChild(judul);
-            target.appendChild(tautan);
+            var caption = document.createElement('span');
+            caption.textContent = label;
+            link.appendChild(caption);
+            target.appendChild(link);
         }
 
+        /* ---------------- Lightbox ---------------- */
+        var lightbox = document.getElementById('lightbox');
+        var lightboxImg = document.getElementById('lightboxImg');
+        var lightboxFrame = document.getElementById('lightboxFrame');
+
         function openLightbox(src, type) {
-            var overlay = document.getElementById('lightbox');
-            var img = document.getElementById('lightboxImg');
-            var frame = document.getElementById('lightboxFrame');
-            if (!overlay || !img || !frame || !src) return;
-
+            if (!lightbox || !src) return;
             if (type === 'pdf') {
-                img.style.display = 'none';
-                img.removeAttribute('src');
-                frame.src = src;
-                frame.style.display = 'block';
+                lightboxImg.classList.add('hidden');
+                lightboxImg.removeAttribute('src');
+                lightboxFrame.src = src;
+                lightboxFrame.classList.remove('hidden');
             } else {
-                frame.style.display = 'none';
-                frame.removeAttribute('src');
-                img.src = src;
-                img.style.display = 'block';
+                lightboxFrame.classList.add('hidden');
+                lightboxFrame.removeAttribute('src');
+                lightboxImg.src = src;
+                lightboxImg.classList.remove('hidden');
             }
-
-            overlay.classList.add('active');
-            document.body.style.overflow = 'hidden';
+            lightbox.classList.remove('hidden');
+            lightbox.classList.add('flex');
         }
 
         function closeLightbox() {
-            var overlay = document.getElementById('lightbox');
-            var img = document.getElementById('lightboxImg');
-            var frame = document.getElementById('lightboxFrame');
-            if (!overlay) return;
+            if (!lightbox) return;
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+            if (lightboxImg) lightboxImg.removeAttribute('src');
+            if (lightboxFrame) lightboxFrame.removeAttribute('src');
+        }
 
-            overlay.classList.remove('active');
-            document.body.style.overflow = '';
-            if (img) img.removeAttribute('src');
-            if (frame) frame.removeAttribute('src');
+        document.addEventListener('click', function (event) {
+            var trigger = event.target.closest('[data-src]');
+            if (trigger) {
+                event.preventDefault();
+                openLightbox(trigger.getAttribute('data-src'), trigger.getAttribute('data-type'));
+                return;
+            }
+            if (event.target === lightbox || event.target.closest('#lightboxClose')) {
+                closeLightbox();
+            }
+        });
+
+        /* ---------------- Lookup ---------------- */
+        function setStatusBadge(status) {
+            if (!detailStatus) return;
+            var tones = {
+                Disetujui: 'bg-emerald-100 text-emerald-700',
+                Dipinjam: 'bg-blue-100 text-blue-700',
+                Menunggu: 'bg-amber-100 text-amber-700',
+                Ditolak: 'bg-rose-100 text-rose-700',
+                Dikembalikan: 'bg-slate-100 text-slate-600'
+            };
+            detailStatus.className = 'rounded-full px-2 py-0.5 text-[10px] font-bold ' + (tones[status] || 'bg-slate-100 text-slate-600');
+            detailStatus.textContent = status || '-';
         }
 
         function lookupNomor(nomor) {
-            if (!nomor || typeof $ === 'undefined') return;
-            setLookupMsg('Mencari data permohonan…', 'info');
-            $.ajax({
-                url: cekNomorUrl,
-                type: 'GET',
-                data: { nomor_permohonan: nomor },
-                success: function (response) {
-                    if (response.exists) {
-                        setLookupMsg('');
+            nomor = String(nomor || '').trim();
+            if (!nomor) {
+                detailWrap.classList.add('hidden');
+                detailEmpty.classList.remove('hidden');
+                setLookupMsg('', null);
+                currentStatus = '';
+                return;
+            }
 
-                        isiTeks('detailNama', response.nama_peminjam);
-                        isiTeks('detailNik', response.nik);
-                        isiTeks('detailTelepon', response.telepon);
-                        isiTeks('detailInstansi', response.instansi);
-                        isiTeks('detailAlamat', response.alamat);
-                        isiTeks('detailTglPinjam', response.tanggal_pinjam);
-                        isiTeks('detailTglKembali', response.tanggal_kembali);
-                        isiTeks('detailKeperluan', response.keperluan);
+            setLookupMsg('Mencari data permohonan...', 'info');
 
-                        var statusColor = response.status === 'Disetujui'
-                            ? 'badge-success'
-                            : (response.status === 'Dipinjam' ? 'badge-primary' : 'badge-warning');
-                        $('#detailStatus')
-                            .removeClass('badge-primary badge-success badge-warning badge-danger badge-secondary')
-                            .addClass(statusColor)
-                            .text(response.status);
-
-                        renderBarang(response.items, response.total_jumlah);
-                        renderLampiran('lampiranKtp', response.foto_ktp, 'Foto Identitas', 'Tidak ada foto identitas');
-                        renderLampiran('lampiranSuratTugas', response.surat_tugas, 'Surat Tugas', 'Tidak ada surat tugas');
-
-                        $('#permohonanDetail').show();
-
-                        var $warn = $('#detailWarn');
-                        if (response.status === 'Disetujui' || response.status === 'Dipinjam') {
-                            $warn.hide().text('');
-                        } else {
-                            $warn.show().html(
-                                '<i class="fas fa-exclamation-triangle me-1"></i>Status <strong>' +
-                                response.status +
-                                '</strong> tidak dapat dikembalikan lagi.'
-                            );
-                        }
-                    } else {
-                        $('#permohonanDetail').hide();
-                        setLookupMsg('<i class="fas fa-exclamation-circle me-1"></i>Permohonan tidak ditemukan. Periksa nomor: <strong>' + nomor + '</strong>', 'error');
-                    }
-                },
-                error: function (xhr) {
-                    $('#permohonanDetail').hide();
-                    var msg = 'Gagal mengambil data permohonan.';
-                    if (xhr && xhr.status === 403) {
-                        msg = 'Akses ditolak. Login sebagai Admin/Super Admin.';
-                    } else if (xhr && xhr.status === 404) {
-                        msg = 'Endpoint tidak ditemukan. Muat ulang halaman (Ctrl+Shift+R).';
-                    }
-                    setLookupMsg('<i class="fas fa-exclamation-circle me-1"></i>' + msg, 'error');
+            fetch(cekNomorUrl + '?nomor_permohonan=' + encodeURIComponent(nomor), {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin'
+            }).then(function (response) {
+                if (!response.ok) {
+                    throw new Error(response.status === 403 ? 'Akses ditolak. Login sebagai Admin/Super Admin.' : 'Gagal mengambil data permohonan.');
                 }
+                return response.json();
+            }).then(function (data) {
+                if (!data.exists) {
+                    currentStatus = '';
+                    detailWrap.classList.add('hidden');
+                    detailEmpty.classList.remove('hidden');
+                    setLookupMsg('Permohonan tidak ditemukan. Periksa nomor: ' + nomor, 'error');
+                    return;
+                }
+
+                currentStatus = data.status || '';
+                setLookupMsg('');
+
+                setText('detailNama', data.nama_peminjam);
+                setText('detailNik', data.nik);
+                setText('detailTelepon', data.telepon);
+                setText('detailInstansi', data.instansi);
+                setText('detailAlamat', data.alamat);
+                setText('detailTglPinjam', data.tanggal_pinjam);
+                setText('detailTglKembali', data.tanggal_kembali);
+                setText('detailKeperluan', data.keperluan);
+                setText('detailNomor', nomor);
+
+                setStatusBadge(currentStatus);
+                detailStatus.classList.remove('hidden');
+
+                renderBarang(data.items, data.total_jumlah);
+                renderLampiran('lampiranKtp', data.foto_ktp, 'Foto Identitas');
+                renderLampiran('lampiranSuratTugas', data.surat_tugas, 'Surat Tugas');
+
+                detailEmpty.classList.add('hidden');
+                detailWrap.classList.remove('hidden');
+
+                var warn = document.getElementById('detailWarn');
+                if (currentStatus === 'Disetujui' || currentStatus === 'Dipinjam') {
+                    warn.classList.add('hidden');
+                    warn.textContent = '';
+                } else {
+                    warn.classList.remove('hidden');
+                    warn.textContent = 'Status "' + currentStatus + '" tidak dapat diproses sebagai pengembalian.';
+                }
+            }).catch(function (error) {
+                currentStatus = '';
+                detailWrap.classList.add('hidden');
+                detailEmpty.classList.remove('hidden');
+                setLookupMsg(error.message || 'Gagal mengambil data permohonan.', 'error');
             });
         }
 
-        function onScanSuccess(decodedText) {
-            if (!decodedText) return;
-            var cleaned = String(decodedText).trim().replace(/\s+/g, '');
-            var input = document.getElementById('nomor_permohonan');
-            if (input) {
-                input.value = cleaned;
-            }
-            setScanStatus('Berhasil scan: ' + cleaned, false);
-            stopScanner().then(function () {
-                if (typeof $ !== 'undefined') $('#scanModal').modal('hide');
-                lookupNomor(cleaned);
-                setTimeout(function () {
-                    var catatan = document.getElementById('catatan');
-                    if (catatan) catatan.focus();
-                }, 400);
+        /* ---------------- Scanner QR ---------------- */
+        function setScanStatus(message, isError) {
+            if (!scanStatus) return;
+            scanStatus.textContent = message;
+            scanStatus.className = 'min-h-[1.25rem] text-center text-[11px] ' + (isError ? 'font-medium text-rose-600' : 'text-slate-500');
+        }
+
+        function stopScanner() {
+            if (!html5QrCode) return Promise.resolve();
+            isScanning = false;
+            var instance = html5QrCode;
+            html5QrCode = null;
+            return instance.stop().then(function () {
+                try { instance.clear(); } catch (e) {}
+            }).catch(function () {
+                try { instance.clear(); } catch (e) {}
             });
+        }
+
+        function closeScanner() {
+            scanActive = false;
+            stopScanner();
+            if (window.AdminUI) window.AdminUI.closeModal('scanModal');
         }
 
         function startScanner() {
+            if (!scanActive) return;
+
             if (typeof Html5Qrcode === 'undefined') {
                 setScanStatus('Library scanner gagal dimuat. Muat ulang halaman atau isi manual.', true);
                 return;
             }
             if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                if (window.isSecureContext) {
-                    setScanStatus('Browser tidak mendukung kamera. Gunakan input manual.', true);
+                if (!window.isSecureContext) {
+                    setScanStatus('Scanner butuh koneksi aman (https://). Isi nomor secara manual bila perlu.', true);
                 } else {
-                    setScanStatus('Scanner butuh koneksi aman (https://). Buka lewat https:// atau isi manual.', true);
-                    var scanEl = document.getElementById('scanStatus');
-                    var httpsLink = document.createElement('a');
-                    httpsLink.className = 'btn btn-sm btn-primary d-block mx-auto mt-2';
-                    httpsLink.href = 'https://' + location.hostname + ':8443' + location.pathname + location.search;
-                    httpsLink.innerHTML = '<i class="fas fa-lock me-1"></i>Buka lewat HTTPS';
-                    scanEl.appendChild(httpsLink);
+                    setScanStatus('Browser tidak mendukung kamera. Gunakan input manual.', true);
                 }
                 return;
             }
 
             stopScanner().then(function () {
-                var formats = [Html5QrcodeSupportedFormats.QR_CODE];
+                if (!scanActive) return;
 
                 html5QrCode = new Html5Qrcode('scanReader', {
-                    formatsToSupport: formats,
+                    formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
                     useBarCodeDetectorIfSupported: true,
                     verbose: false
                 });
                 isScanning = true;
-                setScanStatus('Mengaktifkan kamera…', false);
+                setScanStatus('Mengaktifkan kamera...', false);
 
                 html5QrCode.start(
                     { facingMode: 'environment' },
                     {
                         fps: 15,
                         qrbox: function (w, h) {
-                            var side = Math.min(w, h) - 40;
-                            side = Math.max(Math.min(side, 280), 180);
+                            var side = Math.max(Math.min(Math.min(w, h) - 40, 260), 160);
                             return { width: side, height: side };
                         },
                         disableFlip: false
                     },
-                    onScanSuccess,
+                    function (decodedText) {
+                        if (!decodedText || !isScanning) return;
+                        isScanning = false;
+                        scanActive = false;
+                        var cleaned = String(decodedText).trim().replace(/\s+/g, '');
+                        if (inputNomor) inputNomor.value = cleaned;
+                        setScanStatus('Berhasil scan: ' + cleaned, false);
+                        stopScanner().then(function () {
+                            if (window.AdminUI) window.AdminUI.closeModal('scanModal');
+                            lookupNomor(cleaned);
+                            toast('QR Code terdeteksi: ' + cleaned, 'success');
+                            setTimeout(function () {
+                                if (inputCatatan) inputCatatan.focus();
+                            }, 350);
+                        });
+                    },
                     function () {}
                 ).then(function () {
+                    if (!scanActive) {
+                        stopScanner();
+                        return;
+                    }
                     setScanStatus('Arahkan kamera ke QR nomor permohonan.', false);
-                }).catch(function (err) {
+                }).catch(function (error) {
                     isScanning = false;
                     setScanStatus('Kamera tidak tersedia atau izin ditolak. Gunakan input manual.', true);
-                    console.warn('Scanner start failed', err);
+                    console.warn('Scanner start failed', error);
                 });
             });
         }
 
-        function openScannerModal() {
-            if (typeof $ === 'undefined' || typeof $.fn.modal === 'undefined') {
-                alert('Komponen modal belum siap. Muat ulang halaman.');
-                return;
-            }
-            $('#scanModal').modal('show');
+        function openScanner() {
+            scanActive = true;
+            if (window.AdminUI) window.AdminUI.openModal('scanModal');
+            setScanStatus('Mengaktifkan kamera...', false);
+            setTimeout(startScanner, 200);
         }
 
-        function initScanPage() {
-            if (inited || typeof $ === 'undefined') return;
-            inited = true;
+        var btnScan = document.getElementById('btnOpenScanner');
+        if (btnScan) btnScan.addEventListener('click', openScanner);
 
-            $('#btnOpenScanner').off('click.pengScan').on('click.pengScan', function (e) {
-                e.preventDefault();
-                openScannerModal();
+        if (scanModal) {
+            scanModal.querySelectorAll('[data-close-scan]').forEach(function (btn) {
+                btn.addEventListener('click', closeScanner);
             });
-
-            $('#scanModal').off('shown.bs.modal.pengScan').on('shown.bs.modal.pengScan', function () {
-                startScanner();
+            scanModal.addEventListener('click', function (event) {
+                if (event.target === scanModal) closeScanner();
             });
+        }
 
-            $('#scanModal').off('hidden.bs.modal.pengScan').on('hidden.bs.modal.pengScan', function () {
-                stopScanner();
-            });
-
-            $('#btnCancelScan, #btnCloseScanTop').off('click.pengScan').on('click.pengScan', function () {
-                stopScanner();
-            });
-
-            // Lightbox lampiran (dipasang dengan delegasi karena thumbnail
-            // dibuat dinamis setelah data hasil scan datang).
-            $(document).off('click.pengLightbox', '[data-src]')
-                .on('click.pengLightbox', '[data-src]', function (e) {
-                    e.preventDefault();
-                    openLightbox(this.getAttribute('data-src'), this.getAttribute('data-type'));
-                });
-
-            $('#lightboxClose').off('click.pengLightbox').on('click.pengLightbox', function () {
-                closeLightbox();
-            });
-
-            $('#lightbox').off('click.pengLightbox').on('click.pengLightbox', function (e) {
-                if (e.target === this) closeLightbox();
-            });
-
-            $(document).off('keydown.pengLightbox').on('keydown.pengLightbox', function (e) {
-                if (e.key === 'Escape') closeLightbox();
-            });
-
-            if (new URLSearchParams(window.location.search).get('scan') === '1') {
-                setTimeout(openScannerModal, 350);
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                if (lightbox && !lightbox.classList.contains('hidden')) closeLightbox();
+                if (scanModal && !scanModal.classList.contains('hidden')) closeScanner();
             }
+        });
 
-            $('#nomor_permohonan').off('change.pengScan blur.pengScan')
-                .on('change.pengScan blur.pengScan', function () {
-                    lookupNomor($(this).val());
+        /* ---------------- Quick pick ---------------- */
+        document.querySelectorAll('[data-quick-pick]').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                var nomor = chip.getAttribute('data-quick-pick');
+                if (inputNomor) inputNomor.value = nomor;
+                lookupNomor(nomor);
+            });
+        });
+
+        /* ---------------- Auto lookup ---------------- */
+        if (inputNomor) {
+            inputNomor.addEventListener('change', function () { lookupNomor(inputNomor.value); });
+            inputNomor.addEventListener('blur', function () { lookupNomor(inputNomor.value); });
+            if (inputNomor.value.trim() !== '') lookupNomor(inputNomor.value);
+        }
+
+        /* ---------------- Upload preview ---------------- */
+        if (inputBukti) {
+            inputBukti.addEventListener('change', function () {
+                if (previewWrap) previewWrap.textContent = '';
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    previewUrl = null;
+                }
+
+                var file = inputBukti.files && inputBukti.files[0];
+                if (!file) {
+                    if (previewWrap) previewWrap.classList.add('hidden');
+                    return;
+                }
+
+                if (file.size > 2 * 1024 * 1024) {
+                    toast('Ukuran foto melebihi 2MB.', 'error');
+                    inputBukti.value = '';
+                    if (previewWrap) previewWrap.classList.add('hidden');
+                    return;
+                }
+
+                previewUrl = URL.createObjectURL(file);
+
+                var box = document.createElement('div');
+                box.className = 'group relative h-16 w-16 overflow-hidden rounded-xl border border-slate-200 shadow-sm';
+
+                var img = document.createElement('img');
+                img.src = previewUrl;
+                img.alt = 'Pratinjau bukti';
+                img.className = 'h-full w-full object-cover';
+
+                var remove = document.createElement('button');
+                remove.type = 'button';
+                remove.className = 'absolute right-1 top-1 rounded-full bg-slate-900/80 p-1 text-white opacity-0 transition group-hover:opacity-100';
+                remove.setAttribute('aria-label', 'Hapus foto');
+                remove.innerHTML = '<i class="fas fa-times text-[9px]"></i>';
+                remove.addEventListener('click', function () {
+                    inputBukti.value = '';
+                    if (previewUrl) {
+                        URL.revokeObjectURL(previewUrl);
+                        previewUrl = null;
+                    }
+                    if (previewWrap) {
+                        previewWrap.textContent = '';
+                        previewWrap.classList.add('hidden');
+                    }
                 });
 
-            $('form').off('submit.pengScan').on('submit.pengScan', function (e) {
-                var nomor = $.trim($('#nomor_permohonan').val() || '');
-                var catatan = $.trim($('#catatan').val() || '');
+                box.appendChild(img);
+                box.appendChild(remove);
+                if (previewWrap) {
+                    previewWrap.appendChild(box);
+                    previewWrap.classList.remove('hidden');
+                    previewWrap.classList.add('flex');
+                }
+            });
+        }
+
+        /* ---------------- Reset ---------------- */
+        var btnReset = document.getElementById('btnReset');
+        if (btnReset) {
+            btnReset.addEventListener('click', function () {
+                if (form) form.reset();
+                if (previewWrap) {
+                    previewWrap.textContent = '';
+                    previewWrap.classList.add('hidden');
+                }
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    previewUrl = null;
+                }
+                detailWrap.classList.add('hidden');
+                detailEmpty.classList.remove('hidden');
+                detailStatus.classList.add('hidden');
+                setLookupMsg('', null);
+                currentStatus = '';
+                syncKondisi();
+                if (inputNomor) inputNomor.focus();
+            });
+        }
+
+        /* ---------------- Validasi submit ---------------- */
+        if (form) {
+            form.addEventListener('submit', function (event) {
+                var nomor = inputNomor ? inputNomor.value.trim() : '';
+                var catatan = inputCatatan ? inputCatatan.value.trim() : '';
+                var kondisi = form.querySelector('input[name="kondisi_barang"]:checked');
+
                 if (!nomor) {
-                    e.preventDefault();
-                    alert('Nomor permohonan wajib diisi (scan QR atau ketik manual).');
-                    $('#nomor_permohonan').focus();
-                    return false;
+                    event.preventDefault();
+                    toast('Nomor permohonan wajib diisi (scan QR atau ketik manual).', 'error');
+                    if (inputNomor) inputNomor.focus();
+                    return;
+                }
+                if (!kondisi) {
+                    event.preventDefault();
+                    toast('Pilih kondisi barang saat dikembalikan.', 'error');
+                    return;
                 }
                 if (!catatan) {
-                    e.preventDefault();
-                    alert('Catatan Admin wajib diisi agar pengembalian dapat dikonfirmasi.');
-                    $('#catatan').focus();
-                    return false;
+                    event.preventDefault();
+                    toast('Catatan Admin wajib diisi agar pengembalian dapat dikonfirmasi.', 'error');
+                    if (inputCatatan) inputCatatan.focus();
+                    return;
                 }
-                var statusText = $.trim($('#detailStatus').text() || '');
-                if (statusText && statusText !== 'Disetujui' && statusText !== 'Dipinjam') {
-                    e.preventDefault();
-                    alert('Status "' + statusText + '" tidak dapat dikembalikan.');
-                    return false;
+                if (currentStatus && currentStatus !== 'Disetujui' && currentStatus !== 'Dipinjam') {
+                    event.preventDefault();
+                    toast('Status "' + currentStatus + '" tidak dapat dikembalikan.', 'error');
+                    return;
                 }
-                return true;
+
+                var btn = document.getElementById('btnConfirmReturn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('cursor-not-allowed', 'opacity-70');
+                    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i><span>Memproses...</span>';
+                }
             });
         }
 
-        // Content script bisa jalan sebelum jQuery (full load) atau sesudahnya (PJAX)
-        if (typeof $ !== 'undefined') {
-            initScanPage();
-        } else {
-            document.addEventListener('DOMContentLoaded', function () {
-                initScanPage();
-            });
-            window.addEventListener('load', function () {
-                initScanPage();
-            });
+        /* ---------------- Buka scanner via ?scan=1 ---------------- */
+        if (new URLSearchParams(window.location.search).get('scan') === '1') {
+            setTimeout(openScanner, 350);
         }
     })();
 </script>
-
-@stop
+@endpush
