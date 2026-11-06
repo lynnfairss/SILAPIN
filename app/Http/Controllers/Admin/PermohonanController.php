@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Permohonan;
 use App\Models\PermohonanStatusLog;
 use App\Models\Instansi;
-use App\Services\NomorPermohonan;
 use App\Services\StokTidakCukup;
 use App\Services\StatusPermohonan;
 use App\Services\TransisiStatus;
@@ -20,43 +19,99 @@ use App\Models\DetailPermohonan;
 
 class PermohonanController extends Controller
 {
-    public function index()
-    {
-        $permohonan = Permohonan::with('instansi', 'detailPermohonan.inventaris')->get();
-        $pageTitle = 'Data Permohonan';
-        $activeStatus = 'Semua';
+    /**
+     * Tab pada halaman daftar. 'Dipinjam' sengaja tidak punya tab sendiri:
+     * ia menyatu dengan tab 'Disetujui', persis seperti sebelum migrasi tampilan.
+     */
+    private const STATUS_TAB = [
+        'Menunggu'     => 'Permohonan Menunggu',
+        'Disetujui'    => 'Permohonan Disetujui',
+        'Ditolak'      => 'Permohonan Ditolak',
+        'Dikembalikan' => 'Permohonan Dikembalikan',
+    ];
 
-        return view('admin.permohonan.index', compact('permohonan', 'pageTitle', 'activeStatus'));
+    public function index(Request $request)
+    {
+        return $this->daftarPermohonan($request, 'Semua', 'Data Permohonan');
     }
 
-    public function byStatus(string $status)
+    public function byStatus(Request $request, string $status)
     {
-        $allowed = [
-            'Menunggu'      => 'Permohonan Menunggu',
-            'Disetujui'     => 'Permohonan Disetujui',
-            'Ditolak'       => 'Permohonan Ditolak',
-            'Dikembalikan'  => 'Permohonan Dikembalikan',
-        ];
-
-        if (!isset($allowed[$status])) {
+        if (!isset(self::STATUS_TAB[$status])) {
             abort(404);
         }
 
-        $query = Permohonan::with('instansi', 'detailPermohonan.inventaris')
+        return $this->daftarPermohonan($request, $status, self::STATUS_TAB[$status]);
+    }
+
+    /**
+     * Satu view (admin.permohonan.index) melayani halaman "Semua" dan halaman per status.
+     */
+    private function daftarPermohonan(Request $request, string $activeStatus, string $pageTitle)
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $permohonan = Permohonan::with('instansi', 'detailPermohonan.inventaris')
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('nomor_permohonan', 'like', "%{$q}%")
+                        ->orWhere('nama_peminjam', 'like', "%{$q}%")
+                        ->orWhere('nik', 'like', "%{$q}%")
+                        ->orWhere('telepon', 'like', "%{$q}%")
+                        ->orWhere('keperluan', 'like', "%{$q}%")
+                        ->orWhere('nama_instansi_lain', 'like', "%{$q}%")
+                        ->orWhereHas('instansi', function ($instansi) use ($q) {
+                            $instansi->where('nama_instansi', 'like', "%{$q}%");
+                        });
+                });
+            })
+            ->when($activeStatus !== 'Semua', function ($query) use ($activeStatus) {
+                if ($activeStatus === TransisiStatus::DISETUJUI) {
+                    $query->whereIn('status', TransisiStatus::SEDANG_DIPAKAI);
+                } else {
+                    $query->where('status', $activeStatus);
+                }
+            })
             ->orderByDesc('tanggal_pinjam')
-            ->latest();
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
-        if ($status === 'Disetujui') {
-            $query->whereIn('status', ['Disetujui', 'Dipinjam']);
-        } else {
-            $query->where('status', $status);
-        }
+        $tabCounts = $this->hitungPerStatus();
 
-        $permohonan = $query->get();
-        $pageTitle = $allowed[$status];
-        $activeStatus = $status;
+        $stats = [
+            'total' => $tabCounts['Semua'],
+            'menunggu' => $tabCounts['Menunggu'],
+            'aktif' => $tabCounts['Disetujui'],
+            'tolak' => $tabCounts['Ditolak'],
+        ];
 
-        return view('admin.permohonan.index', compact('permohonan', 'pageTitle', 'activeStatus'));
+        return view('admin.permohonan.index', compact(
+            'permohonan', 'pageTitle', 'activeStatus', 'q', 'tabCounts', 'stats'
+        ));
+    }
+
+    /**
+     * Satu query GROUP BY untuk seluruh badge tab dan kartu statistik,
+     * bukan lima COUNT terpisah.
+     */
+    private function hitungPerStatus(): array
+    {
+        $perStatus = Permohonan::query()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->all();
+
+        $ambil = fn (string $status) => (int) ($perStatus[$status] ?? 0);
+
+        return [
+            'Semua' => array_sum(array_map('intval', $perStatus)),
+            'Menunggu' => $ambil(TransisiStatus::MENUNGGU),
+            'Disetujui' => $ambil(TransisiStatus::DISETUJUI) + $ambil(TransisiStatus::DIPINJAM),
+            'Ditolak' => $ambil(TransisiStatus::DITOLAK),
+            'Dikembalikan' => $ambil(TransisiStatus::DIKEMBALIKAN),
+        ];
     }
 
     public function show(Permohonan $permohonan)
@@ -64,53 +119,6 @@ class PermohonanController extends Controller
         $permohonan->load('instansi', 'detailPermohonan.inventaris', 'statusLogs.user');
 
         return view('admin.permohonan.show', compact('permohonan'));
-    }
-
-    public function create()
-    {
-    $instansi = Instansi::all();
-    $inventaris = Inventaris::where('stok', '>', 0)->get();
-
-    return view(
-        'admin.permohonan.create',
-        compact('instansi', 'inventaris')
-    );
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate($this->rulesPermohonan());
-
-        if ($galat = $this->periksaStok($validated)) {
-            return back()->withErrors($galat)->withInput();
-        }
-
-        DB::transaction(function () use ($validated) {
-            $permohonan = Permohonan::create([
-                'nomor_permohonan' => NomorPermohonan::generate(),
-                'instansi_id'      => $validated['instansi_id'],
-                'nama_peminjam'    => $validated['nama_peminjam'],
-                'nik'              => $validated['nik'],
-                'jabatan'          => $validated['jabatan'] ?? null,
-                'telepon'          => $validated['telepon'],
-                'tanggal_pinjam'   => $validated['tanggal_pinjam'],
-                'tanggal_kembali'  => $validated['tanggal_kembali'],
-                'keperluan'        => $validated['keperluan'],
-                'status'           => TransisiStatus::MENUNGGU,
-            ]);
-
-            $this->simpanDetail($permohonan, $validated);
-
-            $permohonan->statusLogs()->create([
-                'status_lama' => null,
-                'status_baru' => TransisiStatus::MENUNGGU,
-                'catatan'     => 'Permohonan dibuat oleh admin.',
-                'user_id'     => auth()->id(),
-            ]);
-        });
-
-        return redirect()->route('permohonan.index')
-            ->with('success', 'Permohonan berhasil ditambahkan.');
     }
 
     /**

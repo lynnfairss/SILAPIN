@@ -346,6 +346,9 @@ return [
     [
         'text' => 'Permohonan',
         'icon' => 'fas fa-file-signature',
+        // Penanda statis; angkanya dihitung saat sidebar dirender agar tidak
+        // ikut terkunci bila konfigurasi di-cache lewat config:cache.
+        'badge' => 'menunggu',
         'submenu' => [
             [
                 'text'  => 'Permohonan Menunggu',

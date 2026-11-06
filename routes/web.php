@@ -98,7 +98,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('permohonan/cek-nomor', [AdminPermohonanController::class, 'cekNomor'])
             ->name('permohonan.cek-nomor');
 
-        Route::resource('permohonan', AdminPermohonanController::class);
+        // Admin hanya menerima permohonan; yang membuatnya hanya alur peminjam.
+        Route::resource('permohonan', AdminPermohonanController::class)
+            ->except(['create', 'store']);
         Route::patch('permohonan/{permohonan}/status', [AdminPermohonanController::class, 'updateStatus'])
             ->name('permohonan.status');
 

@@ -79,6 +79,14 @@ class Permohonan extends Model
             : 'Surat belum tersedia. Permohonan harus disetujui terlebih dahulu.';
     }
 
+    /**
+     * Jumlah antrean persetujuan yang ditampilkan sebagai badge di sidebar.
+     */
+    public static function countMenunggu(): int
+    {
+        return static::where('status', TransisiStatus::MENUNGGU)->count();
+    }
+
     public function instansi()
     {
         return $this->belongsTo(Instansi::class);

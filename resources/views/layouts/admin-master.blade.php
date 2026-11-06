@@ -28,7 +28,7 @@
             : ($user?->isAdmin() ? 'Admin' : 'Staff');
         $userInitial = strtoupper(substr($user?->name ?? 'S', 0, 1));
 
-        $menungguCount = \App\Models\Permohonan::where('status', \App\Services\TransisiStatus::MENUNGGU)->count();
+        $menungguCount = \App\Models\Permohonan::countMenunggu();
 
         $navGroups = [
             [
@@ -97,12 +97,13 @@
                         @foreach($group['items'] as $item)
                             @php $isActive = request()->routeIs($item['active']); @endphp
                             <a href="{{ route($item['route']) }}"
-                               class="sidebar-link flex items-center gap-3 rounded-lg px-3 py-2 transition-all {{ $isActive ? 'bg-blue-600 font-medium text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200' }}"
+                               class="sidebar-link flex items-center gap-3 rounded-lg px-3 py-2 transition-all {{ $isActive ? 'bg-blue-600 font-medium text-white shadow-md shadow-blue-600/20' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200' }} {{ empty($item['badge']) ? '' : 'has-badge' }}"
                                title="{{ $item['label'] }}">
                                 <i class="fas {{ $item['icon'] }} w-5 shrink-0 text-center text-[15px]"></i>
                                 <span class="sidebar-label flex-1 truncate text-sm font-medium">{{ $item['label'] }}</span>
                                 @if(!empty($item['badge']))
-                                    <span class="sidebar-badge rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-semibold text-blue-400">{{ $item['badge'] }}</span>
+                                    <span class="sidebar-badge flex h-5 min-w-[1.25rem] shrink-0 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[11px] font-bold leading-none text-white shadow-sm shadow-rose-500/40"
+                                          title="{{ $item['badge'] }} permohonan menunggu">{{ $item['badge'] }}</span>
                                 @endif
                             </a>
                         @endforeach

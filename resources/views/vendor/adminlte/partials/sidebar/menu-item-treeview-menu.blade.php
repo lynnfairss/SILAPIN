@@ -17,6 +17,14 @@
                     {{ $item['label'] }}
                 </span>
             @endisset
+
+            @php $badgeMenunggu = ($item['badge'] ?? null) === 'menunggu' ? \App\Models\Permohonan::countMenunggu() : 0; @endphp
+            @if($badgeMenunggu > 0)
+                <span class="right" title="{{ $badgeMenunggu }} permohonan menunggu"
+                      style="display:inline-flex;align-items:center;justify-content:center;min-width:1.35rem;height:1.35rem;padding:0 .35rem;border-radius:9999px;background:#ef4444;color:#fff;font-size:11px;font-weight:700;line-height:1;">
+                    {{ $badgeMenunggu }}
+                </span>
+            @endif
         </p>
 
     </a>

@@ -65,6 +65,23 @@ body {
     body.sidebar-collapsed .sidebar-link i {
         width: auto;
     }
+
+    /* Badge angka digantikan titik merah di pojok ikon supaya antrean tetap terlihat. */
+    body.sidebar-collapsed .sidebar-link.has-badge {
+        position: relative;
+    }
+
+    body.sidebar-collapsed .sidebar-link.has-badge::after {
+        content: '';
+        position: absolute;
+        top: 6px;
+        right: 10px;
+        width: 10px;
+        height: 10px;
+        border-radius: 9999px;
+        background: #ef4444;
+        box-shadow: 0 0 0 2px #0f172a;
+    }
 }
 
 @media (max-width: 1023px) {
