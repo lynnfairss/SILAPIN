@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Permohonan;
 use App\Models\PermohonanStatusLog;
 use App\Models\Instansi;
+use App\Services\CsvExport;
 use App\Services\StokTidakCukup;
 use App\Services\StatusPermohonan;
 use App\Services\TransisiStatus;
 use App\Services\TransisiStatusTidakValid;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -29,6 +32,8 @@ class PermohonanController extends Controller
         'Ditolak'      => 'Permohonan Ditolak',
         'Dikembalikan' => 'Permohonan Dikembalikan',
     ];
+
+    private const PER_PAGE = 8;
 
     public function index(Request $request)
     {
@@ -49,9 +54,35 @@ class PermohonanController extends Controller
      */
     private function daftarPermohonan(Request $request, string $activeStatus, string $pageTitle)
     {
+        $permohonan = $this->daftarQuery($request, $activeStatus)
+            ->paginate(self::PER_PAGE)
+            ->withQueryString();
+
         $q = trim((string) $request->query('q', ''));
 
-        $permohonan = Permohonan::with('instansi', 'detailPermohonan.inventaris')
+        $tabCounts = $this->hitungPerStatus();
+
+        $stats = [
+            'total' => $tabCounts['Semua'],
+            'menunggu' => $tabCounts['Menunggu'],
+            'aktif' => $tabCounts['Disetujui'],
+            'tolak' => $tabCounts['Ditolak'],
+        ];
+
+        return view('admin.permohonan.index', compact(
+            'permohonan', 'pageTitle', 'activeStatus', 'q', 'tabCounts', 'stats'
+        ));
+    }
+
+    /**
+     * Sumber query bersama untuk daftar (paginated) dan ekspor CSV (semua
+     * baris), sehingga ekspor selalu mengikuti tab dan pencarian yang tampil.
+     */
+    private function daftarQuery(Request $request, string $activeStatus): Builder
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        return Permohonan::with('instansi', 'detailPermohonan.inventaris')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
                     $sub->where('nomor_permohonan', 'like', "%{$q}%")
@@ -73,22 +104,37 @@ class PermohonanController extends Controller
                 }
             })
             ->orderByDesc('tanggal_pinjam')
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+            ->latest();
+    }
 
-        $tabCounts = $this->hitungPerStatus();
+    /**
+     * Unduh seluruh permohonan pada tab aktif, bukan hanya halaman aktif.
+     */
+    public function export(Request $request): Response
+    {
+        $status = (string) $request->query('status', 'Semua');
 
-        $stats = [
-            'total' => $tabCounts['Semua'],
-            'menunggu' => $tabCounts['Menunggu'],
-            'aktif' => $tabCounts['Disetujui'],
-            'tolak' => $tabCounts['Ditolak'],
-        ];
+        if ($status !== 'Semua' && !isset(self::STATUS_TAB[$status])) {
+            abort(404);
+        }
 
-        return view('admin.permohonan.index', compact(
-            'permohonan', 'pageTitle', 'activeStatus', 'q', 'tabCounts', 'stats'
-        ));
+        return CsvExport::stream(
+            $this->daftarQuery($request, $status)->get(),
+            ['Nomor Permohonan', 'Instansi', 'Nama', 'NIK', 'Tanggal Pinjam', 'Tanggal Kembali', 'Status', 'Barang'],
+            function (Permohonan $item) {
+                return [
+                    $item->nomor_permohonan,
+                    $item->instansi?->nama_instansi ?? $item->nama_instansi_lain ?? '-',
+                    $item->nama_peminjam,
+                    $item->nik,
+                    $item->tanggal_pinjam,
+                    $item->tanggal_kembali,
+                    $item->status,
+                    $item->detailPermohonan->pluck('inventaris.nama_barang')->implode(', '),
+                ];
+            },
+            'data-permohonan-' . strtolower($status) . '.csv'
+        );
     }
 
     /**

@@ -5,15 +5,25 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Inventaris;
 use App\Models\Jenis;
+use App\Services\CsvExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class JenisController extends Controller
 {
-    public function index(Request $request)
+    private const PER_PAGE = 8;
+
+    /**
+     * Sumber query bersama untuk daftar (paginated) dan ekspor CSV (semua
+     * baris). Filter dan urutan di sini adalah satu-satunya definisi "hasil
+     * pencarian", jadi ekspor tidak pernah menyimpang dari yang tampil.
+     */
+    private function daftarQuery(Request $request): Builder
     {
         $q = trim((string) $request->query('q', ''));
 
-        $jenis = Jenis::query()
+        return Jenis::query()
             ->withCount('inventaris')
             ->with(['inventaris' => function ($query) {
                 $query->select('id', 'jenis_id', 'kode_barang', 'nama_barang', 'stok', 'kondisi')
@@ -25,8 +35,15 @@ class JenisController extends Controller
                         ->orWhere('keterangan', 'like', "%{$q}%");
                 });
             })
-            ->latest()
-            ->paginate(10)
+            ->latest();
+    }
+
+    public function index(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $jenis = $this->daftarQuery($request)
+            ->paginate(self::PER_PAGE)
             ->withQueryString();
 
         $terpopuler = Jenis::withCount('inventaris')
@@ -41,6 +58,25 @@ class JenisController extends Controller
         ];
 
         return view('admin.jenis.index', compact('jenis', 'stats', 'q'));
+    }
+
+    /**
+     * Unduh seluruh jenis yang cocok filter, bukan hanya halaman aktif.
+     */
+    public function export(Request $request): Response
+    {
+        return CsvExport::stream(
+            $this->daftarQuery($request)->get(),
+            ['Nama Jenis', 'Keterangan', 'Total Aset'],
+            function (Jenis $item) {
+                return [
+                    $item->nama_jenis,
+                    $item->keterangan,
+                    $item->inventaris_count ?? 0,
+                ];
+            },
+            'data-jenis.csv'
+        );
     }
 
     public function store(Request $request)

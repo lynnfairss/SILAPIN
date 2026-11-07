@@ -26,6 +26,10 @@
             })->values(),
         ];
     })->values();
+
+    // route() dengan lebih dari satu argumen tidak bisa ditulis di dalam
+    // @json(), karena direktif itu memecah argumen pada koma pertama.
+    $exportUrl = route('inventaris.export', array_filter(request()->only(['q', 'jenis', 'kategori', 'kondisi'])));
 @endphp
 
 @section('content')
@@ -660,6 +664,7 @@
     const INVENTARIS = @json($inventarisPayload);
     const INVENTARIS_BASE = @json(url('inventaris'));
     const INVENTARIS_STORE = @json(route('inventaris.store'));
+    const INVENTARIS_EXPORT = @json($exportUrl);
 
     let fotoDihapus = [];
     let fotoIdSlot = {};
@@ -887,23 +892,7 @@
 
     /* -------------------- Export -------------------- */
     function exportData() {
-        AdminUI.exportCsv(
-            'data-inventaris.csv',
-            ['Kode', 'Nama Barang', 'Kategori', 'Jenis', 'Stok Tersedia', 'Dipinjam', 'Total', 'Kondisi', 'Deskripsi'],
-            INVENTARIS.map(function (item) {
-                return [
-                    item.kode,
-                    item.nama,
-                    item.kategori || '',
-                    item.jenis || '',
-                    item.stok,
-                    item.dipinjam,
-                    item.total,
-                    item.kondisi,
-                    item.deskripsi || '',
-                ];
-            })
-        );
+        window.location.assign(INVENTARIS_EXPORT);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

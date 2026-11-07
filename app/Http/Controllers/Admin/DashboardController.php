@@ -68,6 +68,11 @@ class DashboardController extends Controller
         $totalPermohonan  = (clone $query)->count();
         $totalItemDipinjam = (clone $query)->get()->sum(fn ($p) => $p->detailPermohonan->sum('jumlah'));
 
+        // KPI tambahan: permohonan yang diajukan pada bulan berjalan.
+        $permohonanBulanIni = Permohonan::whereYear('tanggal_pinjam', now()->year)
+            ->whereMonth('tanggal_pinjam', now()->month)
+            ->count();
+
         $statusCounts = [];
         foreach ($statusList as $st) {
             $statusCounts[$st] = (clone $query)->where('status', $st)->count();
@@ -83,26 +88,91 @@ class DashboardController extends Controller
             $per = ($rangeDays !== null && $rangeDays <= 31) ? 'hari' : 'bulan';
         }
 
+        $trenDateFormat = $per === 'hari' ? '%Y-%m-%d' : '%Y-%m';
+        $chartLabel = $per === 'hari' ? 'Permohonan per Hari' : 'Permohonan per Bulan';
+
+        $trenPermohonan = (clone $query)
+            ->select(DB::raw("DATE_FORMAT(tanggal_pinjam, '{$trenDateFormat}') as label"), DB::raw('count(*) as total'))
+            ->groupBy('label')
+            ->orderBy('label')
+            ->pluck('total', 'label')
+            ->all();
+
+        // Seri kedua chart area: total item yang dipinjam pada periode yang sama.
+        $trenItem = (clone $query)
+            ->join('detail_permohonans', 'detail_permohonans.permohonan_id', '=', 'permohonans.id')
+            ->select(
+                DB::raw("DATE_FORMAT(tanggal_pinjam, '{$trenDateFormat}') as label"),
+                DB::raw('COALESCE(SUM(detail_permohonans.jumlah), 0) as total')
+            )
+            ->groupBy('label')
+            ->pluck('total', 'label')
+            ->all();
+
+        // Isi periode kosong dengan nol agar grafik tetap berupa garis tren,
+        // bukan satu titik ketika data hanya terkumpul di satu periode.
         if ($per === 'hari') {
-            $trenQuery = (clone $query)
-                ->select(DB::raw("DATE_FORMAT(tanggal_pinjam, '%Y-%m-%d') as label"), DB::raw('count(*) as total'))
-                ->groupBy('label')
-                ->orderBy('label')
-                ->pluck('total', 'label');
+            $keys = array_keys($trenPermohonan);
+            sort($keys);
+            $dataStart = $keys ? Carbon::parse($keys[0])->startOfDay() : now()->startOfDay();
+            $dataEnd = $keys ? Carbon::parse(end($keys))->startOfDay() : now()->startOfDay();
 
-            $labels = $trenQuery->keys()->map(fn ($l) => Carbon::parse($l)->translatedFormat('d M'))->toArray();
-            $values = $trenQuery->values()->toArray();
-            $chartLabel = 'Permohonan per Hari';
+            $start = $dari ? $dari->copy()->startOfDay() : $dataStart->copy();
+            $end = $sampai ? $sampai->copy()->startOfDay() : $dataEnd->copy();
+            if ($start->greaterThan($end)) {
+                $start = $end->copy();
+            }
+            $tanpaFilterTanggal = !$dari && empty($filters['bulan']) && empty($filters['tahun']);
+            if ($tanpaFilterTanggal && $start->diffInDays($end) + 1 < 7) {
+                $start = $end->copy()->subDays(6)->startOfDay();
+            }
+
+            $labels = [];
+            $values = [];
+            $trenItemValues = [];
+            for ($cursor = $start->copy(); $cursor->lessThanOrEqualTo($end); $cursor->addDay()) {
+                $key = $cursor->format('Y-m-d');
+                $labels[] = $cursor->translatedFormat('d M');
+                $values[] = (int) ($trenPermohonan[$key] ?? 0);
+                $trenItemValues[] = (int) ($trenItem[$key] ?? 0);
+            }
         } else {
-            $trenQuery = (clone $query)
-                ->select(DB::raw("DATE_FORMAT(tanggal_pinjam, '%Y-%m') as label"), DB::raw('count(*) as total'))
-                ->groupBy('label')
-                ->orderBy('label')
-                ->pluck('total', 'label');
+            $keys = array_keys($trenPermohonan);
+            sort($keys);
+            $dataStart = $keys ? Carbon::createFromFormat('Y-m', $keys[0])->startOfMonth() : now()->startOfMonth();
+            $dataEnd = $keys ? Carbon::createFromFormat('Y-m', end($keys))->startOfMonth() : now()->startOfMonth();
 
-            $labels = $trenQuery->keys()->map(fn ($l) => Carbon::createFromFormat('Y-m', $l)->translatedFormat('M Y'))->toArray();
-            $values = $trenQuery->values()->toArray();
-            $chartLabel = 'Permohonan per Bulan';
+            $start = $dari ? $dari->copy()->startOfMonth() : $dataStart->copy();
+            $end = $sampai ? $sampai->copy()->startOfMonth() : $dataEnd->copy();
+
+            // Filter tahun tanpa rentang tanggal: tampilkan satu tahun penuh.
+            if (!$dari && !empty($filters['tahun'])) {
+                $start = Carbon::create((int) $filters['tahun'], 1, 1)->startOfMonth();
+            }
+            if (!$sampai && !empty($filters['tahun'])) {
+                $end = Carbon::create((int) $filters['tahun'], 12, 1)->startOfMonth();
+                if ($end->greaterThan(now())) {
+                    $end = now()->startOfMonth();
+                }
+            }
+
+            if ($start->greaterThan($end)) {
+                $start = $end->copy();
+            }
+            $tanpaFilterTanggal = !$dari && empty($filters['bulan']) && empty($filters['tahun']);
+            if ($tanpaFilterTanggal && $start->diffInMonths($end) + 1 < 6) {
+                $start = $end->copy()->subMonths(5)->startOfMonth();
+            }
+
+            $labels = [];
+            $values = [];
+            $trenItemValues = [];
+            for ($cursor = $start->copy(); $cursor->lessThanOrEqualTo($end); $cursor->addMonth()) {
+                $key = $cursor->format('Y-m');
+                $labels[] = $cursor->translatedFormat('M Y');
+                $values[] = (int) ($trenPermohonan[$key] ?? 0);
+                $trenItemValues[] = (int) ($trenItem[$key] ?? 0);
+            }
         }
 
         // ---------- Distribusi status (doughnut) ----------
@@ -114,16 +184,6 @@ class DashboardController extends Controller
                 $statusValues[] = $statusCounts[$st];
             }
         }
-
-        // ---------- Inventaris per kategori ----------
-        $perKategori = Inventaris::with('kategori')
-            ->get()
-            ->groupBy(fn ($i) => $i->kategori?->nama ?? 'Tanpa Kategori')
-            ->map->count()
-            ->sortDesc()
-            ->take(8);
-        $kategoriLabels = $perKategori->keys()->toArray();
-        $kategoriValues = $perKategori->values()->toArray();
 
         // ---------- Top 5 item paling sering dipinjam ----------
         $topItem = DetailPermohonan::with('inventaris')
@@ -194,19 +254,16 @@ class DashboardController extends Controller
             ->sortByDesc('total_permohonan')
             ->values();
 
-        $statusListFilter = array_values(array_filter($statusList, fn ($st) => $st !== 'Menunggu'));
-
         return view('admin.dashboard', compact(
             'presets', 'filters', 'preset',
             'totalInventaris', 'totalKategori', 'totalInstansi',
-            'totalPermohonan', 'totalItemDipinjam', 'statusCounts',
-            'labels', 'values', 'chartLabel', 'per',
+            'totalPermohonan', 'totalItemDipinjam', 'permohonanBulanIni', 'statusCounts',
+            'labels', 'values', 'trenItemValues', 'chartLabel', 'per',
             'statusLabels', 'statusValues',
-            'kategoriLabels', 'kategoriValues',
             'topLabels', 'topValues',
             'recapGrandTotal', 'statusList',
             'permohonan', 'instansiList', 'tahunList',
-            'recapInstansi', 'statusListFilter'
+            'recapInstansi'
         ));
     }
 

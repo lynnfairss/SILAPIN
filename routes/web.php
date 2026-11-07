@@ -79,6 +79,12 @@ Route::middleware(['auth'])->group(function () {
 
     // Master Data (hanya Super Admin)
     Route::middleware('role:super_admin')->group(function () {
+        // Harus sebelum Route::resource agar tidak tertimpa {instansi} dan kawan-kawan.
+        Route::get('instansi/export', [InstansiController::class, 'export'])->name('instansi.export');
+        Route::get('kategori/export', [KategoriController::class, 'export'])->name('kategori.export');
+        Route::get('jenis/export', [JenisController::class, 'export'])->name('jenis.export');
+        Route::get('inventaris/export', [InventarisController::class, 'export'])->name('inventaris.export');
+
         Route::resource('instansi', InstansiController::class)->except(['create', 'edit', 'show']);
         Route::resource('kategori', KategoriController::class)->except(['create', 'edit', 'show']);
         Route::resource('jenis', JenisController::class)->except(['create', 'edit', 'show']);
@@ -97,6 +103,9 @@ Route::middleware(['auth'])->group(function () {
         // Harus sebelum Route::resource agar tidak tertimpa permohonan/{permohonan}
         Route::get('permohonan/cek-nomor', [AdminPermohonanController::class, 'cekNomor'])
             ->name('permohonan.cek-nomor');
+
+        Route::get('permohonan/export', [AdminPermohonanController::class, 'export'])
+            ->name('permohonan.export');
 
         // Admin hanya menerima permohonan; yang membuatnya hanya alur peminjam.
         Route::resource('permohonan', AdminPermohonanController::class)

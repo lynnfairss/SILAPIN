@@ -22,6 +22,10 @@
             'total' => $item->inventaris_count ?? 0,
         ];
     })->values();
+
+    // route() dengan lebih dari satu argumen tidak bisa ditulis di dalam
+    // @json(), karena direktif itu memecah argumen pada koma pertama.
+    $exportUrl = route('kategori.export', array_filter(request()->only(['q'])));
 @endphp
 
 @section('content')
@@ -350,6 +354,7 @@
     const KATEGORI = @json($kategoriPayload);
     const KATEGORI_BASE = @json(url('kategori'));
     const KATEGORI_STORE = @json(route('kategori.store'));
+    const KATEGORI_EXPORT = @json($exportUrl);
 
     function openCreate(preserveOld = false) {
         const form = document.getElementById('kategoriForm');
@@ -389,13 +394,7 @@
     }
 
     function exportData() {
-        AdminUI.exportCsv(
-            'data-kategori.csv',
-            ['Kode', 'Nama Kategori', 'Keterangan', 'Total Item'],
-            KATEGORI.map(function (item) {
-                return [item.kode, item.nama, item.keterangan || '', item.total];
-            })
-        );
+        window.location.assign(KATEGORI_EXPORT);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

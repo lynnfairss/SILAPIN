@@ -33,6 +33,10 @@
             })->values(),
         ];
     })->values();
+
+    // route() dengan lebih dari satu argumen tidak bisa ditulis di dalam
+    // @json(), karena direktif itu memecah argumen pada koma pertama.
+    $exportUrl = route('jenis.export', array_filter(request()->only(['q'])));
 @endphp
 
 @section('content')
@@ -423,6 +427,7 @@
     const JENIS = @json($jenisPayload);
     const JENIS_BASE = @json(url('jenis'));
     const JENIS_STORE = @json(route('jenis.store'));
+    const JENIS_EXPORT = @json($exportUrl);
 
     function iconFor(nama) {
         const n = (nama || '').toLowerCase();
@@ -526,13 +531,7 @@
     }
 
     function exportData() {
-        AdminUI.exportCsv(
-            'data-jenis.csv',
-            ['Nama Jenis', 'Keterangan', 'Total Aset'],
-            JENIS.map(function (item) {
-                return [item.nama, item.keterangan || '', item.total];
-            })
-        );
+        window.location.assign(JENIS_EXPORT);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

@@ -50,18 +50,12 @@
         ? route('permohonan.index')
         : route('permohonan.byStatus', ['status' => $activeStatus]);
 
-    $permohonanPayload = $permohonan->getCollection()->map(function ($item) {
-        return [
-            'nomor' => $item->nomor_permohonan,
-            'instansi' => $item->instansi?->nama_instansi ?? $item->nama_instansi_lain ?? '-',
-            'nama' => $item->nama_peminjam,
-            'nik' => $item->nik,
-            'pinjam' => $item->tanggal_pinjam,
-            'kembali' => $item->tanggal_kembali,
-            'status' => $item->status,
-            'barang' => $item->detailPermohonan->pluck('inventaris.nama_barang')->implode(', '),
-        ];
-    })->values();
+    // route() dengan lebih dari satu argumen tidak bisa ditulis di dalam
+    // @json(), karena direktif itu memecah argumen pada koma pertama.
+    $exportUrl = route('permohonan.export', array_filter([
+        'q'      => $q,
+        'status' => $activeStatus === 'Semua' ? null : $activeStatus,
+    ]));
 @endphp
 
 @push('css')
@@ -377,8 +371,7 @@
 @push('scripts')
 <script src="{{ asset('vendor/qrcode/qrcode.min.js') }}?v={{ @filemtime(public_path('vendor/qrcode/qrcode.min.js')) ?: 1 }}"></script>
 <script>
-    const PERMOHONAN = @json($permohonanPayload);
-    const PERMOHONAN_TAB = @json($activeStatus);
+    const PERMOHONAN_EXPORT = @json($exportUrl);
 
     function renderQr(selector, nomor, size, dark) {
         const el = document.querySelector(selector);
@@ -426,13 +419,7 @@
     }
 
     function exportData() {
-        AdminUI.exportCsv(
-            'data-permohonan-' + PERMOHONAN_TAB.toLowerCase() + '.csv',
-            ['Nomor Permohonan', 'Instansi', 'Nama', 'NIK', 'Tanggal Pinjam', 'Tanggal Kembali', 'Status', 'Barang'],
-            PERMOHONAN.map(function (row) {
-                return [row.nomor, row.instansi, row.nama, row.nik, row.pinjam, row.kembali, row.status, row.barang];
-            })
-        );
+        window.location.assign(PERMOHONAN_EXPORT);
     }
 </script>
 @include('admin.permohonan._aksi-scripts')

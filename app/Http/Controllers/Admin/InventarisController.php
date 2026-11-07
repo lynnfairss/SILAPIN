@@ -8,8 +8,11 @@ use App\Models\Inventaris;
 use App\Models\InventarisFoto;
 use App\Models\Jenis;
 use App\Models\Kategori;
+use App\Services\CsvExport;
 use App\Services\TransisiStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -23,7 +26,14 @@ class InventarisController extends Controller
      */
     private const KONDISI = ['Baik', 'Rusak Ringan', 'Rusak Berat'];
 
-    public function index(Request $request)
+    private const PER_PAGE = 8;
+
+    /**
+     * Sumber query bersama untuk daftar (paginated) dan ekspor CSV (semua
+     * baris). Filter dan urutan di sini adalah satu-satunya definisi "hasil
+     * pencarian", jadi ekspor tidak pernah menyimpang dari yang tampil.
+     */
+    private function daftarQuery(Request $request): Builder
     {
         $query = Inventaris::with('kategori', 'jenis', 'fotos')
             ->withSum(['detailPermohonan as dipinjam' => function ($query) {
@@ -53,7 +63,16 @@ class InventarisController extends Controller
             });
         }
 
-        $inventaris = $query->latest()->paginate(10)->withQueryString();
+        return $query->latest();
+    }
+
+    public function index(Request $request)
+    {
+        $inventaris = $this->daftarQuery($request)
+            ->paginate(self::PER_PAGE)
+            ->withQueryString();
+
+        $q = trim((string) $request->query('q', ''));
 
         $jenisList = Jenis::orderBy('nama_jenis')->get();
         $kategoriList = Kategori::orderBy('nama_kategori')->get();
@@ -96,6 +115,31 @@ class InventarisController extends Controller
             'stats',
             'q'
         ));
+    }
+
+    /**
+     * Unduh seluruh barang yang cocok filter, bukan hanya halaman aktif.
+     */
+    public function export(Request $request): Response
+    {
+        return CsvExport::stream(
+            $this->daftarQuery($request)->get(),
+            ['Kode', 'Nama Barang', 'Kategori', 'Jenis', 'Stok Tersedia', 'Dipinjam', 'Total', 'Kondisi', 'Deskripsi'],
+            function (Inventaris $item) {
+                return [
+                    $item->kode_barang,
+                    $item->nama_barang,
+                    $item->kategori?->nama_kategori,
+                    $item->jenis?->nama_jenis,
+                    $item->stok,
+                    (int) ($item->dipinjam ?? 0),
+                    (int) $item->stok + (int) ($item->dipinjam ?? 0),
+                    $item->kondisi,
+                    $item->deskripsi,
+                ];
+            },
+            'data-inventaris.csv'
+        );
     }
 
     public function store(Request $request)

@@ -15,6 +15,10 @@
             'terdaftar' => $item->created_at?->format('d M Y') ?? '-',
         ];
     })->values();
+
+    // route() dengan lebih dari satu argumen tidak bisa ditulis di dalam
+    // @json(), karena direktif itu memecah argumen pada koma pertama.
+    $exportUrl = route('instansi.export', array_filter(request()->only(['q'])));
 @endphp
 
 @section('content')
@@ -361,6 +365,7 @@
     const INSTANSI = @json($instansiPayload);
     const INSTANSI_BASE = @json(url('instansi'));
     const INSTANSI_STORE = @json(route('instansi.store'));
+    const INSTANSI_EXPORT = @json($exportUrl);
 
     function openCreate(preserveOld = false) {
         const form = document.getElementById('instansiForm');
@@ -416,13 +421,7 @@
     }
 
     function exportData() {
-        AdminUI.exportCsv(
-            'data-instansi.csv',
-            ['Kode', 'Nama Instansi', 'Alamat', 'Telepon', 'Peminjaman', 'Terdaftar'],
-            INSTANSI.map(function (item) {
-                return [item.kode, item.nama, item.alamat || '', item.telepon || '', item.peminjaman, item.terdaftar];
-            })
-        );
+        window.location.assign(INSTANSI_EXPORT);
     }
 
     document.addEventListener('DOMContentLoaded', function () {

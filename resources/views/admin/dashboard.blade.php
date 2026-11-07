@@ -27,17 +27,13 @@
         'Dipinjam' => '#3b82f6',
         'Dikembalikan' => '#94a3b8',
     ];
-    $kpiStyle = [
-        ['box' => 'border-blue-100 bg-blue-50', 'icon' => 'bg-blue-600 shadow-blue-600/20'],
-        ['box' => 'border-violet-100 bg-violet-50', 'icon' => 'bg-violet-600 shadow-violet-600/20'],
-        ['box' => 'border-pink-100 bg-pink-50', 'icon' => 'bg-pink-600 shadow-pink-600/20'],
-        ['box' => 'border-teal-100 bg-teal-50', 'icon' => 'bg-teal-600 shadow-teal-600/20'],
-    ];
-    $kpiCards = [
-        ['icon' => 'fa-box', 'label' => 'Total Inventaris', 'value' => $totalInventaris, 'route' => 'inventaris.index'],
-        ['icon' => 'fa-file-alt', 'label' => 'Permohonan', 'value' => $totalPermohonan, 'sub' => 'Item Dipinjam: ' . number_format($totalItemDipinjam, 0, ',', '.'), 'route' => 'permohonan.index'],
-        ['icon' => 'fa-building', 'label' => 'Instansi', 'value' => $totalInstansi, 'route' => 'instansi.index'],
-        ['icon' => 'fa-tags', 'label' => 'Kategori', 'value' => $totalKategori, 'route' => 'kategori.index'],
+
+    $statCards = [
+        ['icon' => 'fa-box', 'box' => 'border-blue-100 bg-blue-50 text-blue-600', 'label' => 'Total Inventaris', 'value' => $totalInventaris, 'sub' => 'Aset terdaftar', 'route' => 'inventaris.index'],
+        ['icon' => 'fa-file-alt', 'box' => 'border-rose-100 bg-rose-50 text-rose-600', 'label' => 'Total Permohonan', 'value' => $totalPermohonan, 'sub' => 'Item dipinjam: ' . number_format($totalItemDipinjam, 0, ',', '.'), 'route' => 'permohonan.index'],
+        ['icon' => 'fa-building', 'box' => 'border-violet-100 bg-violet-50 text-violet-600', 'label' => 'Instansi Aktif', 'value' => $totalInstansi, 'sub' => 'Unit peminjam', 'route' => 'instansi.index'],
+        ['icon' => 'fa-tags', 'box' => 'border-emerald-100 bg-emerald-50 text-emerald-600', 'label' => 'Kategori Barang', 'value' => $totalKategori, 'sub' => 'Pengelompokan', 'route' => 'kategori.index'],
+        ['icon' => 'fa-layer-group', 'box' => 'border-indigo-100 bg-indigo-50 text-indigo-600', 'label' => 'Permohonan Bulan Ini', 'value' => $permohonanBulanIni, 'sub' => now()->translatedFormat('F Y'), 'route' => 'permohonan.index'],
     ];
 
     $rangeDesc = 'Semua data';
@@ -46,9 +42,22 @@
             . ' – ' . \Carbon\Carbon::parse($filters['sampai'])->translatedFormat('d M Y');
     } elseif (!empty($filters['dari']) && $filters['dari'] !== 'null') {
         $rangeDesc = 'Dari ' . \Carbon\Carbon::parse($filters['dari'])->translatedFormat('d M Y');
+    } elseif (!empty($filters['bulan']) || !empty($filters['tahun'])) {
+        $bulanNama = !empty($filters['bulan'])
+            ? \Carbon\Carbon::create()->month((int) $filters['bulan'])->translatedFormat('F')
+            : null;
+        if ($bulanNama && !empty($filters['tahun'])) {
+            $rangeDesc = $bulanNama . ' ' . $filters['tahun'];
+        } elseif ($bulanNama) {
+            $rangeDesc = $bulanNama;
+        } else {
+            $rangeDesc = 'Tahun ' . $filters['tahun'];
+        }
     }
     if (!empty($filters['status'])) { $rangeDesc .= ' · ' . $filters['status']; }
     if (!empty($filters['instansi_id'])) { $rangeDesc .= ' · Instansi terpilih'; }
+
+    $filterAktif = collect($filters)->filter(fn ($v) => filled($v) && $v !== 'null')->isNotEmpty();
 
     $inputClass = 'h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs text-slate-700 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20';
     $cardClass = 'overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm';
@@ -60,10 +69,17 @@
         (function () {
             const statusHex = @json($statusHex);
 
-            // Lebar bar dimulai 0 lalu dianimasikan ke nilai hasil filter.
-            document.querySelectorAll('[data-bar-width]').forEach(function (el) {
-                setTimeout(function () { el.style.width = el.dataset.barWidth; }, 150);
-            });
+            // Panel filter bisa dilipat agar dashboard tetap ringkas.
+            const filterToggle = document.getElementById('filterToggle');
+            const filterPanel = document.getElementById('filterPanel');
+            const filterChevron = document.getElementById('filterChevron');
+            if (filterToggle && filterPanel && filterChevron) {
+                filterToggle.addEventListener('click', function () {
+                    const terbuka = !filterPanel.classList.toggle('hidden');
+                    filterChevron.classList.toggle('rotate-180', terbuka);
+                    filterToggle.setAttribute('aria-expanded', String(terbuka));
+                });
+            }
 
             Chart.defaults.global.defaultFontFamily = 'Inter, sans-serif';
             Chart.defaults.global.defaultFontColor = '#64748b';
@@ -77,39 +93,61 @@
                 displayColors: false
             };
 
+            // Chart area: permohonan vs total item dipinjam.
             new Chart(document.getElementById('chartTren'), {
                 type: 'line',
                 data: {
                     labels: @json($labels),
                     datasets: [{
-                        label: 'Jumlah Permohonan',
+                        label: 'Permohonan',
                         data: @json($values),
-                        borderColor: '#6d28d9',
-                        backgroundColor: 'rgba(109,40,217,.12)',
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37,99,235,.14)',
                         fill: true,
                         tension: .35,
                         pointBackgroundColor: '#2563eb',
                         pointBorderColor: '#fff',
                         pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }, {
+                        label: 'Item Dipinjam',
+                        data: @json($trenItemValues),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,.12)',
+                        fill: true,
+                        tension: .35,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    legend: { display: false },
-                    tooltips: tooltipStyle,
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        align: 'end',
+                        labels: { usePointStyle: true, boxWidth: 8, fontSize: 11, padding: 16 }
+                    },
+                    tooltips: Object.assign({}, tooltipStyle, { displayColors: true }),
                     scales: {
                         yAxes: [{
                             ticks: { beginAtZero: true, callback: function (v) { return Number(v).toFixed(0); } },
                             gridLines: { color: 'rgba(15,23,42,.06)' }
                         }],
-                        xAxes: [{ gridLines: { display: false } }]
+                        xAxes: [{
+                            gridLines: { display: false },
+                            ticks: { autoSkip: true, maxTicksLimit: 12, maxRotation: 0 }
+                        }]
                     }
                 }
             });
 
+            // Donut distribusi status (legenda digambar manual di HTML).
             new Chart(document.getElementById('chartStatus'), {
                 type: 'doughnut',
                 data: {
@@ -124,39 +162,9 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutoutPercentage: 62,
-                    legend: {
-                        position: 'bottom',
-                        labels: { usePointStyle: true, padding: 14, fontSize: 11 }
-                    },
-                    tooltips: Object.assign({}, tooltipStyle, { displayColors: true })
-                }
-            });
-
-            new Chart(document.getElementById('chartKategori'), {
-                type: 'bar',
-                data: {
-                    labels: @json($kategoriLabels),
-                    datasets: [{
-                        label: 'Jumlah Barang',
-                        data: @json($kategoriValues),
-                        backgroundColor: 'rgba(37,99,235,.75)',
-                        hoverBackgroundColor: 'rgba(109,40,217,.85)',
-                        maxBarThickness: 40
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    cutoutPercentage: 68,
                     legend: { display: false },
-                    tooltips: tooltipStyle,
-                    scales: {
-                        yAxes: [{
-                            ticks: { beginAtZero: true, callback: function (v) { return Number(v).toFixed(0); } },
-                            gridLines: { color: 'rgba(15,23,42,.06)' }
-                        }],
-                        xAxes: [{ gridLines: { display: false } }]
-                    }
+                    tooltips: Object.assign({}, tooltipStyle, { displayColors: true })
                 }
             });
 
@@ -170,7 +178,7 @@
                         data: @json($topValues),
                         backgroundColor: 'rgba(245,158,11,.8)',
                         hoverBackgroundColor: 'rgba(234,88,12,.9)',
-                        maxBarThickness: 26
+                        maxBarThickness: 18
                     }]
                 },
                 options: {
@@ -183,7 +191,16 @@
                             ticks: { beginAtZero: true, callback: function (v) { return Number(v).toFixed(0); } },
                             gridLines: { color: 'rgba(15,23,42,.06)' }
                         }],
-                        yAxes: [{ gridLines: { display: false } }]
+                        yAxes: [{
+                            gridLines: { display: false },
+                            ticks: {
+                                fontSize: 10,
+                                callback: function (value) {
+                                    var label = String(value);
+                                    return label.length > 20 ? label.slice(0, 19) + '…' : label;
+                                }
+                            }
+                        }]
                     }
                 }
             });
@@ -192,51 +209,74 @@
 @endpush
 
 @section('content')
+    {{-- ==================== HEADER ==================== --}}
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Dashboard SILAPIN</h1>
+            <p class="mt-1 text-xs font-medium text-slate-500">
+                Selamat datang kembali,
+                <strong class="font-bold text-blue-600">{{ auth()->user()->name ?? 'Pengguna' }}</strong>
+                — ringkasan data inventaris Anda hari ini.
+            </p>
+        </div>
 
-<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <span class="inline-flex items-center gap-2 self-start rounded-2xl border border-slate-200 bg-white px-3.5 py-2 text-xs font-semibold text-slate-600 shadow-sm sm:self-auto">
+            <i class="fas fa-calendar-alt text-[12px] text-blue-600"></i>
+            {{ $rangeDesc }}
+        </span>
+    </div>
 
-    {{-- ==================== KOLOM KIRI ==================== --}}
-    <div class="space-y-6 lg:col-span-2">
-
-        {{-- Ikhtisar Inventaris --}}
-        <section class="{{ $cardClass }}">
-            <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-                <i class="fas fa-th-large text-sm text-blue-600"></i>
-                <h2 class="text-sm font-bold text-slate-900">Ikhtisar Inventaris</h2>
-            </div>
-            <div class="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
-                @foreach($kpiCards as $i => $kpi)
-                <a href="{{ route($kpi['route']) }}"
-                   class="flex items-center gap-4 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md {{ $kpiStyle[$i]['box'] }}">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-md {{ $kpiStyle[$i]['icon'] }}">
-                        <i class="fas {{ $kpi['icon'] }} text-lg"></i>
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-500">{{ $kpi['label'] }}</p>
-                        <h3 class="mt-0.5 text-2xl font-bold leading-tight text-slate-900">{{ number_format($kpi['value'], 0, ',', '.') }}</h3>
-                        @if(isset($kpi['sub']))
-                        <p class="mt-0.5 text-[11px] text-slate-500">{{ $kpi['sub'] }}</p>
-                        @endif
-                    </div>
-                </a>
-                @endforeach
-            </div>
-        </section>
-
-        {{-- Laporan Rekap Peminjaman per Instansi --}}
-        <section class="{{ $cardClass }}">
-            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-sliders-h text-sm text-blue-600"></i>
-                    <h2 class="text-sm font-bold text-slate-900">Laporan Rekap Peminjaman per Instansi</h2>
+    {{-- ==================== KARTU STATISTIK ==================== --}}
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        @foreach($statCards as $card)
+            <a href="{{ route($card['route']) }}"
+               class="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
+                <div class="mb-3 flex items-center justify-between">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-xl border {{ $card['box'] }}">
+                        <i class="fas {{ $card['icon'] }} text-base"></i>
+                    </span>
+                    <i class="fas fa-external-link-alt text-[10px] text-slate-300 opacity-0 transition group-hover:opacity-100"></i>
                 </div>
-                <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-medium text-slate-600">
-                    {{ $rangeDesc }}
+                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $card['label'] }}</p>
+                <h3 class="mt-0.5 text-2xl font-extrabold leading-none text-slate-900">
+                    {{ number_format($card['value'], 0, ',', '.') }}
+                </h3>
+                <p class="mt-1.5 text-[10px] font-medium text-slate-400">{{ $card['sub'] }}</p>
+            </a>
+        @endforeach
+    </div>
+
+    {{-- ==================== FILTER ACCORDION ==================== --}}
+    <section class="{{ $cardClass }}">
+        <button type="button" id="filterToggle" aria-expanded="{{ $filterAktif ? 'true' : 'false' }}"
+                class="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-slate-50/70">
+            <div class="flex items-center gap-3">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-md shadow-blue-600/20">
+                    <i class="fas fa-filter text-sm"></i>
                 </span>
+                <div>
+                    <h2 class="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-900">
+                        Filter &amp; Rekap Peminjaman per Instansi
+                        <span class="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+                            {{ $rangeDesc }}
+                        </span>
+                    </h2>
+                    <p class="mt-0.5 text-[11px] text-slate-400">
+                        Klik untuk menampilkan atau menyembunyikan opsi filter tanggal &amp; instansi.
+                    </p>
+                </div>
             </div>
 
-            <form method="GET" action="{{ route('dashboard') }}" id="filterForm" class="space-y-4 p-5">
-                <div class="flex flex-wrap gap-2">
+            <span id="filterChevron"
+                  class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition-transform {{ $filterAktif ? 'rotate-180' : '' }}">
+                <i class="fas fa-chevron-down text-xs"></i>
+            </span>
+        </button>
+
+        <div id="filterPanel" class="{{ $filterAktif ? '' : 'hidden' }} border-t border-slate-100 p-5">
+            <form method="GET" action="{{ route('dashboard') }}" class="space-y-4">
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="mr-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Rentang cepat:</span>
                     @foreach($presets as $key => [$name])
                     <button type="submit" name="preset" value="{{ $key }}"
                             class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all {{ $preset === $key ? 'border-blue-600 bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50' }}">
@@ -245,7 +285,7 @@
                     @endforeach
                 </div>
 
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <div>
                         <label class="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
                             <i class="fas fa-calendar text-[10px] text-slate-400"></i> Dari Tanggal
@@ -288,7 +328,7 @@
                         </label>
                         <select name="status" class="{{ $inputClass }}" onchange="this.form.submit()">
                             <option value="">Semua Status</option>
-                            @foreach(($statusListFilter ?? $statusList) as $st)
+                            @foreach($statusList as $st)
                             <option value="{{ $st }}" {{ $filters['status'] === $st ? 'selected' : '' }}>{{ $st }}</option>
                             @endforeach
                         </select>
@@ -306,242 +346,237 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <label class="mb-1 flex items-center gap-1.5 text-[11px] font-semibold text-slate-600">
-                            <i class="fas fa-chart-line text-[10px] text-slate-400"></i> Granularitas Grafik
-                        </label>
-                        <select name="per" class="{{ $inputClass }}" onchange="this.form.submit()">
-                            <option value="auto" {{ $per === 'auto' ? 'selected' : '' }}>Otomatis</option>
-                            <option value="hari" {{ $per === 'hari' ? 'selected' : '' }}>Per Hari</option>
-                            <option value="bulan" {{ $per === 'bulan' ? 'selected' : '' }}>Per Bulan</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
+                    <div class="flex items-end gap-2 sm:col-span-2">
+                        <a href="{{ route('dashboard') }}"
+                           class="flex h-9 shrink-0 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-xs font-semibold text-slate-600 transition-all hover:bg-slate-50">
+                            <i class="fas fa-undo text-[11px]"></i>
+                            <span>Reset</span>
+                        </a>
                         <button type="submit"
-                                class="flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-blue-50 px-4 text-xs font-semibold text-blue-700 ring-1 ring-blue-200 transition-all hover:bg-blue-100">
+                                class="flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs font-semibold text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700">
                             <i class="fas fa-search text-[11px]"></i>
                             <span>Terapkan Filter</span>
                         </button>
                     </div>
                 </div>
             </form>
+        </div>
+    </section>
 
-            <div class="border-t border-slate-100 px-5 pb-5 pt-4">
-                <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-                    <h3 class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        <i class="fas fa-building text-[11px] text-blue-600"></i> Rekap Peminjaman per Instansi
-                    </h3>
-                    <span class="flex items-center gap-1.5 text-[11px] text-slate-400">
-                        <i class="fas fa-hand-pointer text-[10px]"></i> Klik baris untuk melihat detail barang
-                    </span>
+    {{-- ==================== CHART: AREA + TOP BARANG ==================== --}}
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <section class="{{ $cardClass }} lg:col-span-8">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+                <div>
+                    <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                        <i class="fas fa-chart-area text-blue-600"></i>
+                        Pergerakan Permohonan &amp; Item Dipinjam
+                    </h2>
+                    <p class="mt-0.5 text-[11px] text-slate-400">Perbandingan jumlah permohonan dengan total item yang dipinjam.</p>
                 </div>
 
-                <div class="admin-table-wrap">
-                    <table class="w-full text-left text-xs text-slate-600">
-                        <thead class="bg-[#0F172A] text-[11px] font-semibold uppercase tracking-wider text-slate-200">
-                            <tr>
-                                <th class="w-12 px-4 py-3.5 text-center">No</th>
-                                <th class="px-5 py-3.5">Nama Instansi</th>
-                                <th class="px-5 py-3.5">Peminjam</th>
-                                <th class="px-4 py-3.5 text-center">Barang Dipinjam</th>
-                                <th class="px-5 py-3.5">Paling Sering Dipinjam</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($recapInstansi as $i => $r)
-                            {{-- Route detail hanya menerima Instansi yang benar-benar ada.
-                                 Permohonan tanpa instansi_id tidak punya halaman detail,
-                                 jadi barisnya tidak diklikable (route() tanpa parameter
-                                 akan melempar 500). --}}
-                            @php $bisaDiklik = !empty($r['instansi_id']); @endphp
-                            <tr @if($bisaDiklik) onclick="window.location='{{ route('dashboard.instansi.detail', $r['instansi_id']) }}'" @endif
-                                class="{{ $bisaDiklik ? 'cursor-pointer ' : '' }}group transition-colors hover:bg-slate-50/80">
-                                <td class="px-4 py-4 text-center font-medium text-slate-400">{{ $i + 1 }}</td>
-                                <td class="px-5 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-600 transition-all group-hover:bg-blue-600 group-hover:text-white">
-                                            <i class="fas fa-building"></i>
-                                        </div>
-                                        <span class="text-xs font-bold text-slate-900">{{ $r['nama_instansi'] }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-4">
-                                    @if(!empty($r['nama_peminjam_list']))
-                                    <span class="flex flex-wrap gap-1">
-                                        @foreach($r['nama_peminjam_list'] as $np)
-                                        <span class="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-600">{{ $np }}</span>
-                                        @endforeach
-                                    </span>
-                                    @else
-                                    <span class="text-slate-400">—</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-4 text-center font-bold text-slate-900">{{ $r['total_barang'] }}</td>
-                                <td class="px-5 py-4 text-slate-500">{{ $r['top_barang'] }}</td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="5" class="px-5 py-10 text-center">
-                                    <i class="fas fa-inbox mb-2 block text-2xl text-slate-300"></i>
-                                    <span class="text-xs text-slate-400">Tidak ada data peminjaman untuk filter ini.</span>
-                                </td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
+                <form method="GET" action="{{ route('dashboard') }}" class="flex items-center gap-2">
+                    @foreach(['dari', 'sampai', 'bulan', 'tahun', 'status', 'instansi_id'] as $filterKey)
+                        @if(filled($filters[$filterKey] ?? null) && $filters[$filterKey] !== 'null')
+                            <input type="hidden" name="{{ $filterKey }}" value="{{ $filters[$filterKey] }}">
+                        @endif
+                    @endforeach
+                    @if(filled($preset))
+                        <input type="hidden" name="preset" value="{{ $preset }}">
+                    @endif
 
-                <p class="mt-3 text-[11px] text-slate-400">
-                    Menampilkan {{ $recapInstansi->isEmpty() ? 0 : 1 }} sampai {{ $recapInstansi->count() }} dari {{ $recapInstansi->count() }} data
-                </p>
-            </div>
-        </section>
-
-        {{-- Grafik tren permohonan --}}
-        <section class="{{ $cardClass }}">
-            <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-                <i class="fas fa-chart-line text-sm text-blue-600"></i>
-                <h2 class="text-sm font-bold text-slate-900">{{ $chartLabel }}</h2>
+                    <label for="perSelect" class="text-[11px] font-medium text-slate-400">Granularitas</label>
+                    <select id="perSelect" name="per" onchange="this.form.submit()"
+                            class="rounded-lg border border-slate-200 bg-white py-1.5 pl-2.5 pr-7 text-[11px] font-medium leading-tight text-slate-600 transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                        <option value="auto" {{ $per === 'auto' ? 'selected' : '' }}>Otomatis</option>
+                        <option value="hari" {{ $per === 'hari' ? 'selected' : '' }}>Per Hari</option>
+                        <option value="bulan" {{ $per === 'bulan' ? 'selected' : '' }}>Per Bulan</option>
+                    </select>
+                </form>
             </div>
             <div class="p-5">
-                <div class="relative h-64">
+                <div class="relative h-72">
                     <canvas id="chartTren"></canvas>
                 </div>
             </div>
         </section>
 
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            {{-- Inventaris per kategori --}}
-            <section class="{{ $cardClass }}">
-                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-                    <i class="fas fa-chart-bar text-sm text-blue-600"></i>
-                    <h2 class="text-sm font-bold text-slate-900">Inventaris per Kategori</h2>
-                </div>
-                <div class="p-5">
-                    <div class="relative h-64">
-                        <canvas id="chartKategori"></canvas>
-                    </div>
-                </div>
-            </section>
-
-            {{-- Item paling sering dipinjam --}}
-            <section class="{{ $cardClass }}">
-                <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-                    <i class="fas fa-trophy text-sm text-blue-600"></i>
-                    <h2 class="text-sm font-bold text-slate-900">Item Paling Sering Dipinjam</h2>
-                </div>
-                <div class="p-5">
-                    <div class="relative h-64">
-                        <canvas id="chartTopItem"></canvas>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </div>
-
-    {{-- ==================== KOLOM KANAN ==================== --}}
-    <div class="space-y-6">
-
-        {{-- Status Permohonan --}}
-        <section class="{{ $cardClass }}">
-            <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-                <i class="fas fa-clipboard-list text-sm text-blue-600"></i>
-                <h2 class="text-sm font-bold text-slate-900">Status Permohonan</h2>
+        <section class="{{ $cardClass }} lg:col-span-4">
+            <div class="border-b border-slate-100 px-5 py-4">
+                <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                    <i class="fas fa-trophy text-amber-500"></i>
+                    Top Barang Paling Sering Dipinjam
+                </h2>
+                <p class="mt-0.5 text-[11px] text-slate-400">Peringkat aset paling populer.</p>
             </div>
-            <div class="space-y-3 p-5">
-                @foreach($statusList as $st)
-                @php $persen = $totalPermohonan > 0 ? round(($statusCounts[$st] ?? 0) / $totalPermohonan * 100) : 0; @endphp
-                <div class="flex items-center gap-3">
-                    <span class="w-28 shrink-0 truncate rounded-full px-2.5 py-1 text-center text-[11px] font-semibold ring-1 {{ $statusPill[$st] }}">
-                        {{ $st }}
-                    </span>
-                    <div class="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
-                        <div class="h-full rounded-full transition-[width] duration-700 ease-out {{ $statusFill[$st] }}"
-                             data-bar-width="{{ $persen }}%" style="width:0%;"></div>
-                    </div>
-                    <span class="w-8 shrink-0 text-right text-sm font-bold text-slate-900">{{ $statusCounts[$st] ?? 0 }}</span>
+            <div class="p-5">
+                <div class="relative h-72">
+                    <canvas id="chartTopItem"></canvas>
                 </div>
-                @endforeach
             </div>
         </section>
+    </div>
 
-        {{-- Permohonan Terbaru --}}
-        <section class="{{ $cardClass }}">
-            <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    {{-- ==================== BARIS BAWAH ==================== --}}
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+        {{-- Rekap per instansi --}}
+        <section class="{{ $cardClass }} lg:col-span-4">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
                 <div class="flex items-center gap-2">
-                    <i class="fas fa-list text-sm text-blue-600"></i>
-                    <h2 class="text-sm font-bold text-slate-900">Permohonan Terbaru</h2>
+                    <i class="fas fa-building text-sm text-blue-600"></i>
+                    <h2 class="text-sm font-bold text-slate-900">Rekap per Instansi</h2>
                 </div>
-                <a href="{{ route('permohonan.index') }}" class="flex items-center gap-1.5 text-[11px] font-semibold text-blue-600 transition hover:text-blue-700">
-                    Lihat Semua <i class="fas fa-arrow-right text-[10px]"></i>
+                <a href="{{ route('instansi.index') }}" class="flex items-center gap-1 text-[11px] font-semibold text-blue-600 transition hover:text-blue-700">
+                    Lihat <i class="fas fa-chevron-right text-[9px]"></i>
                 </a>
             </div>
+
             <div class="admin-table-wrap">
                 <table class="w-full text-left text-xs text-slate-600">
                     <thead class="bg-[#0F172A] text-[10px] font-semibold uppercase tracking-wider text-slate-200">
                         <tr>
-                            <th class="whitespace-nowrap px-4 py-3">No. Permohonan</th>
-                            <th class="px-4 py-3">Instansi</th>
-                            <th class="px-4 py-3">Peminjam</th>
-                            <th class="whitespace-nowrap px-4 py-3">Tgl Pinjam</th>
-                            <th class="px-3 py-3 text-center">Item</th>
-                            <th class="px-4 py-3">Status</th>
+                            <th class="w-10 px-3 py-3 text-center">No</th>
+                            <th class="px-3 py-3">Nama Instansi</th>
+                            <th class="w-16 px-3 py-3 text-center">Barang</th>
+                            <th class="px-3 py-3">Paling Sering</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        @forelse($permohonan->take(5) as $p)
-                        <tr class="transition-colors hover:bg-slate-50/80">
-                            <td class="whitespace-nowrap px-4 py-3 font-mono text-[11px] font-semibold text-slate-900">{{ $p->nomor_permohonan }}</td>
-                            <td class="px-4 py-3">{{ $p->instansi?->nama_instansi ?? $p->nama_instansi_lain ?? '—' }}</td>
-                            <td class="px-4 py-3">{{ $p->nama_peminjam }}</td>
-                            <td class="whitespace-nowrap px-4 py-3 text-slate-500">{{ \Carbon\Carbon::parse($p->tanggal_pinjam)->translatedFormat('d M Y') }}</td>
-                            <td class="px-3 py-3 text-center font-bold text-slate-900">{{ $p->detailPermohonan->sum('jumlah') }}</td>
-                            <td class="px-4 py-3">
-                                <span class="whitespace-nowrap rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 {{ $statusPill[$p->status] ?? 'bg-slate-100 text-slate-600 ring-slate-200' }}">
-                                    {{ $p->status }}
-                                </span>
-                            </td>
-                        </tr>
+                        @forelse($recapInstansi as $i => $r)
+                            @php $bisaDiklik = !empty($r['instansi_id']); @endphp
+                            <tr @if($bisaDiklik) onclick="window.location='{{ route('dashboard.instansi.detail', $r['instansi_id']) }}'" @endif
+                                class="{{ $bisaDiklik ? 'cursor-pointer ' : '' }}group transition-colors hover:bg-blue-50/40">
+                                <td class="px-3 py-3 text-center font-medium text-slate-400">{{ $i + 1 }}</td>
+                                <td class="px-3 py-3">
+                                    <p class="truncate text-xs font-bold text-slate-900">{{ $r['nama_instansi'] }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-400">{{ $r['total_permohonan'] }} permohonan</p>
+                                </td>
+                                <td class="px-3 py-3 text-center">
+                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 ring-1 ring-blue-200">
+                                        {{ $r['total_barang'] }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-3">
+                                    @if($r['top_barang'] !== '-')
+                                    <span class="inline-flex max-w-[150px] items-center gap-1 truncate rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-amber-200" title="{{ $r['top_barang'] }}">
+                                        <i class="fas fa-fire shrink-0 text-[9px]"></i>
+                                        <span class="truncate">{{ $r['top_barang'] }}</span>
+                                    </span>
+                                    @else
+                                    <span class="text-slate-400">—</span>
+                                    @endif
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-xs text-slate-400">Tidak ada permohonan.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="4" class="px-4 py-10 text-center">
+                                    <i class="fas fa-inbox mb-2 block text-xl text-slate-300"></i>
+                                    <span class="text-xs text-slate-400">Belum ada data peminjaman.</span>
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </section>
 
-        {{-- Ringkasan status --}}
-        <div class="grid grid-cols-2 gap-4">
-            @foreach(['Menunggu', 'Disetujui', 'Dikembalikan'] as $st)
-            <div class="rounded-2xl border border-slate-200/80 bg-white p-4 text-center shadow-sm">
-                <p class="text-[11px] font-semibold text-slate-500">{{ $st }}</p>
-                <h3 class="mt-1 text-xl font-bold text-slate-900">{{ $statusCounts[$st] ?? 0 }}</h3>
+        {{-- Permohonan terbaru --}}
+        <section class="{{ $cardClass }} lg:col-span-5">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 px-5 py-4">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-list text-sm text-blue-600"></i>
+                    <h2 class="text-sm font-bold text-slate-900">Permohonan Terbaru</h2>
+                </div>
+                <a href="{{ route('permohonan.index') }}" class="flex items-center gap-1 text-[11px] font-semibold text-blue-600 transition hover:text-blue-700">
+                    Lihat Semua <i class="fas fa-chevron-right text-[9px]"></i>
+                </a>
             </div>
-            @endforeach
-            <div class="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 text-center shadow-sm">
-                <p class="text-[11px] font-semibold text-slate-500">Grand Total</p>
-                <h3 class="mt-1 text-xl font-bold text-blue-700">{{ $recapGrandTotal }}</h3>
+
+            <div class="admin-table-wrap">
+                <table class="w-full text-left text-xs text-slate-600">
+                    <thead class="bg-[#0F172A] text-[10px] font-semibold uppercase tracking-wider text-slate-200">
+                        <tr>
+                            <th class="whitespace-nowrap px-3 py-3">No. Permohonan</th>
+                            <th class="px-3 py-3">Peminjam</th>
+                            <th class="whitespace-nowrap px-3 py-3">Tgl Pinjam</th>
+                            <th class="px-3 py-3">Status</th>
+                            <th class="w-12 px-3 py-3 text-center">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @forelse($permohonan->take(5) as $p)
+                            <tr class="transition-colors hover:bg-slate-50/80">
+                                <td class="whitespace-nowrap px-3 py-3">
+                                    <span class="rounded bg-blue-50 px-1.5 py-0.5 font-mono text-[10px] font-bold text-blue-700">
+                                        {{ $p->nomor_permohonan }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-3">
+                                    <p class="font-semibold leading-tight text-slate-800">{{ $p->nama_peminjam }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-400">{{ $p->instansi?->nama_instansi ?? $p->nama_instansi_lain ?? '—' }}</p>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 font-medium text-slate-500">
+                                    {{ \Carbon\Carbon::parse($p->tanggal_pinjam)->translatedFormat('d M Y') }}
+                                </td>
+                                <td class="px-3 py-3">
+                                    <span class="inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 {{ $statusPill[$p->status] ?? 'bg-slate-100 text-slate-600 ring-slate-200' }}">
+                                        <span class="h-1.5 w-1.5 rounded-full {{ $statusFill[$p->status] ?? 'bg-slate-400' }}"></span>
+                                        {{ $p->status }}
+                                    </span>
+                                </td>
+                                <td class="px-3 py-3 text-center">
+                                    <a href="{{ route('permohonan.show', $p) }}"
+                                       class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-blue-50 hover:text-blue-600" title="Lihat detail">
+                                        <i class="fas fa-eye text-[11px]"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="px-4 py-10 text-center">
+                                    <i class="fas fa-inbox mb-2 block text-xl text-slate-300"></i>
+                                    <span class="text-xs text-slate-400">Tidak ada permohonan.</span>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        </div>
+        </section>
 
         {{-- Distribusi status --}}
-        <section class="{{ $cardClass }}">
-            <div class="flex items-center gap-2 border-b border-slate-100 px-5 py-4">
-                <i class="fas fa-chart-pie text-sm text-blue-600"></i>
-                <h2 class="text-sm font-bold text-slate-900">Distribusi Status Peminjaman</h2>
+        <section class="{{ $cardClass }} lg:col-span-3">
+            <div class="border-b border-slate-100 px-5 py-4">
+                <h2 class="flex items-center gap-2 text-sm font-bold text-slate-900">
+                    <i class="fas fa-chart-pie text-blue-600"></i>
+                    Distribusi Status
+                </h2>
+                <p class="mt-0.5 text-[11px] text-slate-400">Persentase permohonan aktif.</p>
             </div>
+
             <div class="p-5">
-                <div class="relative h-56">
+                <div class="relative h-48">
                     <canvas id="chartStatus"></canvas>
+                    <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-xl font-extrabold leading-none text-slate-900">{{ number_format($recapGrandTotal, 0, ',', '.') }}</span>
+                        <span class="mt-1 text-[9px] font-semibold uppercase tracking-wider text-slate-400">Total</span>
+                    </div>
                     @if(count($statusLabels) === 0)
                     <div class="absolute inset-0 flex items-center justify-center text-xs text-slate-400">Belum ada data</div>
                     @endif
                 </div>
+
+                <div class="mt-4 grid grid-cols-2 gap-1.5 border-t border-slate-100 pt-3">
+                    @foreach($statusList as $st)
+                    <div class="flex items-center gap-1.5 text-[11px]">
+                        <span class="h-2 w-2 shrink-0 rounded-full {{ $statusFill[$st] }}"></span>
+                        <span class="truncate font-medium text-slate-500">{{ $st }}</span>
+                        <span class="ml-auto font-bold text-slate-700">{{ $statusCounts[$st] ?? 0 }}</span>
+                    </div>
+                    @endforeach
+                </div>
             </div>
         </section>
     </div>
-</div>
-
 @endsection

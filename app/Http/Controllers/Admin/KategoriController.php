@@ -5,15 +5,25 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Inventaris;
 use App\Models\Kategori;
+use App\Services\CsvExport;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class KategoriController extends Controller
 {
-    public function index(Request $request)
+    private const PER_PAGE = 8;
+
+    /**
+     * Sumber query bersama untuk daftar (paginated) dan ekspor CSV (semua
+     * baris). Filter dan urutan di sini adalah satu-satunya definisi "hasil
+     * pencarian", jadi ekspor tidak pernah menyimpang dari yang tampil.
+     */
+    private function daftarQuery(Request $request): Builder
     {
         $q = trim((string) $request->query('q', ''));
 
-        $kategori = Kategori::query()
+        return Kategori::query()
             ->withCount('inventaris')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
@@ -21,8 +31,15 @@ class KategoriController extends Controller
                         ->orWhere('keterangan', 'like', "%{$q}%");
                 });
             })
-            ->latest()
-            ->paginate(10)
+            ->latest();
+    }
+
+    public function index(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $kategori = $this->daftarQuery($request)
+            ->paginate(self::PER_PAGE)
             ->withQueryString();
 
         $terpopuler = Kategori::withCount('inventaris')
@@ -37,6 +54,26 @@ class KategoriController extends Controller
         ];
 
         return view('admin.kategori.index', compact('kategori', 'stats', 'q'));
+    }
+
+    /**
+     * Unduh seluruh kategori yang cocok filter, bukan hanya halaman aktif.
+     */
+    public function export(Request $request): Response
+    {
+        return CsvExport::stream(
+            $this->daftarQuery($request)->get(),
+            ['Kode', 'Nama Kategori', 'Keterangan', 'Total Item'],
+            function (Kategori $item) {
+                return [
+                    'KAT-' . str_pad((string) $item->id, 3, '0', STR_PAD_LEFT),
+                    $item->nama_kategori,
+                    $item->keterangan,
+                    $item->inventaris_count ?? 0,
+                ];
+            },
+            'data-kategori.csv'
+        );
     }
 
     public function store(Request $request)

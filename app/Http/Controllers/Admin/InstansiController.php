@@ -5,16 +5,26 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Instansi;
 use App\Models\Permohonan;
+use App\Services\CsvExport;
 use App\Services\TransisiStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class InstansiController extends Controller
 {
-    public function index(Request $request)
+    private const PER_PAGE = 8;
+
+    /**
+     * Sumber query bersama untuk daftar (paginated) dan ekspor CSV (semua
+     * baris). Filter dan urutan di sini adalah satu-satunya definisi "hasil
+     * pencarian", jadi ekspor tidak pernah menyimpang dari yang tampil.
+     */
+    private function daftarQuery(Request $request): Builder
     {
         $q = trim((string) $request->query('q', ''));
 
-        $instansi = Instansi::query()
+        return Instansi::query()
             ->withCount('permohonan')
             ->when($q !== '', function ($query) use ($q) {
                 $query->where(function ($sub) use ($q) {
@@ -23,8 +33,15 @@ class InstansiController extends Controller
                         ->orWhere('telepon', 'like', "%{$q}%");
                 });
             })
-            ->latest()
-            ->paginate(10)
+            ->latest();
+    }
+
+    public function index(Request $request)
+    {
+        $q = trim((string) $request->query('q', ''));
+
+        $instansi = $this->daftarQuery($request)
+            ->paginate(self::PER_PAGE)
             ->withQueryString();
 
         $stats = [
@@ -34,6 +51,28 @@ class InstansiController extends Controller
         ];
 
         return view('admin.instansi.index', compact('instansi', 'stats', 'q'));
+    }
+
+    /**
+     * Unduh seluruh instansi yang cocok filter, bukan hanya halaman aktif.
+     */
+    public function export(Request $request): Response
+    {
+        return CsvExport::stream(
+            $this->daftarQuery($request)->get(),
+            ['Kode', 'Nama Instansi', 'Alamat', 'Telepon', 'Peminjaman', 'Terdaftar'],
+            function (Instansi $item) {
+                return [
+                    'INS-' . str_pad((string) $item->id, 3, '0', STR_PAD_LEFT),
+                    $item->nama_instansi,
+                    $item->alamat,
+                    $item->telepon,
+                    $item->permohonan_count ?? 0,
+                    $item->created_at?->format('d M Y'),
+                ];
+            },
+            'data-instansi.csv'
+        );
     }
 
     public function store(Request $request)
