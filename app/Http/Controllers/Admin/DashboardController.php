@@ -66,17 +66,27 @@ class DashboardController extends Controller
         $totalKategori    = Kategori::count();
         $totalInstansi    = Instansi::count();
         $totalPermohonan  = (clone $query)->count();
-        $totalItemDipinjam = (clone $query)->get()->sum(fn ($p) => $p->detailPermohonan->sum('jumlah'));
+
+        // Agregat di database: tidak perlu memuat semua permohonan lalu
+        // menjumlahkan detailnya di PHP.
+        $totalItemDipinjam = (int) (clone $query)
+            ->join('detail_permohonans', 'detail_permohonans.permohonan_id', '=', 'permohonans.id')
+            ->sum('detail_permohonans.jumlah');
 
         // KPI tambahan: permohonan yang diajukan pada bulan berjalan.
         $permohonanBulanIni = Permohonan::whereYear('tanggal_pinjam', now()->year)
             ->whereMonth('tanggal_pinjam', now()->month)
             ->count();
 
-        $statusCounts = [];
-        foreach ($statusList as $st) {
-            $statusCounts[$st] = (clone $query)->where('status', $st)->count();
-        }
+        // Satu query GROUP BY untuk semua status, bukan lima COUNT terpisah.
+        $statusCounts = array_fill_keys($statusList, 0);
+        (clone $query)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->each(function ($total, $status) use (&$statusCounts) {
+                $statusCounts[$status] = (int) $total;
+            });
 
         // ---------- Tren permohonan (per hari atau per bulan) ----------
         $per = $request->input('per', 'auto');

@@ -28,11 +28,15 @@
         'Dikembalikan' => '#94a3b8',
     ];
 
+    // Master Data hanya untuk Super Admin; Admin tetap melihat angkanya,
+    // tetapi kartu tidak dijadikan tautan agar tidak berujung 403.
+    $canManageMasterData = (bool) auth()->user()?->isSuperAdmin();
+
     $statCards = [
-        ['icon' => 'fa-box', 'box' => 'border-blue-100 bg-blue-50 text-blue-600', 'label' => 'Total Inventaris', 'value' => $totalInventaris, 'sub' => 'Aset terdaftar', 'route' => 'inventaris.index'],
+        ['icon' => 'fa-box', 'box' => 'border-blue-100 bg-blue-50 text-blue-600', 'label' => 'Total Inventaris', 'value' => $totalInventaris, 'sub' => 'Aset terdaftar', 'route' => $canManageMasterData ? 'inventaris.index' : null],
         ['icon' => 'fa-file-alt', 'box' => 'border-rose-100 bg-rose-50 text-rose-600', 'label' => 'Total Permohonan', 'value' => $totalPermohonan, 'sub' => 'Item dipinjam: ' . number_format($totalItemDipinjam, 0, ',', '.'), 'route' => 'permohonan.index'],
-        ['icon' => 'fa-building', 'box' => 'border-violet-100 bg-violet-50 text-violet-600', 'label' => 'Instansi Aktif', 'value' => $totalInstansi, 'sub' => 'Unit peminjam', 'route' => 'instansi.index'],
-        ['icon' => 'fa-tags', 'box' => 'border-emerald-100 bg-emerald-50 text-emerald-600', 'label' => 'Kategori Barang', 'value' => $totalKategori, 'sub' => 'Pengelompokan', 'route' => 'kategori.index'],
+        ['icon' => 'fa-building', 'box' => 'border-violet-100 bg-violet-50 text-violet-600', 'label' => 'Instansi Aktif', 'value' => $totalInstansi, 'sub' => 'Unit peminjam', 'route' => $canManageMasterData ? 'instansi.index' : null],
+        ['icon' => 'fa-tags', 'box' => 'border-emerald-100 bg-emerald-50 text-emerald-600', 'label' => 'Kategori Barang', 'value' => $totalKategori, 'sub' => 'Pengelompokan', 'route' => $canManageMasterData ? 'kategori.index' : null],
         ['icon' => 'fa-layer-group', 'box' => 'border-indigo-100 bg-indigo-50 text-indigo-600', 'label' => 'Permohonan Bulan Ini', 'value' => $permohonanBulanIni, 'sub' => now()->translatedFormat('F Y'), 'route' => 'permohonan.index'],
     ];
 
@@ -229,20 +233,26 @@
     {{-- ==================== KARTU STATISTIK ==================== --}}
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         @foreach($statCards as $card)
-            <a href="{{ route($card['route']) }}"
-               class="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
+            @php
+                $cardRoute = $card['route'] ?? null;
+                $cardTag = $cardRoute ? 'a' : 'div';
+            @endphp
+            <{{ $cardTag }} @if($cardRoute) href="{{ route($cardRoute) }}" @endif
+               class="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm transition-all {{ $cardRoute ? 'hover:-translate-y-1 hover:shadow-md' : '' }}">
                 <div class="mb-3 flex items-center justify-between">
                     <span class="flex h-10 w-10 items-center justify-center rounded-xl border {{ $card['box'] }}">
                         <i class="fas {{ $card['icon'] }} text-base"></i>
                     </span>
-                    <i class="fas fa-external-link-alt text-[10px] text-slate-300 opacity-0 transition group-hover:opacity-100"></i>
+                    @if($cardRoute)
+                        <i class="fas fa-external-link-alt text-[10px] text-slate-300 opacity-0 transition group-hover:opacity-100"></i>
+                    @endif
                 </div>
                 <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ $card['label'] }}</p>
                 <h3 class="mt-0.5 text-2xl font-extrabold leading-none text-slate-900">
                     {{ number_format($card['value'], 0, ',', '.') }}
                 </h3>
                 <p class="mt-1.5 text-[10px] font-medium text-slate-400">{{ $card['sub'] }}</p>
-            </a>
+            </{{ $cardTag }}>
         @endforeach
     </div>
 
@@ -427,9 +437,11 @@
                     <i class="fas fa-building text-sm text-blue-600"></i>
                     <h2 class="text-sm font-bold text-slate-900">Rekap per Instansi</h2>
                 </div>
-                <a href="{{ route('instansi.index') }}" class="flex items-center gap-1 text-[11px] font-semibold text-blue-600 transition hover:text-blue-700">
-                    Lihat <i class="fas fa-chevron-right text-[9px]"></i>
-                </a>
+                @if($canManageMasterData)
+                    <a href="{{ route('instansi.index') }}" class="flex items-center gap-1 text-[11px] font-semibold text-blue-600 transition hover:text-blue-700">
+                        Lihat <i class="fas fa-chevron-right text-[9px]"></i>
+                    </a>
+                @endif
             </div>
 
             <div class="admin-table-wrap">

@@ -30,15 +30,19 @@
 
         $menungguCount = \App\Models\Permohonan::countMenunggu();
 
+        // Grup menu dibatasi per role. Backend tetap dijaga oleh middleware
+        // role:super_admin; ini hanya mencegah menu berujung 403.
         $navGroups = [
             [
                 'title' => 'Main Menu',
+                'roles' => ['super_admin', 'admin', 'staff'],
                 'items' => [
                     ['label' => 'Dashboard', 'icon' => 'fa-tachometer-alt', 'route' => 'dashboard', 'active' => 'dashboard*'],
                 ],
             ],
             [
                 'title' => 'Master Data',
+                'roles' => ['super_admin'],
                 'items' => [
                     ['label' => 'Instansi', 'icon' => 'fa-building', 'route' => 'instansi.index', 'active' => 'instansi.*'],
                     ['label' => 'Kategori', 'icon' => 'fa-tags', 'route' => 'kategori.index', 'active' => 'kategori.*'],
@@ -48,6 +52,7 @@
             ],
             [
                 'title' => 'Transaksi',
+                'roles' => ['super_admin', 'admin', 'staff'],
                 'items' => [
                     ['label' => 'Permohonan', 'icon' => 'fa-file-alt', 'route' => 'permohonan.index', 'active' => 'permohonan.*', 'badge' => $menungguCount ?: null],
                     ['label' => 'Pengembalian Barang', 'icon' => 'fa-undo', 'route' => 'pengembalian.index', 'active' => 'pengembalian.*'],
@@ -57,11 +62,17 @@
             ],
             [
                 'title' => 'Pengaturan',
+                'roles' => ['super_admin'],
                 'items' => [
                     ['label' => 'Manajemen Admin', 'icon' => 'fa-user-shield', 'route' => 'users.index', 'active' => 'users.*'],
                 ],
             ],
         ];
+
+        $navGroups = array_values(array_filter(
+            $navGroups,
+            fn ($group) => $user && in_array($user->role, $group['roles'], true)
+        ));
     @endphp
 
     {{-- ==================== TOAST ==================== --}}

@@ -28,7 +28,7 @@
     </style>
 
     {{-- Client-Side Protection --}}
-    <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/security.js') }}?v={{ filemtime(public_path('js/security.js')) ?: 1 }}" defer></script>
 
     {{-- Custom stylesheets (pre AdminLTE) --}}
     @yield('adminlte_css_pre')

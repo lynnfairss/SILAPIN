@@ -12,8 +12,8 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <link href="{{ asset('css/silapin-theme.css') }}?v={{ filemtime(public_path('css/silapin-theme.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/website.css') }}?v={{ filemtime(public_path('css/website.css')) }}" rel="stylesheet">
-    <link href="{{ asset('css/splash.css') }}?v={{ time() }}" rel="stylesheet">
-    <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+    <link href="{{ asset('css/splash.css') }}?v={{ filemtime(public_path('css/splash.css')) ?: 1 }}" rel="stylesheet">
+    <script src="{{ asset('js/security.js') }}?v={{ filemtime(public_path('js/security.js')) ?: 1 }}" defer></script>
     <script>
         (function () {
             try {

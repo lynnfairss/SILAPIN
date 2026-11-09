@@ -14,33 +14,8 @@
     <link href="{{ asset('css/silapin-theme.css') }}?v={{ filemtime(public_path('css/silapin-theme.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/peminjam.css') }}?v={{ filemtime(public_path('css/peminjam.css')) }}" rel="stylesheet">
     <link href="{{ asset('css/peminjam-form.css') }}?v={{ filemtime(public_path('css/peminjam-form.css')) }}" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            corePlugins: { preflight: false },
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#eff6ff',
-                            100: '#dbeafe',
-                            500: '#3b82f6',
-                            600: '#2563eb',
-                            700: '#1d4ed8',
-                            800: '#1e40af',
-                            900: '#1e3a8a',
-                            950: '#0f172a',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-    <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+    <link href="{{ asset('css/peminjam-tailwind.css') }}?v={{ filemtime(public_path('css/peminjam-tailwind.css')) ?: 1 }}" rel="stylesheet">
+    <script src="{{ asset('js/security.js') }}?v={{ filemtime(public_path('js/security.js')) ?: 1 }}" defer></script>
 </head>
 <body class="font-sans antialiased text-slate-800 bg-slate-50 min-h-full flex flex-col justify-between">
 
@@ -704,7 +679,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="{{ asset('vendor/jquery/jquery.min.js') }}?v={{ filemtime(public_path('vendor/jquery/jquery.min.js')) ?: 1 }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     let currentStep = 1;
@@ -1441,12 +1416,37 @@
     let ocrWorker = null;
     let ocrBusy = false;
 
+    // Tesseract dimuat saat pertama kali OCR dipakai, bukan saat halaman dibuka.
+    let ocrScriptPromise = null;
+
     function ocrSupported() {
-        return typeof Tesseract !== 'undefined' && !!Tesseract.createWorker;
+        return true;
+    }
+
+    function loadTesseractScript() {
+        if (typeof Tesseract !== 'undefined' && Tesseract.createWorker) {
+            return Promise.resolve();
+        }
+        if (ocrScriptPromise) return ocrScriptPromise;
+
+        ocrScriptPromise = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+            script.async = true;
+            script.onload = () => resolve();
+            script.onerror = () => {
+                ocrScriptPromise = null;
+                reject(new Error('Gagal memuat mesin OCR (butuh internet)'));
+            };
+            document.head.appendChild(script);
+        });
+
+        return ocrScriptPromise;
     }
 
     async function getOcrWorker() {
         if (ocrWorker) return ocrWorker;
+        await loadTesseractScript();
         const worker = await Tesseract.createWorker('ind');
         await worker.setParameters({ preserve_interword_spaces: '1' });
         ocrWorker = worker;

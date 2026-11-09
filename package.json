@@ -3,7 +3,8 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vite build",
+        "build": "vite build && tailwindcss -c tailwind.peminjam.config.cjs -i resources/css/peminjam-tailwind.css -o public/css/peminjam-tailwind.css --minify",
+        "build:peminjam-css": "tailwindcss -c tailwind.peminjam.config.cjs -i resources/css/peminjam-tailwind.css -o public/css/peminjam-tailwind.css --minify",
         "dev": "vite",
         "https": "node dev-https.cjs"
     },

@@ -20,7 +20,7 @@
         }
         .ttd-block { page-break-inside: avoid; }
     </style>
-    <script src="{{ asset('js/security.js') }}?v={{ time() }}"></script>
+    <script src="{{ asset('js/security.js') }}?v={{ filemtime(public_path('js/security.js')) ?: 1 }}" defer></script>
 </head>
 <body>
     @php

@@ -4,10 +4,16 @@ namespace App\Models;
 
 use App\Services\TransisiStatus;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class Permohonan extends Model
 {
+    /**
+     * Kunci cache badge sidebar. Dihapus setiap kali permohonan berubah.
+     */
+    private const CACHE_MENUNGGU = 'permohonan.menunggu.count';
+
     protected $fillable = [
         'nomor_permohonan',
         'instansi_id',
@@ -51,6 +57,10 @@ class Permohonan extends Model
                 $permohonan->token = Str::random(64);
             }
         });
+
+        // Jaga badge sidebar tetap akurat tanpa query COUNT di setiap halaman.
+        static::saved(fn () => Cache::forget(self::CACHE_MENUNGGU));
+        static::deleted(fn () => Cache::forget(self::CACHE_MENUNGGU));
     }
 
     /**
@@ -85,7 +95,11 @@ class Permohonan extends Model
      */
     public static function countMenunggu(): int
     {
-        return static::where('status', TransisiStatus::MENUNGGU)->count();
+        return (int) Cache::remember(
+            self::CACHE_MENUNGGU,
+            now()->addSeconds(30),
+            fn () => static::where('status', TransisiStatus::MENUNGGU)->count()
+        );
     }
 
     public function instansi()
