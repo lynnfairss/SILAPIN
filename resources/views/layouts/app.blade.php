@@ -32,5 +32,6 @@
                 {{ $slot }}
             </main>
         </div>
+        <script src="{{ asset('js/security.js') }}?v={{ @filemtime(public_path('js/security.js')) ?: 1 }}"></script>
     </body>
 </html>

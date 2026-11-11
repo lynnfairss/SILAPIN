@@ -5,22 +5,49 @@
  * Cara pakai:
  *   1. php artisan serve            (backend seperti biasa, port 8000)
  *   2. node dev-https.cjs           (proxy HTTPS, port 8443)
- *   3. Buka dari HP: https://192-168-1-33.nip.io:8443
+ *   3. Buka dari HP lewat URL https yang dicetak saat server nyala,
+ *      contoh https://192-168-1-16.nip.io:8443
  *      (nip.io resolve ke IP LAN via DNS publik; passkey WebAuthn DILARANG
  *       memakai IP langsung — Chrome menolak "invalid domain")
- *      Abaikan peringatan sertifikat: Lanjutkan / Advanced -> Proceed.
+ *      Abaikan peringatan sertifikat, atau pasang .ssl/ca.pem di HP supaya
+ *      gemboknya hijau (diperlukan kalau browser menolak WebAuthn di halaman
+ *      bersertifikat error).
  *
- * Sertifikat self-signed: .ssl/cert.pem + .ssl/key.pem
- * (SAN: IP 192.168.1.33, 192.168.18.214, 127.0.0.1 + DNS localhost,
- *  silapin.local, 192-168-1-33.nip.io, 192.168.1.33.nip.io).
+ * Sertifikat self-signed: .ssl/cert.pem + .ssl/key.pem, ditandatangani
+ * .ssl/ca.pem (SILAPIN Local Dev CA). Daftar SAN ada di .ssl/openssl.cnf;
+ * tambah IP/hostname baru di sana lalu terbitkan ulang:
+ *   openssl req -new -newkey rsa:2048 -nodes -keyout .ssl/key.pem \
+ *     -out .ssl/leaf.csr -config .ssl/openssl.cnf
+ *   openssl x509 -req -in .ssl/leaf.csr -CA .ssl/ca.pem -CAkey .ssl/ca.key \
+ *     -CAcreateserial -out .ssl/cert.pem -days 397 -sha256 \
+ *     -extfile .ssl/openssl.cnf -extensions v3_req
  */
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const PORT = Number(process.env.HTTPS_PORT || 8443);
 const TARGET = { host: '127.0.0.1', port: Number(process.env.BACKEND_PORT || 8000) };
+
+/*
+ * IP LAN dipakai untuk membentuk nama nip.io. Diurutkan supaya adapter
+ * virtual (192.168.56.x, Docker, dll) tidak menang atas Wi-Fi sungguhan.
+ */
+function ipLan() {
+    const kandidat = [];
+    for (const daftar of Object.values(os.networkInterfaces())) {
+        for (const antarmuka of daftar || []) {
+            if (antarmuka.family !== 'IPv4' && antarmuka.addressType !== 'IPv4') continue;
+            if (antarmuka.internal) continue;
+            kandidat.push(antarmuka.address);
+        }
+    }
+    const utama = (awalan) => kandidat.find((ip) => ip.startsWith(awalan));
+    return utama('192.168.1.') || utama('192.168.') || utama('10.') || utama('172.')
+        || kandidat[0] || '127.0.0.1';
+}
 
 const server = https.createServer({
     key: fs.readFileSync(path.join(__dirname, '.ssl', 'key.pem')),
@@ -66,7 +93,9 @@ server.on('upgrade', (req, socket, head) => {
 });
 
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`HTTPS dev aktif : https://192-168-1-33.nip.io:${PORT}  (dan https://127.0.0.1:${PORT})`);
+    const ip = ipLan();
+    const hostNip = ip.split('.').join('-') + '.nip.io';
+    console.log(`HTTPS dev aktif : https://${hostNip}:${PORT}  (juga https://${ip}:${PORT} dan https://127.0.0.1:${PORT})`);
     console.log(`Proxy ke        : http://${TARGET.host}:${TARGET.port}`);
-    console.log('Buka dari HP lewat URL https di atas; abaikan peringatan sertifikat.');
+    console.log('Buka dari HP lewat nama domain di atas (passkey menolak alamat IP).');
 });

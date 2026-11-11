@@ -1213,13 +1213,11 @@ footer {
     }
 }
 
-/* ===== MOBILE: GRID 2 KOLOM + KARTU KOMPACT ===== */
+/* ===== MOBILE: KARTU KOMPACT ===== */
+/* Lebar kolom diatur oleh grid-cols-2 di #barangContainer, jadi tidak ada
+   lagi aturan flex/max-width di sini — dulu item dipaksa 50% di dalam grid
+   1 kolom sehingga setengah baris selalu kosong. */
 @media (max-width: 575.98px) {
-    #barangContainer .barang-item {
-        flex: 0 0 50%;
-        max-width: 50%;
-    }
-
     .product-info {
         padding: 10px 10px 12px;
     }

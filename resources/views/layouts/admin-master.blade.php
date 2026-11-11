@@ -233,6 +233,7 @@
             errors: @json($errors->any() ? $errors->all() : []),
         };
     </script>
+    <script src="{{ asset('js/security.js') }}?v={{ @filemtime(public_path('js/security.js')) ?: 1 }}"></script>
     <script src="{{ asset('js/admin-master.js') }}?v={{ @filemtime(public_path('js/admin-master.js')) ?: 1 }}"></script>
     @stack('scripts')
 </body>

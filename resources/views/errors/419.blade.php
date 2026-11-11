@@ -73,5 +73,6 @@
         </p>
         <a class="btn" href="/dashboard">Kembali ke Dasbor</a>
     </div>
+    <script src="{{ asset('js/security.js') }}?v={{ @filemtime(public_path('js/security.js')) ?: 1 }}"></script>
 </body>
 </html>

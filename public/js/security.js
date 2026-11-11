@@ -3,8 +3,8 @@
  * Blokir context menu, shortcut inspect, deteksi DevTools (overlay freeze),
  * dan jaga atribut validasi form via MutationObserver.
  *
- * SAKLAR: Ctrl+Alt+Spasi (toggle on/off) atau URL ?sec=off
- * Status disimpan di sessionStorage (per tab; reset saat tab ditutup).
+ * SAKLAR: Ctrl+Alt+Spasi (toggle on/off) atau URL ?sec=off / ?sec=on.
+ * Status disimpan di localStorage agar bertahan setelah reload dan lintas halaman.
  *
  * CATATAN: Ini lapisan deterrent, BUKAN keamanan mutlak.
  * Keamanan inti tetap di server (validasi & otorisasi Laravel).
@@ -54,28 +54,36 @@
     };
 
     /* ======================= 0. SAKLAR ON/OFF ======================= */
+    function readStored() {
+        try { return localStorage.getItem(STORAGE_KEY); } catch (err) { /* ignore */ }
+        try { return sessionStorage.getItem(STORAGE_KEY); } catch (err) { /* ignore */ }
+        return null;
+    }
+
+    function writeStored(value) {
+        try { localStorage.setItem(STORAGE_KEY, value); return; } catch (err) { /* ignore */ }
+        try { sessionStorage.setItem(STORAGE_KEY, value); } catch (err) { /* ignore */ }
+    }
+
     function readInitialEnabled() {
-        // 1) URL ?sec=off / ?sec=on (sekali muat, simpan ke sessionStorage)
+        // 1) URL ?sec=off / ?sec=on (sekali muat, simpan ke storage)
         try {
             var m = /[?&]sec=(off|on)\b/.exec(window.location.search);
             if (m) {
                 var val = m[1] === 'off' ? 'off' : 'on';
-                sessionStorage.setItem(STORAGE_KEY, val);
+                writeStored(val);
                 return val !== 'off';
             }
-            // 2) Status tersimpan (tab yang sama)
-            if (sessionStorage.getItem(STORAGE_KEY) === 'off') return false;
-        } catch (err) { /* storage bisa diblokir */ }
-        return true;
+        } catch (err) { /* ignore */ }
+        // 2) Status tersimpan (localStorage, fallback sessionStorage)
+        return readStored() !== 'off';
     }
 
     state.enabled = readInitialEnabled();
 
     function setEnabled(on, showToast) {
         state.enabled = !!on;
-        try {
-            sessionStorage.setItem(STORAGE_KEY, on ? 'on' : 'off');
-        } catch (err) { /* ignore */ }
+        writeStored(on ? 'on' : 'off');
 
         if (!on) {
             // Lepas freeze bila sedang aktif
@@ -104,6 +112,8 @@
 
     function comboMatches(e, combo) {
         var key = (e.key || '').toUpperCase();
+        // Sebagian browser/IME mengirim e.key spasi secara berbeda.
+        if (e.code === 'Space' || key === 'SPACEBAR') key = ' ';
         var ctrl = e.ctrlKey || e.metaKey;
         if (combo.ctrl !== ctrl) return false;
         if (!!combo.shift !== !!e.shiftKey) return false;
@@ -155,6 +165,16 @@
     }, true);
 
     /* ======================= 3. DETEKSI DEVTOOLS ======================= */
+    function isEmbedded() {
+        try {
+            if (window.self !== window.top) return true;
+        } catch (err) {
+            return true;
+        }
+        var ua = navigator.userAgent || '';
+        return /vscode-webview|electron|code\/\d/i.test(ua);
+    }
+
     function checkDimensions() {
         var w = window.outerWidth - window.innerWidth;
         var h = window.outerHeight - window.innerHeight;
@@ -175,6 +195,10 @@
 
     function detectDevtools() {
         if (document.hidden) return false;
+        // Webview (VS Code Simple Browser, Electron, iframe) sering punya selisih
+        // outer/inner yang besar dan bukan DevTools.
+        if (isEmbedded()) return false;
+        if (window.outerWidth === 0 || window.outerHeight === 0) return false;
         return checkDimensions() || checkDebuggerTiming();
     }
 
@@ -193,7 +217,7 @@
         el.id = 'silapin-security-overlay';
         el.style.cssText = [
             'position:fixed', 'top:0', 'left:0', 'width:100%', 'height:100%',
-            'background:#0f172a', 'color:#e2e8f0', 'z-index:2147483647',
+            'background:#0f172a', 'color:#e2e8f0', 'z-index:2147483646',
             'display:flex', 'flex-direction:column', 'align-items:center',
             'justify-content:center', 'text-align:center', 'font-family:Inter,Arial,sans-serif',
             'padding:24px', 'pointer-events:auto', 'cursor:not-allowed'
@@ -279,6 +303,8 @@
 
         var attr = mutation.attributeName;
         if (CONFIG.protectedAttrs.indexOf(attr) === -1) return;
+        // Izinkan toggle show/hide password pada input yang ditandai eksplisit.
+        if (attr === 'type' && el.hasAttribute('data-sec-allow-type')) return;
         if (!(attr in snap)) {
             // Atribut aslinya tidak ada → biarkan.
             // Yang berbahaya = penghapusan atribut proteksi yang aslinya ada.

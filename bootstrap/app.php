@@ -15,6 +15,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // X-Forwarded-Proto: https dikenali (kamera & aset https).
         $middleware->trustProxies(at: '*');
 
+        $middleware->web(append: [
+            \App\Http\Middleware\PilihSumberAsetVite::class,
+        ]);
+
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
             'peminjam.access' => \App\Http\Middleware\VerifyPemohonanAccess::class,

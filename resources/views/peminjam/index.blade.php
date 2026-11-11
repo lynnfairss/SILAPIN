@@ -454,7 +454,7 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5" id="barangContainer">
+                                <div class="grid grid-cols-2 lg:grid-cols-3" id="barangContainer">
                                     @forelse($inventaris as $item)
                                      <div class="barang-item" data-kategori="{{ $item->kategori->nama_kategori ?? '' }}" data-jenis="{{ $item->jenis?->nama_jenis ?? '' }}" data-nama="{{ strtolower($item->nama_barang) }}">
                                         <div class="product-card{{ $item->stok <= 0 ? ' out-of-stock' : '' }}" data-stok="{{ (int) $item->stok }}" onclick="toggleBarang(this, {{ $item->id }})">

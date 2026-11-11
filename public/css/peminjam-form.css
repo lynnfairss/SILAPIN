@@ -483,3 +483,80 @@
         padding: 0.6rem 0.75rem;
     }
 }
+
+/* ---------- Kartu barang 2 kolom ---------- */
+/* Jarak antar kartu diatur di sini, bukan lewat kelas .gap-*: Bootstrap 5
+   mendefinisikan .gap-4 { gap: 1.5rem !important } yang selalu menang.
+   Selektor pakai #barangContainer agar menang atas aturan dasar di
+   peminjam.css, yang sebagian tidak bisa dioverride dari sana. */
+#barangContainer {
+    gap: 1.25rem;
+}
+
+@media (max-width: 639.98px) {
+    #barangContainer {
+        gap: 0.75rem;
+    }
+
+    #barangContainer .img-slider {
+        aspect-ratio: 1 / 1;
+    }
+
+    #barangContainer .product-info {
+        padding: 0.5rem 0.55rem 0.4rem;
+    }
+
+    #barangContainer .product-name {
+        font-size: 0.8rem;
+    }
+
+    #barangContainer .product-meta {
+        font-size: 0.64rem;
+        gap: 0.25rem;
+    }
+
+    #barangContainer .product-meta code {
+        font-size: 0.63rem;
+    }
+
+    #barangContainer .product-kategori,
+    #barangContainer .product-jenis {
+        font-size: 0.62rem;
+        padding: 1px 0.45rem;
+    }
+
+    #barangContainer .product-stok .badge {
+        font-size: 0.64rem;
+        padding: 0.25em 0.5em;
+    }
+
+    #barangContainer .product-action {
+        flex-direction: column;
+        gap: 0.4rem;
+        padding: 0.45rem 0.5rem 0.55rem;
+    }
+
+    #barangContainer .product-action .form-check {
+        width: 100%;
+        font-size: 0.7rem;
+    }
+
+    #barangContainer .product-action .form-check-label {
+        font-size: 0.7rem;
+    }
+
+    #barangContainer .qty-stepper {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    #barangContainer .qty-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.9rem;
+    }
+
+    #barangContainer .qty-input {
+        width: 42px;
+    }
+}
