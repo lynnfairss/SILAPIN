@@ -132,7 +132,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('surat/templates', [SuratController::class, 'uploadTemplate'])->name('surat.templates.store');
         Route::post('surat/templates/scan', [SuratController::class, 'scanTemplates'])->name('surat.templates.scan');
         Route::post('surat/templates/{template}/activate', [SuratController::class, 'activateTemplate'])->name('surat.templates.activate');
+        Route::post('surat/templates/{template}/deactivate', [SuratController::class, 'deactivateTemplate'])->name('surat.templates.deactivate');
         Route::post('surat/templates/{template}/restore', [SuratController::class, 'restoreTemplate'])->name('surat.templates.restore');
+        Route::delete('surat/templates/{template}/permanent', [SuratController::class, 'destroyPermanent'])->name('surat.templates.permanent');
         Route::delete('surat/templates/{template}', [SuratController::class, 'destroyTemplate'])->name('surat.templates.destroy');
         Route::post('surat/{permohonan}/template', [SuratController::class, 'assignTemplate'])->name('surat.template.assign');
         Route::get('surat/{permohonan}/berkas', [SuratController::class, 'berkas'])->name('surat.berkas');

@@ -10,15 +10,19 @@ use Illuminate\Support\Facades\File;
  * Menentukan file template DOCX yang dipakai untuk sebuah surat.
  *
  * Urutan pencarian:
- *   1. template yang dipilih khusus untuk surat itu (termasuk versi lama);
+ *   1. template yang tercatat pada surat itu: versi yang aktif saat surat
+ *      dibuat, atau versi yang dipilih manual admin (termasuk versi lama yang
+ *      sudah diarsipkan);
  *   2. template aktif untuk tahun surat dibuat;
  *   3. versi terbaru tahun itu, termasuk yang sudah diarsipkan
- *      (menjaga surat lama yang belum sempat dipin);
+ *      (menjaga surat lama yang belum sempat dicatat);
  *   4. template aktif terbaru dari tahun mana pun;
  *   5. template default di public/templates.
  *
- * Tidak ada template yang dihapus dari proses ini. File lama tetap dipakai
- * bila memang itu yang tercatat pada surat.
+ * Surat lama sengaja tidak ikut berubah ketika admin mengaktifkan versi baru:
+ * versinya sudah tercatat sejak surat itu dibuat. Tidak ada template yang
+ * dihapus dari proses ini; file lama tetap dipakai bila memang itu yang
+ * tercatat pada surat.
  */
 class SuratTemplateResolver
 {
@@ -42,7 +46,8 @@ class SuratTemplateResolver
      */
     public static function forPermohonan(Permohonan $permohonan): ?SuratTemplate
     {
-        // 1. Pilihan manual admin/super admin untuk surat ini.
+        // 1. Versi yang tercatat pada surat ini: pilihan manual admin, atau
+        //    template yang aktif saat surat itu dibuat.
         if ($permohonan->surat_template_id) {
             $dipilih = self::usable(
                 SuratTemplate::withTrashed()->find($permohonan->surat_template_id)
@@ -61,7 +66,7 @@ class SuratTemplateResolver
             return $aktif;
         }
 
-        // 3. Surat lama yang belum dipin: pakai versi tahun itu, termasuk arsip.
+        // 3. Surat yang versinya belum tercatat: pakai versi tahun itu, termasuk arsip.
         $versiTahunItu = self::latestForYear($tahun, true);
         if ($versiTahunItu) {
             return $versiTahunItu;

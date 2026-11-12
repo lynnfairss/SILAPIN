@@ -167,7 +167,7 @@
                     </div>
                     <div>
                         <h2 class="text-sm font-bold text-slate-900">Template Surat per Tahun</h2>
-                        <p class="mt-0.5 text-[11px] text-slate-500">Setiap tahun boleh punya beberapa versi template</p>
+                        <p class="mt-0.5 text-[11px] text-slate-500">Versi aktif hanya dipakai oleh surat yang dibuat setelahnya &bull; surat lama tetap memakai versinya sendiri</p>
                     </div>
                 </div>
                 <span class="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-100">
@@ -314,7 +314,21 @@
                                                     <i class="fas fa-undo text-[13px]"></i>
                                                 </button>
                                             </form>
+                                            <button type="button" title="Hapus permanen (baris database + berkasnya)"
+                                                    onclick="AdminUI.confirmDelete(@js(route('surat.templates.permanent', $template->id)), @js('template ' . $template->tahun . ' versi ' . $template->versi . ' beserta berkasnya'))"
+                                                    class="rounded-lg border border-transparent p-1.5 text-slate-500 transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600">
+                                                <i class="fas fa-trash text-[13px]"></i>
+                                            </button>
                                         @else
+                                            @if($template->is_active)
+                                                <form action="{{ route('surat.templates.deactivate', $template) }}" method="POST" class="inline">
+                                                    @csrf
+                                                    <button type="submit" title="Nonaktifkan, tapi tetap tersimpan"
+                                                            class="rounded-lg border border-transparent p-1.5 text-slate-500 transition-all hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600">
+                                                        <i class="fas fa-power-off text-[13px]"></i>
+                                                    </button>
+                                                </form>
+                                            @endif
                                             <form action="{{ route('surat.templates.destroy', $template) }}" method="POST" class="inline"
                                                   data-arsipkan="template tahun {{ $template->tahun }} versi {{ $template->versi }}?">
                                                 @csrf
@@ -378,7 +392,8 @@
                         </div>
                     </form>
                     <p class="mt-2 text-[11px] text-slate-400">
-                        Pilih template lama untuk surat ini saja. Surat lain tidak terpengaruh.
+                        Pilih template lain untuk surat ini saja. Surat lain tidak terpengaruh.
+                        Surat baru memakai template yang aktif saat surat itu dibuat; surat lama tetap memakai template yang tercatat padanya.
                     </p>
                 </div>
             </div>

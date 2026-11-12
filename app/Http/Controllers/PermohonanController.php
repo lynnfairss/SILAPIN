@@ -110,7 +110,10 @@ class PermohonanController extends Controller
                 }
             }
 
-            $templateAktif = \App\Services\SuratTemplateResolver::activeForYear((int) now()->year)
+            // Versi yang aktif saat surat dibuat ikut dicatat pada surat, jadi
+            // surat lama tetap tercetak dengan template lamanya walaupun admin
+            // mengaktifkan versi baru.
+            $templateAwal = \App\Services\SuratTemplateResolver::activeForYear((int) now()->year)
                 ?? \App\Services\SuratTemplateResolver::latestActive();
 
             $permohonan = Permohonan::create([
@@ -129,7 +132,7 @@ class PermohonanController extends Controller
                 'status'             => 'Menunggu',
                 'foto_ktp'           => $fotoKtp,
                 'surat_tugas'        => $suratTugas,
-                'surat_template_id'  => $templateAktif?->id,
+                'surat_template_id'  => $templateAwal?->id,
             ]);
 
             foreach ($validated['inventaris'] as $inventarisId) {
@@ -256,7 +259,7 @@ class PermohonanController extends Controller
         // --- Resolve all values ---
         $halItems = $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->filter()->implode(', ');
         $halText = $sc['hal'] ?: 'Permohonan Peminjaman ' . ($halItems ?: 'Barang Inventaris');
-        $dateText = 'Ponorogo, ' . $permohonan->created_at->format('d F Y');
+        $dateText = \App\Services\SuratKopExtractor::kota($permohonan) . ', ' . $permohonan->created_at->format('d F Y');
 
         $vNama = $sc['nama_peminjam'] ?: $permohonan->nama_peminjam ?? '-';
         $vNrp  = $sc['nik']           ?: $permohonan->nik ?? '';
@@ -288,11 +291,11 @@ class PermohonanController extends Controller
         $penutupText = str_replace("\n", ' ', $sc['penutup']);
         $terimaKasihText = str_replace("\n", ' ', $sc['terima_kasih']);
 
-        // --- Load template: template yang dipin ke surat ini, atau yang aktif ---
+        // --- Load template: versi yang tercatat pada surat, atau versi tahun surat ---
         $templateModel = \App\Services\SuratTemplateResolver::forPermohonan($permohonan);
 
-        // Pin sekali saja: setelah dipin, surat ini tidak ikut berubah walaupun
-        // admin mengunggah template baru untuk tahun yang sama.
+        // Catat versinya sekali saja. Setelah tercatat, surat ini tidak ikut
+        // berubah walaupun admin mengunggah atau mengaktifkan template baru.
         if (! $permohonan->surat_template_id && $templateModel) {
             $permohonan->forceFill(['surat_template_id' => $templateModel->id])->saveQuietly();
         }

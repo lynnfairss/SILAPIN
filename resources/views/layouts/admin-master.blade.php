@@ -92,9 +92,9 @@
     {{-- ==================== SIDEBAR ==================== --}}
     <aside id="adminSidebar" class="fixed inset-y-0 left-0 z-40 flex flex-col bg-[#0F172A] text-slate-300 shadow-xl">
         <div class="sidebar-brand flex h-16 shrink-0 items-center gap-3 border-b border-slate-800 px-5">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-lg font-bold text-white shadow-md shadow-blue-500/30">
-                S
-            </div>
+            <img src="{{ asset('images/logo-silapin.png') }}?v={{ @filemtime(public_path('images/logo-silapin.png')) ?: 1 }}"
+                 alt="Logo SILAPIN"
+                 class="h-10 w-10 shrink-0 rounded-xl bg-white object-contain p-1 shadow-md shadow-blue-500/20">
             <span class="sidebar-brand-text text-lg font-bold tracking-wide text-white">SILAPIN</span>
         </div>
 

@@ -437,6 +437,26 @@ it('lets admins pick an older template for one letter only', function () {
         ->and(SuratTemplateResolver::forPermohonan($suratB->fresh())->id)->toBe($baru->id);
 });
 
+it('keeps each letter on the template version recorded when it was made', function () {
+    $admin = adminUpload();
+
+    unggahTemplate($this, $admin, 2026, docxTemplate('PONOROGO'), 'versi awal')->assertSessionHasNoErrors();
+
+    $suratLama = suratTahun(permohonanUpload('SP-TETAP-LAMA'), '2026-05-01 10:00:00');
+
+    // Surat mencatat versi yang aktif pada saat ia dibuat.
+    $dicatat = SuratTemplateResolver::forPermohonan($suratLama);
+    $suratLama->forceFill(['surat_template_id' => $dicatat?->id])->saveQuietly();
+
+    unggahTemplate($this, $admin, 2026, docxTemplate('KABUPATEN PONOROGO'), 'revisi kota')->assertSessionHasNoErrors();
+    $baru = SuratTemplate::where('tahun', 2026)->orderByDesc('versi')->first();
+
+    // Surat lama tidak ikut berubah...
+    expect(SuratTemplateResolver::forPermohonan($suratLama->fresh())->id)->toBe($dicatat->id)
+        // ...sedangkan surat yang versinya belum tercatat memakai versi aktif terbaru.
+        ->and(SuratTemplateResolver::activeForYear(2026)->id)->toBe($baru->id);
+});
+
 it('uses the latest active template for a year without its own template', function () {
     $admin = adminUpload();
 
@@ -537,4 +557,59 @@ it('fills only the placeholders that exist in the template file', function () {
     expect($permohonan->fresh()->surat_template_id)->toBe(
         SuratTemplate::where('tahun', 2026)->first()->id
     );
+});
+
+it('deletes an archived template permanently together with its file', function () {
+    $admin = adminUpload();
+
+    unggahTemplate($this, $admin, 2026, docxTemplate('versi dibuang'), 'mau dihapus')->assertSessionHasNoErrors();
+    $template = SuratTemplate::where('tahun', 2026)->first();
+    $berkas = $template->path;
+
+    expect(Storage::disk('local')->exists($berkas))->toBeTrue();
+
+    $this->actingAs($admin)->delete(route('surat.templates.destroy', $template))->assertRedirect();
+
+    $this->actingAs($admin)
+        ->delete(route('surat.templates.permanent', $template->id))
+        ->assertRedirect()
+        ->assertSessionHas('success');
+
+    expect(SuratTemplate::withTrashed()->find($template->id))->toBeNull()
+        ->and(Storage::disk('local')->exists($berkas))->toBeFalse();
+});
+
+it('refuses to delete permanently a template that letters still record', function () {
+    $admin = adminUpload();
+
+    unggahTemplate($this, $admin, 2026, docxTemplate('versi terpakai'), 'masih dipakai')->assertSessionHasNoErrors();
+    $template = SuratTemplate::where('tahun', 2026)->first();
+
+    $surat = permohonanUpload('SP-PAKAI-TEMPLATE');
+    $surat->forceFill(['surat_template_id' => $template->id])->saveQuietly();
+
+    $this->actingAs($admin)->delete(route('surat.templates.destroy', $template))->assertRedirect();
+
+    $this->actingAs($admin)
+        ->delete(route('surat.templates.permanent', $template->id))
+        ->assertRedirect()
+        ->assertSessionHas('error');
+
+    expect(SuratTemplate::withTrashed()->find($template->id))->not->toBeNull()
+        ->and(Storage::disk('local')->exists($template->path))->toBeTrue()
+        ->and(SuratTemplateResolver::forPermohonan($surat->fresh())->id)->toBe($template->id);
+});
+
+it('offers the permanent delete button on archived templates', function () {
+    $admin = adminUpload();
+
+    unggahTemplate($this, $admin, 2026, docxTemplate('versi arsip ui'), 'arsip ui')->assertSessionHasNoErrors();
+    $template = SuratTemplate::where('tahun', 2026)->first();
+
+    $this->actingAs($admin)->delete(route('surat.templates.destroy', $template))->assertRedirect();
+
+    $this->actingAs($admin)
+        ->get(route('surat.upload'))
+        ->assertOk()
+        ->assertSee('Hapus permanen (baris database + berkasnya)', false);
 });

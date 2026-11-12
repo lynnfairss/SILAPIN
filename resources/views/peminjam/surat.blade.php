@@ -41,7 +41,7 @@
         $sc = \App\Http\Controllers\Admin\SuratController::getContent($permohonan);
         $halItems = $permohonan->detailPermohonan->pluck('inventaris.nama_barang')->filter()->implode(', ');
         $halText = $sc['hal'] ?: 'Permohonan Peminjaman ' . ($halItems ?: 'Barang Inventaris');
-        $dateText = 'Ponorogo, ' . $permohonan->created_at->format('d F Y');
+        $dateText = \App\Services\SuratKopExtractor::kota($permohonan) . ', ' . $permohonan->created_at->format('d F Y');
 
         $vNama  = $sc['nama_peminjam'] ?: $permohonan->nama_peminjam ?? '-';
         $vNrp   = $sc['nik']           ?: $permohonan->nik ?? '';
@@ -65,6 +65,10 @@
 
         // QR nomor permohonan (server-side SVG â†’ jalan di HTML, cetak, dan PDF dompdf)
         $qrSvgDataUri = \App\Services\QrCodeService::svgDataUri((string) $permohonan->nomor_permohonan);
+
+        // Baris kop diambil dari file template surat yang dipakai surat ini,
+        // supaya PDF dan pratinjau ikut berubah saat admin unggah template baru.
+        $kop = \App\Services\SuratKopExtractor::untuk($permohonan);
     @endphp
 
     @if(!$forPdf)
@@ -85,11 +89,9 @@
                 <img src="{{ $imgLogoKiri }}" style="width:2.1cm; height:2.1cm; display:block;">
             </td>
             <td style="width:73%; border-bottom:6px double #000; vertical-align:center; padding:0 0 2px;">
-                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:12pt; font-weight:bold; text-align:center; line-height:1.3;">PEMERINTAH KABUPATEN PONOROGO</p>
-                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:12pt; font-weight:bold; text-align:center; line-height:1.3;">DINAS KOMUNIKASI INFORMATIKA DAN STATISTIK</p>
-                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:10pt; text-align:center; line-height:1.2;">Jl. Ir. Juanda Nomor 198 Telp. (0352) 3592999 Kode Pos 63418</p>
-                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:10pt; font-style:italic; text-align:center; line-height:1.2;">Website: https://kominfo.ponorogo.go.id, Email: kominfo@ponorogo.go.id</p>
-                <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:14pt; font-weight:bold; text-align:center; line-height:1.3; margin-top:4px;">P O N O R O G O</p>
+                @foreach($kop as $barisKop)
+                    <p style="margin:0; padding:0; font-family:Arial,sans-serif; font-size:{{ $barisKop['ukuran'] }}pt; @if($barisKop['tebal']) font-weight:bold; @endif @if($barisKop['miring']) font-style:italic; @endif text-align:center; line-height:{{ $barisKop['tebal'] ? 1.3 : 1.2 }}; @if($loop->last) margin-top:4px; @endif">{{ $barisKop['teks'] }}</p>
+                @endforeach
             </td>
             @if($imgLogoKanan)
             <td style="width:13.5%; border-bottom:6px double #000; vertical-align:center; padding:0;">

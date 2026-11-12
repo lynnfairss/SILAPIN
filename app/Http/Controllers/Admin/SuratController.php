@@ -309,7 +309,8 @@ class SuratController extends Controller
         ]);
 
         return back()->with('success', 'Template surat tahun ' . $tahun . ' versi ' . $versi
-            . ' berhasil disimpan dan diaktifkan. Versi lama tetap tersimpan.');
+            . ' berhasil disimpan dan diaktifkan. Surat yang dibuat setelah ini memakainya; '
+            . 'surat lama dan versi lama tetap tersimpan.');
     }
 
     /**
@@ -321,12 +322,38 @@ class SuratController extends Controller
         $template->update(['is_active' => true]);
 
         return back()->with('success', 'Template tahun ' . $template->tahun
-            . ' versi ' . $template->versi . ' diaktifkan.');
+            . ' versi ' . $template->versi . ' diaktifkan untuk surat yang dibuat setelah ini. '
+            . 'Surat lama tetap memakai versinya sendiri.');
     }
 
     /**
-     * Arsipkan template. File fisik tidak dihapus dan surat lama tetap bisa
-     * memakainya karena template dipin per surat.
+     * Matikan template tanpa mengarsipkannya.
+     *
+     * Surat yang sudah dibuat tidak berubah karena versinya tercatat pada
+     * masing-masing surat. Yang terpengaruh hanya surat yang dibuat setelahnya.
+     */
+    public function deactivateTemplate(SuratTemplate $template)
+    {
+        if (! $template->is_active) {
+            return back()->with('error', 'Template tahun ' . $template->tahun
+                . ' versi ' . $template->versi . ' sudah tidak aktif.');
+        }
+
+        $template->update(['is_active' => false]);
+
+        $lain = SuratTemplate::aktif()->where('tahun', $template->tahun)->exists();
+
+        return back()->with('success', 'Template tahun ' . $template->tahun
+            . ' versi ' . $template->versi . ' dinonaktifkan. Surat yang sudah ada tetap memakai versinya; '
+            . ($lain
+                ? 'surat baru tahun itu memakai versi aktif lainnya.'
+                : 'surat baru tahun ' . $template->tahun
+                    . ' memakai versi terbaru tahun itu yang masih tersimpan.'));
+    }
+
+    /**
+     * Arsipkan template. File fisik tidak dihapus, jadi surat tahun itu masih
+     * bisa dicetak ulang memakai versi tersebut.
      */
     public function destroyTemplate(SuratTemplate $template)
     {
@@ -354,6 +381,35 @@ class SuratController extends Controller
 
         return back()->with('success', 'Template tahun ' . $data->tahun
             . ' versi ' . $data->versi . ' dipulihkan.');
+    }
+
+    /**
+     * Hapus permanen template yang sudah diarsipkan: baris database beserta
+     * berkas DOCX-nya. Ditolak selama masih ada surat yang mencatat versinya,
+     * supaya menghapus template tidak mengubah surat-surat lama.
+     */
+    public function destroyPermanent(int $template)
+    {
+        $data = SuratTemplate::onlyTrashed()->findOrFail($template);
+
+        $pemakai = Permohonan::where('surat_template_id', $data->id)->count();
+
+        if ($pemakai > 0) {
+            return back()->with('error', 'Template tahun ' . $data->tahun . ' versi ' . $data->versi
+                . ' masih tercatat pada ' . $pemakai . ' surat. Biarkan tetap diarsipkan; '
+                . 'hapus permanen hanya bila surat-surat itu memang tidak ada.');
+        }
+
+        $berkas = $data->path;
+        $data->forceDelete();
+
+        if ($berkas) {
+            Storage::disk('local')->delete($berkas);
+        }
+
+        return back()->with('success', 'Template tahun ' . $data->tahun . ' versi ' . $data->versi
+            . ' dihapus permanen beserta berkasnya. Berkas aslinya di folder public/templates '
+            . 'tidak ikut terhapus, jadi jangan pindai ulang bila tidak ingin versi itu kembali.');
     }
 
     /**
