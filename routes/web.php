@@ -76,6 +76,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('security.2fa.confirm');
     Route::post('/security/2fa/disable', [SecurityController::class, 'disableTwoFactor'])
         ->name('security.2fa.disable');
+    Route::post('/security/2fa/recovery-codes', [SecurityController::class, 'regenerateRecoveryCodes'])
+        ->name('security.2fa.recovery');
 
     // Master Data (hanya Super Admin)
     Route::middleware('role:super_admin')->group(function () {

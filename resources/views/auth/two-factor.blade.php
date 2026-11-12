@@ -165,7 +165,7 @@
         <div class="card-body-custom">
 
             <h4>Kode Verifikasi</h4>
-            <p class="subtitle">Masukkan kode 6 digit dari aplikasi Google Authenticator</p>
+            <p class="subtitle">Masukkan kode 6 digit dari aplikasi Google Authenticator, atau satu kode pemulihan Anda.</p>
 
             @if($expired)
             <div class="alert alert-warning alert-custom d-flex align-items-center">
@@ -192,9 +192,12 @@
                 @csrf
 
                 <div class="mb-4">
-                    <label class="form-label fw-medium text-secondary" style="font-size:.85rem;">Kode OTP</label>
-                    <input type="text" name="code" class="form-control otp-input" inputmode="numeric"
-                           maxlength="6" placeholder="••••••" required autofocus autocomplete="one-time-code">
+                    <label class="form-label fw-medium text-secondary" style="font-size:.85rem;">Kode OTP atau Kode Pemulihan</label>
+                    <input type="text" name="code" class="form-control otp-input"
+                           maxlength="14" placeholder="••••••" required autofocus autocomplete="one-time-code">
+                    <div class="form-text" style="font-size:.75rem;">
+                        Kode pemulihan berbentuk <code>SLPN-XXXX-XXXX</code> dan hanya bisa dipakai satu kali.
+                    </div>
                 </div>
 
                 <button type="submit" class="btn btn-login w-100">

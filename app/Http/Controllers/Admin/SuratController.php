@@ -20,7 +20,7 @@ class SuratController extends Controller
      * Placeholder minimal yang harus ada di template tahunan. Tanpa ini surat
      * tidak bisa diisi dengan benar (mis. cloneRow item akan gagal).
      */
-    private const PLACEHOLDER_WAJIB = [
+    public const PLACEHOLDER_WAJIB = [
         'nomor',
         'tanggal',
         'nama_peminjam',
@@ -169,7 +169,11 @@ class SuratController extends Controller
         $terpilih = (int) request('permohonan', 0);
         $suratTerpilih = $terpilih ? $permohonan->firstWhere('id', $terpilih) : null;
 
-        return view('admin.surat.upload', compact('permohonan', 'templates', 'terpilih', 'suratTerpilih'));
+        $placeholderWajib = self::PLACEHOLDER_WAJIB;
+
+        return view('admin.surat.upload', compact(
+            'permohonan', 'templates', 'terpilih', 'suratTerpilih', 'placeholderWajib'
+        ));
     }
 
     /**
