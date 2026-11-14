@@ -76,13 +76,56 @@
     AdminUI.open = AdminUI.openModal;
     AdminUI.close = AdminUI.closeModal;
 
-    /* -------------------- Delete confirmation -------------------- */
-    AdminUI.confirmDelete = function (action, name) {
+    /* -------------------- Delete / action confirmation -------------------- */
+    const confirmTones = {
+        danger:  { icon: 'bg-rose-100 text-rose-600',   button: 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20' },
+        warning: { icon: 'bg-amber-100 text-amber-600', button: 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20' },
+        info:    { icon: 'bg-blue-100 text-blue-600',   button: 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20' },
+    };
+
+    /**
+     * Buka modal konfirmasi bersama.
+     *
+     * options: { action, name, title, message, confirmLabel, method, tone, icon }
+     */
+    AdminUI.confirm = function (options) {
+        const opts = options || {};
+        const tone = confirmTones[opts.tone] || confirmTones.danger;
+
         const form = document.getElementById('deleteForm');
-        const label = document.getElementById('deleteName');
-        if (form) form.action = action || '';
-        if (label) label.textContent = name ? '"' + name + '"' : 'data ini';
+        if (form) form.action = opts.action || '';
+
+        const method = document.getElementById('deleteMethod');
+        if (method) method.value = opts.method || 'DELETE';
+
+        const icon = document.getElementById('deleteIcon');
+        if (icon) {
+            icon.className = 'mx-auto flex h-12 w-12 items-center justify-center rounded-full ' + tone.icon;
+
+            const glyph = icon.querySelector('i');
+            if (glyph) glyph.className = 'fas ' + (opts.icon || 'fa-exclamation-triangle') + ' text-xl';
+        }
+
+        const title = document.getElementById('deleteTitle');
+        if (title) title.textContent = opts.title || 'Hapus Data Ini?';
+
+        const message = document.getElementById('deleteMessage');
+        if (message) {
+            message.textContent = opts.message
+                || 'Apakah Anda yakin ingin menghapus "' + (opts.name || 'data ini') + '"? Tindakan ini tidak dapat dibatalkan.';
+        }
+
+        const confirm = document.getElementById('deleteConfirm');
+        if (confirm) {
+            confirm.className = 'w-full rounded-xl py-2.5 text-xs font-medium text-white shadow-md transition ' + tone.button;
+            confirm.textContent = opts.confirmLabel || 'Ya, Hapus';
+        }
+
         AdminUI.openModal('deleteModal');
+    };
+
+    AdminUI.confirmDelete = function (action, name, options) {
+        AdminUI.confirm(Object.assign({ action: action, name: name }, options || {}));
     };
 
     /* -------------------- CSV export -------------------- */

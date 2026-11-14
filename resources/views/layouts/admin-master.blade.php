@@ -201,14 +201,13 @@
     {{-- ==================== MODAL HAPUS (SHARED) ==================== --}}
     <div id="deleteModal" class="admin-modal hidden fixed inset-0 z-[80] items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
         <div class="admin-modal-card w-full max-w-sm space-y-4 rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+            <div id="deleteIcon" class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-100 text-rose-600">
                 <i class="fas fa-exclamation-triangle text-xl"></i>
             </div>
             <div>
-                <h3 class="text-base font-bold text-slate-900">Hapus Data Ini?</h3>
-                <p class="mt-1 text-xs leading-relaxed text-slate-500">
-                    Apakah Anda yakin ingin menghapus <span id="deleteName" class="font-semibold text-slate-800"></span>?
-                    Tindakan ini tidak dapat dibatalkan.
+                <h3 id="deleteTitle" class="text-base font-bold text-slate-900">Hapus Data Ini?</h3>
+                <p id="deleteMessage" class="mt-1 text-xs leading-relaxed text-slate-500">
+                    Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.
                 </p>
             </div>
             <div class="flex items-center justify-center gap-2 pt-2">
@@ -217,8 +216,9 @@
                 </button>
                 <form id="deleteForm" method="POST" class="w-full">
                     @csrf
-                    @method('DELETE')
-                    <button type="submit" class="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-medium text-white shadow-md shadow-rose-600/20 transition hover:bg-rose-700">
+                    <input type="hidden" name="_method" value="DELETE" id="deleteMethod">
+                    <button type="submit" id="deleteConfirm"
+                            class="w-full rounded-xl bg-rose-600 py-2.5 text-xs font-medium text-white shadow-md shadow-rose-600/20 transition hover:bg-rose-700">
                         Ya, Hapus
                     </button>
                 </form>

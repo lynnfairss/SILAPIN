@@ -10,6 +10,13 @@ use PhpOffice\PhpWord\IOFactory;
 
 class DocxParserService
 {
+    /**
+     * Label identitas yang kadang masih ikut tercetak di sel tanda tangan.
+     * Template lama memakai NRP/NIK, template baru NIP, dan admin bisa
+     * mengetik ulang labelnya sendiri di Word.
+     */
+    private const PREFIX_IDENTITAS = '/^(?:NRP|NIK|NIP)\.\s*/i';
+
     public function parse(string $filePath): array
     {
         libxml_use_internal_errors(true);
@@ -266,7 +273,7 @@ class DocxParserService
             }
             if (count($leftTexts) >= 2) {
                 $nrpText = $leftTexts[1];
-                $result['ttd_kiri_nrp'] = preg_replace('/^(?:NRP|NIK)\.\s*/', '', $nrpText);
+                $result['ttd_kiri_nrp'] = preg_replace(self::PREFIX_IDENTITAS, '', $nrpText);
             }
             if (count($leftTexts) >= 3) {
                 $result['ttd_kiri_jabatan'] = $leftTexts[2];
@@ -284,11 +291,11 @@ class DocxParserService
             // bentuk barisnya agar file Word lama & baru terbaca sama benar.
             if (count($rightTexts) >= 2) {
                 $barisKedua = $rightTexts[1];
-                $berupaNrp = preg_match('/^(?:NRP|NIK)\./i', $barisKedua) === 1
+                $berupaNrp = preg_match(self::PREFIX_IDENTITAS, $barisKedua) === 1
                     || preg_match('/^\d{6,}$/', $barisKedua) === 1;
 
                 if ($berupaNrp) {
-                    $result['ttd_kanan_nrp'] = preg_replace('/^(?:NRP|NIK)\.\s*/', '', $barisKedua);
+                    $result['ttd_kanan_nrp'] = preg_replace(self::PREFIX_IDENTITAS, '', $barisKedua);
                     if (count($rightTexts) >= 3) {
                         $result['ttd_kanan_jabatan'] = $rightTexts[2];
                     }

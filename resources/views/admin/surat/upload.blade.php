@@ -74,7 +74,7 @@
     {{-- ==================== DUA KARTU UTAMA ==================== --}}
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {{-- ---------- Unggah surat ---------- --}}
-        <div id="kartuUnggah" class="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+        <div id="kartuUnggah" class="scroll-mt-24 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             <div class="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
                 <div class="flex items-start gap-3">
                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
@@ -99,7 +99,7 @@
                     </p>
                 </div>
 
-                <form action="{{ route('surat.upload.store') }}" method="POST" enctype="multipart/form-data" data-form-unggah>
+                <form id="form-upload" action="{{ route('surat.upload.store') }}" method="POST" enctype="multipart/form-data" data-form-unggah class="scroll-mt-24">
                     @csrf
 
                     <div>
@@ -792,9 +792,16 @@
         /* ---------------- Arsipkan template ---------------- */
         document.querySelectorAll('[data-arsipkan]').forEach(function (form) {
             form.addEventListener('submit', function (event) {
-                if (!window.confirm('Arsipkan ' + form.dataset.arsipkan + ' File tetap tersimpan dan bisa dipulihkan.')) {
-                    event.preventDefault();
-                }
+                event.preventDefault();
+
+                AdminUI.confirm({
+                    action: form.action,
+                    title: 'Arsipkan Template?',
+                    message: 'Arsipkan ' + form.dataset.arsipkan + ' Berkasnya tetap tersimpan dan bisa dipulihkan kapan saja.',
+                    confirmLabel: 'Ya, Arsipkan',
+                    tone: 'warning',
+                    icon: 'fa-box-archive'
+                });
             });
         });
 
@@ -827,6 +834,14 @@
         document.getElementById('previewTutup').addEventListener('click', kosongkanPratinjau);
         modalPratinjau.addEventListener('click', function (event) {
             if (event.target === modalPratinjau) kosongkanPratinjau();
+        });
+
+        // Escape ditangani layout (menutup modal), jadi iframe dikosongkan
+        // lewat listener terpisah agar tidak terus memuat surat.
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && !modalPratinjau.classList.contains('hidden')) {
+                kosongkanPratinjau();
+            }
         });
 
         document.getElementById('previewCetak').addEventListener('click', function () {
@@ -876,7 +891,8 @@
             });
 
             jumlahTampil.textContent = tampil;
-            daftarKosong.classList.toggle('hidden', tampil !== 0);
+            // Empty-state filter hanya relevan bila tabel memang berisi baris.
+            daftarKosong.classList.toggle('hidden', tampil !== 0 || baris.length === 0);
         }
 
         tombolStatus.forEach(function (tombol) {

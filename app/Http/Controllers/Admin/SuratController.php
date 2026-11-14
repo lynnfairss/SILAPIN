@@ -83,8 +83,8 @@ class SuratController extends Controller
      * Urutan untuk kolom kiri:
      *   1. nilai yang sudah tersimpan di surat_content (hasil sync dari Word)
      *      -- isian manual itu yang menang;
-     *   2. nama akun penyetuju beserta NIP-nya; jabatan dikosongkan karena
-     *      tabel users tidak menyimpannya;
+     *   2. nama akun penyetuju beserta NIP-nya (kolom users.nip); jabatan
+     *      dikosongkan karena akun admin tidak menyimpannya;
      *   3. belum ada penyetuju (permohonan belum disetujui) -- kembali ke data
      *      peminjam supaya surat lama tetap sama seperti sebelumnya.
      */
@@ -121,12 +121,18 @@ class SuratController extends Controller
             ];
         }
 
+        $nrpKananTersimpan = preg_replace(
+            '/^(?:NRP|NIK|NIP)\.\s*/i',
+            '',
+            (string) ($sc['ttd_kanan_nrp'] ?? '')
+        );
+
         return [
             'kiri_nama'     => $kiri['nama'],
             'kiri_nrp'      => $kiri['nrp'],
             'kiri_jabatan'  => $kiri['jabatan'],
             'kanan_nama'    => $sc['ttd_kanan_nama'] ?: $namaPeminjam,
-            'kanan_nrp'     => $sc['ttd_kanan_nrp'] ?: ($permohonan->nik ?: ''),
+            'kanan_nrp'     => $nrpKananTersimpan ?: ($permohonan->nik ?: ''),
             'kanan_jabatan' => $sc['ttd_kanan_jabatan'] ?: ($permohonan->jabatan ?: ''),
         ];
     }
@@ -216,11 +222,18 @@ class SuratController extends Controller
             ]);
         }
 
-        $relative = $berkas->storeAs(
-            'surat-docx',
-            $permohonan->nomor_permohonan . '.docx',
-            'local'
-        );
+        // Nama berkas diturunkan dari nomor surat, tetapi karakter selain
+        // huruf/angka/titik/dash diganti supaya tidak membentuk sub-folder
+        // (mis. nomor lama yang memuat "/").
+        $namaBerkas = preg_replace('/[^A-Za-z0-9._-]/', '_', $permohonan->nomor_permohonan) . '.docx';
+
+        $relative = $berkas->storeAs('surat-docx', $namaBerkas, 'local');
+
+        if (! $relative) {
+            return back()->withInput()->withErrors([
+                'file' => 'Berkas DOCX gagal disimpan di server. Periksa izin folder storage lalu coba lagi.',
+            ]);
+        }
 
         $merged = array_merge(
             $permohonan->surat_content ?? [],
@@ -233,7 +246,13 @@ class SuratController extends Controller
             'word_path'     => Storage::disk('local')->path($relative),
         ]);
 
-        $pdf->buat($permohonan);
+        // PDF hanya pelengkap: kalau gagal, DOCX tetap tersimpan. Jangan
+        // mengklaim PDF berhasil dibuat saat layanan mengembalikan null.
+        if ($pdf->buat($permohonan) === null) {
+            return back()->with('error', 'DOCX surat ' . $permohonan->nomor_permohonan
+                . ' berhasil diperbarui, tetapi PDF gagal dibuat. PDF lama sudah dihapus agar tidak '
+                . 'menampilkan isi yang keliru; coba unggah ulang atau unduh DOCX untuk memeriksa.');
+        }
 
         return back()->with('success', 'Surat ' . $permohonan->nomor_permohonan . ' berhasil diunggah. Isi surat sudah diperbarui dan PDF dibuat ulang.');
     }
