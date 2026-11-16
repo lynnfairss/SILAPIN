@@ -1019,6 +1019,63 @@ footer {
     z-index: 2;
 }
 
+/* ===== SCAN KTP DI HP: BINGKAI DIPERBESAR ===== */
+/* Diukur pada viewport 447 px: modal 92vw + padding 24 + hole 78% memberi
+   bingkai kartu 283x178 px. Dengan 96vw, padding 10 dan hole 90% menjadi
+   344x217 px (+48% luas, lebih besar lagi di layar 390 px), jadi kartu
+   memakai lebih banyak piksel sensor dan OCR membaca lebih tajam. Petunjuk
+   'letakkan kartu...' dipindah ke #cameraStatus karena tidak ada lagi ruang
+   di dalam frame untuk .ktp-label. */
+@media (max-width: 575.98px) {
+    .camera-modal-content {
+        width: min(560px, 96vw);
+        padding: 12px 10px 14px;
+    }
+
+    .camera-modal-content h6 {
+        margin-bottom: .5rem !important;
+        font-size: .95rem;
+    }
+
+    .ktp-hole {
+        width: 90%;
+        border-width: 1.5px;
+    }
+
+    .ktp-corner {
+        width: 16px;
+        height: 16px;
+        border-width: 2.5px;
+    }
+
+    .ktp-face-box {
+        left: 84%;
+        width: 20%;
+    }
+
+    .ktp-face-label {
+        left: 84%;
+        font-size: .52rem;
+    }
+
+    .ktp-label {
+        display: none;
+    }
+
+    .torch-btn {
+        top: 6px;
+        right: 6px;
+        width: 40px;
+        height: 40px;
+    }
+
+    #cameraStatus {
+        padding-top: .35rem !important;
+        padding-bottom: .35rem !important;
+        font-size: .78rem;
+    }
+}
+
 .scan-preview {
     margin-top: .5rem;
 }
@@ -1292,4 +1349,16 @@ footer {
     .step-content .d-flex.gap-2 > .btn {
         white-space: nowrap;
     }
+}
+
+/* Bootstrap menimpa utility px/py Tailwind dengan !important, dan border
+   bawaan membuat tautan "Kembali" 3px lebih pendek dari tombol "Selanjutnya". */
+.step-nav > a,
+.step-nav > button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    padding: 0 24px !important;
+    border-width: 2px !important;
 }

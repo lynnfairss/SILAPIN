@@ -484,39 +484,87 @@ footer.sp-footer--compact {
 }
 @media (max-width: 575.98px) {
     .inventory-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
     }
     .inventory-grid .product-card {
         max-width: none;
         width: 100%;
         margin: 0;
+        border-radius: 10px;
+    }
+    .inventory-grid .img-slider {
+        border-radius: 10px 10px 0 0;
+    }
+    .inventory-grid .stock-badge {
+        top: 4px;
+        right: 4px;
+        padding: .16em .5em;
+        font-size: .55rem;
+        letter-spacing: 0;
     }
     .inventory-grid .product-info {
-        padding: 10px 10px 12px;
+        padding: 7px 7px 8px;
     }
     .inventory-grid .product-name {
-        font-size: .85rem;
-        min-height: 2.34em;
+        font-size: .6rem;
+        line-height: 1.25;
+        min-height: 2.5em;
     }
-    .inventory-grid .product-meta {
-        font-size: .7rem;
-        gap: 4px;
+    .inventory-grid .product-cat {
+        gap: 3px;
+        margin-top: 4px;
+        font-size: .52rem;
+        min-width: 0;
     }
-    .inventory-grid .product-meta code {
-        font-size: .68rem;
+    .inventory-grid .product-cat span {
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .inventory-grid .product-cat i {
+        font-size: .55rem;
     }
     .inventory-grid .product-stok-kondisi {
-        gap: 4px;
+        gap: 2px 4px;
+        margin-top: 6px;
+        padding-top: 6px;
+        font-size: .52rem;
+    }
+    /* Titik pemisah dibuang: lebarnya cuma ~90px, Stok dan kondisi lebih
+       terbaca kalau turun ke baris sendiri. */
+    .inventory-grid .meta-dot {
+        display: none;
+    }
+    .inventory-grid .product-meta {
+        font-size: .5rem;
+        gap: 3px;
+    }
+    .inventory-grid .product-meta code {
+        font-size: .5rem;
     }
     .inventory-grid .badge-kondisi {
-        font-size: .7rem;
-        padding: .3em .5em;
+        font-size: .5rem;
+        padding: .2em .4em;
     }
     .inventory-grid .slider-btn {
-        width: 26px;
-        height: 26px;
-        font-size: .7rem;
+        width: 20px;
+        height: 20px;
+        font-size: .55rem;
+    }
+    .inventory-grid .slider-prev { left: 4px; }
+    .inventory-grid .slider-next { right: 4px; }
+    .inventory-grid .slider-dots {
+        bottom: 4px;
+        gap: 3px;
+    }
+    .inventory-grid .slider-dots .dot {
+        width: 5px;
+        height: 5px;
+    }
+    .inventory-grid .slider-dots .dot.active {
+        width: 12px;
     }
     .inv-chips {
         flex-wrap: nowrap;

@@ -625,53 +625,85 @@
 
         @media (max-width: 480px) {
             body {
-                padding: 22px 14px;
+                padding: 12px 10px;
             }
 
             .brand-header {
-                margin-bottom: 20px;
+                margin-bottom: 12px;
             }
 
             .brand-logo {
-                width: 92px;
-                height: 92px;
+                width: 62px;
+                height: 62px;
+                padding: 5px;
             }
 
             .brand-subtitle {
-                font-size: 13px;
-            }
-
-            .login-card {
-                border-radius: 15px;
-            }
-
-            .welcome-panel {
-                padding: 23px 20px;
-            }
-
-            .welcome-panel h2 {
-                font-size: 22px;
-                margin-bottom: 7px;
-            }
-
-            .welcome-panel p {
                 font-size: 12px;
             }
 
-            .form-panel {
-                padding: 27px 21px;
+            .login-card {
+                border-radius: 14px;
             }
 
-            .form-heading h2 {
-                font-size: 21px;
+            /* Sambutan panel dan keterangan form mengatakan hal yang sama;
+               di HP keduanya membuat halaman melebihi satu layar. */
+            .welcome-panel {
+                padding: 12px 16px;
+            }
+
+            .welcome-panel h2 {
+                font-size: 17px;
+                margin-bottom: 3px;
+            }
+
+            .welcome-panel p {
+                font-size: 11.5px;
+                line-height: 1.5;
+            }
+
+            .form-panel {
+                padding: 16px 16px 18px;
             }
 
             .form-heading {
-                margin-bottom: 24px;
+                margin-bottom: 14px;
+            }
+
+            .form-heading h2 {
+                font-size: 18px;
+                margin-bottom: 0;
+            }
+
+            .form-heading p {
+                display: none;
+            }
+
+            .form-group {
+                margin-bottom: 13px;
+            }
+
+            .form-label {
+                font-size: 12px;
+                margin-bottom: 5px;
+            }
+
+            .input-wrapper {
+                height: 45px;
+                padding: 0 12px;
+            }
+
+            .input-icon {
+                font-size: 16px;
+                margin-right: 10px;
+            }
+
+            .input-wrapper input {
+                font-size: 14px;
             }
 
             .form-options {
-                align-items: center;
+                margin: 0 0 14px;
             }
 
             .remember-label,
@@ -679,10 +711,31 @@
                 font-size: 12px;
             }
 
+            .btn-login {
+                height: 45px;
+                font-size: 14px;
+            }
+
+            .divider {
+                margin: 13px 0;
+            }
+
+            .btn-passkey {
+                height: 44px;
+                font-size: 13px;
+            }
+
+            .alert-error,
+            .alert-status {
+                padding: 9px 11px;
+                font-size: 12px;
+                margin-bottom: 13px;
+            }
+
             .footer {
                 font-size: 11px;
-                line-height: 1.6;
-                margin-top: 22px;
+                line-height: 1.5;
+                margin-top: 14px;
             }
         }
 

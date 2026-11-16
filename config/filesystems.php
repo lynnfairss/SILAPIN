@@ -40,7 +40,11 @@ return [
 
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            // Berkas publik disimpan langsung di public/storage supaya tidak
+            // bergantung pada symlink. Shared hosting (mis. InfinityFree)
+            // tidak mengizinkan pembuatan symlink, sedangkan di lokal folder
+            // public/storage sudah berupa junction ke storage/app/public.
+            'root' => public_path('storage'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,

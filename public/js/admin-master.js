@@ -246,10 +246,42 @@
         }
     }
 
+    /* -------------------- Topbar jam & tanggal -------------------- */
+    // Jam diambil dari perangkat pemohon, bukan dari server: config('app.timezone')
+    // masih UTC sehingga waktu server selalu meleset delapan jam dari WIB.
+    const formatTanggalPanjang = new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const formatTanggalPendek = new Intl.DateTimeFormat('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+    const layarLebar = window.matchMedia('(min-width: 640px)');
+
+    function duaDigit(n) {
+        return (n < 10 ? '0' : '') + n;
+    }
+
+    function initClock() {
+        const jam = document.getElementById('topbarJam');
+        if (!jam) return;
+
+        const tanggal = document.getElementById('topbarTanggal');
+
+        const render = function () {
+            const sekarang = new Date();
+            jam.textContent = duaDigit(sekarang.getHours()) + ':' + duaDigit(sekarang.getMinutes()) + ':' + duaDigit(sekarang.getSeconds());
+            // Format dipilih per tick, jadi rotasi layar ikut tanpa perlu
+            // listener resize dan tidak mungkin dua versi tanggal tampil bareng.
+            if (tanggal) {
+                tanggal.textContent = (layarLebar.matches ? formatTanggalPanjang : formatTanggalPendek).format(sekarang);
+            }
+        };
+
+        render();
+        setInterval(render, 1000);
+    }
+
     /* -------------------- Global bindings -------------------- */
     document.addEventListener('DOMContentLoaded', function () {
         initSidebar();
         initTopbar();
+        initClock();
         initViewToggles();
 
         document.querySelectorAll('[data-modal-close]').forEach(function (btn) {

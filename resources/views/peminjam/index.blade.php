@@ -22,7 +22,7 @@
 @include('partials.public-navbar', ['active' => 'form'])
 
 {{-- HERO --}}
-<section class="bg-gradient-to-b from-brand-950 via-brand-900 to-slate-900 text-white pt-32 pb-24 relative overflow-hidden">
+<section class="pf-hero text-white pt-32 pb-24 relative overflow-hidden">
     <div class="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
     <div class="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -44,7 +44,7 @@
     </div>
 </section>
 
-<main class="relative z-10 -mt-16 pb-20 px-4 sm:px-6 lg:px-8">
+<main class="pf-main relative z-10 -mt-16 pb-20 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
 
         @if (session('error'))
@@ -73,7 +73,7 @@
         @endif
 
         {{-- STEPPER --}}
-        <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-4 sm:p-6 mb-6">
+        <div class="pf-stepper bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-4 sm:p-6 mb-6">
             <div class="relative flex items-center justify-between max-w-2xl mx-auto">
                 <div class="absolute left-[16.6667%] top-1/2 -translate-y-1/2 w-[66.6667%] h-1 bg-slate-100 -z-0 rounded-full"></div>
                 <div id="stepProgress" class="absolute left-[16.6667%] top-1/2 -translate-y-1/2 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 -z-0 transition-all duration-500 rounded-full" style="width:0%"></div>
@@ -107,7 +107,7 @@
                 {{-- STEP 1: Data Diri --}}
                 <div class="step-content active" data-step="1">
                     <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
-                        <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <div class="pf-card-head bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm">
                                     <i class="fa-solid fa-id-card"></i>
@@ -120,8 +120,8 @@
                             <span class="text-xs font-medium text-slate-400"><span class="text-red-500">*</span> Wajib diisi</span>
                         </div>
 
-                        <div class="p-6 sm:p-8 space-y-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="pf-card-body p-6 sm:p-8 space-y-8">
+                            <div class="pf-grid grid grid-cols-1 md:grid-cols-2 gap-6">
 
                                 {{-- Nama Lengkap --}}
                                 <div>
@@ -270,7 +270,7 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="pf-grid grid grid-cols-1 md:grid-cols-2 gap-6">
 
                                     {{-- Foto Identitas --}}
                                     <div class="upload-field space-y-3">
@@ -341,9 +341,9 @@
                             </div>
 
                             {{-- Navigasi Step 1 --}}
-                            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="step-nav pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <a href="{{ route('website') }}"
-                                   class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
+                                   class="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
                                     <span>Kembali ke Beranda</span>
                                 </a>
@@ -361,7 +361,7 @@
                 {{-- STEP 2: Pilih Barang --}}
                 <div class="step-content" data-step="2">
                     <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
-                        <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <div class="pf-card-head bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-sm">
                                     <i class="fa-solid fa-box-open"></i>
@@ -374,8 +374,8 @@
                             <span class="text-xs font-medium text-slate-400"><span class="text-red-500">*</span> Wajib diisi</span>
                         </div>
 
-                        <div class="p-6 sm:p-8 space-y-8">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="pf-card-body p-6 sm:p-8 space-y-8">
+                            <div class="pf-grid grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div>
                                     <label for="tanggal_pinjam" class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
                                         Tanggal Pinjam <span class="text-red-500">*</span>
@@ -532,9 +532,9 @@
                             </div>
 
                             {{-- Navigasi Step 2 --}}
-                            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="step-nav pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <button type="button" onclick="goToStep(1)"
-                                        class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
+                                        class="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
                                     <span>Sebelumnya</span>
                                 </button>
@@ -551,7 +551,7 @@
                 {{-- STEP 3: Preview & Submit --}}
                 <div class="step-content" data-step="3">
                     <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
-                        <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                        <div class="pf-card-head bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                             <div class="flex items-center space-x-3">
                                 <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-semibold text-sm">
                                     <i class="fa-solid fa-file-circle-check"></i>
@@ -563,7 +563,7 @@
                             </div>
                         </div>
 
-                        <div class="p-6 sm:p-8 space-y-6">
+                        <div class="pf-card-body p-6 sm:p-8 space-y-6">
                             <div>
                                 <h3 class="text-sm font-bold text-slate-800 mb-3"><i class="fa-solid fa-user mr-2 text-blue-600"></i>Data Diri</h3>
                                 <div class="overflow-hidden rounded-xl border border-slate-200">
@@ -605,9 +605,9 @@
                         </div>
 
                         <div class="px-6 sm:px-8 pb-6 sm:pb-8">
-                            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div class="step-nav pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <button type="button" onclick="goToStep(2)"
-                                        class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
+                                        class="w-full sm:w-auto px-5 py-3 rounded-xl border border-slate-300 text-slate-600 hover:bg-slate-100 hover:text-slate-800 font-semibold text-xs tracking-wide transition-all inline-flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-arrow-left text-xs"></i>
                                     <span>Sebelumnya</span>
                                 </button>
@@ -681,6 +681,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('vendor/jquery/jquery.min.js') }}?v={{ filemtime(public_path('vendor/jquery/jquery.min.js')) ?: 1 }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{{ asset('js/ktp-ocr.js') }}?v={{ filemtime(public_path('js/ktp-ocr.js')) ?: 1 }}"></script>
 <script>
     let currentStep = 1;
 
@@ -1059,41 +1060,205 @@
     // ========== SCAN DOKUMEN (KAMERA) ==========
 
     let cameraStream = null;
-    const KTP_RATIO = 85.6 / 53.98; // rasio kartu identitas standar (ISO ID-1: KTP/SIM/KTM)
+    let cameraTrack = null;
+    let imageCapture = null;          // ImageCapture: foto resolusi penuh bila didukung
+    let lastCaptureCanvas = null;     // canvas resolusi penuh untuk OCR (bebas kompresi JPEG)
+    let lastCaptureFile = null;
 
     // ===== AUTO-CAPTURE KARTU IDENTITAS =====
     const AUTO_DETECT = {
-        interval: 100,       // ms antar sampling
-        sampleWidth: 96,     // lebar canvas sampling (px)
-        stableFrames: 2,     // jumlah sampel stabil berturut-turut sebelum capture (±0,2 detik)
-        minBrightness: 120,  // kecerahan rata-rata minimum area bingkai
-        maxBrightness: 235,  // kecerahan rata-rata maksimum
-        minEdge: 0.08,       // rasio piksel tepi minimum (teks pada kartu)
-        maxEdge: 0.55,       // rasio piksel tepi maksimum
+        interval: 110,       // ms antar sampling
+        sampleWidth: 420,    // lebar canvas sampling: ketajaman hanya terukur
+                             // pada resolusi mendekati kartu aslinya
+        stableFrames: 6,     // ±0,66 detik stabil sebelum capture (mencegah blur)
+        minBrightness: 105,  // kecerahan rata-rata minimum area bingkai
+        maxBrightness: 245,  // kecerahan rata-rata maksimum
+        minEdge: 0.04,       // rasio piksel tepi minimum (teks pada kartu)
+        maxEdge: 0.62,       // rasio piksel tepi maksimum
+        maxGlare: 0.07,      // porsi piksel nyaris putih (pantulan cahaya)
+        minSharpness: 60,    // variansi Laplacian minimum pada sampel 420px
+        sharpRatio: 0.9,     // harus mendekati ketajaman terbaik sejauh ini
         maxDiff: 7,          // selisih rata-rata antar frame (stabilitas)
+        minCoverage: 0.70,   // kotak kartu hasil grid menutupi minimal porsi ini
+        minBusyCells: 20,    // sel grid berserat: di bawah ini tidak ada kartu
+        maxOffsetX: 0.10,    // simpul pusat kartu terhadap bingkai (porsi lebar)
+        maxOffsetY: 0.12,
+        forceAfter: 9000,    // ms posisi sudah pas tapi fokus tak kunjung datang
+        manualHintAfter: 9000, // ms sebelum menyarankan tombol Ambil Foto
     };
     let autoDetectTimer = null;
     let autoDetectFrame = null;
     let autoDetectStable = 0;
+    let autoDetectPeakSharp = 0;
+    let autoDetectPosMs = 0;
+    let autoDetectStarted = 0;
     let autoCapturing = false;
 
-    function getHoleSourceRect(video, frame) {
-        const frameW = frame.offsetWidth;
-        const frameH = frame.offsetHeight;
-        const scale = Math.max(frameW / video.videoWidth, frameH / video.videoHeight);
-        const dw = video.videoWidth * scale;
-        const dh = video.videoHeight * scale;
-        const dx = (frameW - dw) / 2;
-        const dy = (frameH - dh) / 2;
-        const hw = frameW * 0.78;
-        const hh = hw / KTP_RATIO;
-        const hx = (frameW - hw) / 2;
-        const hy = (frameH - hh) / 2;
+    // Sumber crop: ukur bingkai panduan yang benar-benar terlihat, bukan
+    // konstanta yang harus dijaga tetap sinkron dengan CSS.
+    function getHoleSourceRect(video, frame, srcW, srcH) {
+        const hole = frame.querySelector('.ktp-hole') || frame;
+        const frameRect = frame.getBoundingClientRect();
+        const holeRect = hole.getBoundingClientRect();
+        const vw = srcW || video.videoWidth;
+        const vh = srcH || video.videoHeight;
+        if (!frameRect.width || !frameRect.height || !vw || !vh) {
+            return { sx: 0, sy: 0, sw: vw || 1, sh: vh || 1 };
+        }
+        const scale = Math.max(frameRect.width / vw, frameRect.height / vh);
+        const dw = vw * scale;
+        const dh = vh * scale;
+        const dx = (frameRect.width - dw) / 2;
+        const dy = (frameRect.height - dh) / 2;
+
+        // Bingkai sedikit diperluas agar tepi kartu yang melengkung tidak
+        // terpotong, tanpa menyapu latar belakang di sekitarnya.
+        const pad = Math.min(frameRect.width, frameRect.height) * 0.012;
+        const hx = Math.max(0, holeRect.left - frameRect.left - pad);
+        const hy = Math.max(0, holeRect.top - frameRect.top - pad);
+        const hw = Math.min(frameRect.width - hx, holeRect.width + pad * 2);
+        const hh = Math.min(frameRect.height - hy, holeRect.height + pad * 2);
+
         return {
-            sx: (hx - dx) / scale,
-            sy: (hy - dy) / scale,
-            sw: hw / scale,
-            sh: hh / scale,
+            sx: Math.max(0, (hx - dx) / scale),
+            sy: Math.max(0, (hy - dy) / scale),
+            sw: Math.min(vw, hw / scale),
+            sh: Math.min(vh, hh / scale),
+        };
+    }
+
+    // Hitung metrik kualitas frame: kecerahan, tekstur, cakupan kartu,
+    // pantulan cahaya, dan ketajaman (variansi Laplacian).
+    function analyzeFrame(gray, w, h) {
+        const n = w * h;
+        let sum = 0, glare = 0;
+        for (let i = 0; i < n; i++) {
+            const v = gray[i];
+            sum += v;
+            if (v > 245) glare++;
+        }
+        const mean = sum / n;
+
+        let edges = 0;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                const i = y * w + x;
+                const right = x < w - 1 ? gray[i + 1] : gray[i];
+                const down = y < h - 1 ? gray[i + w] : gray[i];
+                if (Math.max(Math.abs(right - gray[i]), Math.abs(down - gray[i])) > 35) edges++;
+            }
+        }
+
+        let lapSum = 0, lapSq = 0, count = 0;
+        for (let y = 1; y < h - 1; y++) {
+            for (let x = 1; x < w - 1; x++) {
+                const i = y * w + x;
+                const lap = (gray[i - 1] + gray[i + 1] + gray[i - w] + gray[i + w]) - 4 * gray[i];
+                lapSum += lap;
+                lapSq += lap * lap;
+                count++;
+            }
+        }
+        const lapMean = count ? lapSum / count : 0;
+        const sharpness = count ? (lapSq / count) - (lapMean * lapMean) : 0;
+
+        return {
+            mean: mean,
+            edgeRatio: edges / n,
+            glare: glare / n,
+            sharpness: sharpness,
+        };
+    }
+
+    // ===== POSISI KARTU =====
+    // Yang dianalisa bukan seluruh frame kamera, hanya lubang bingkai panduan
+    // (lihat getHoleSourceRect). Jadi "posisi sudah sesuai" berarti kartu
+    // menutupi lubang itu -- dan kartu yang benar-benar rapat justru tidak
+    // menyisakan latar di tepi mana pun.
+    //
+    // Batas kartu dicari lewat TEKSTUR, bukan lewat terang/gelap. Sudah diukur
+    // pada frame sintetis: langkah luminans baris teks dan kotak foto sama
+    // curamnya dengan langkah kartu-ke-latar, jadi pencarian tepi terang-gelap
+    // membaca posisi secara acak tepat pada kasus paling umum (kartu penuh di
+    // bingkai). Isi KTP punya banyak tepi kecil (huruf, foto, garis Garuda)
+    // sedangkan meja, lantai, dan dinding relatif rata, jadi kerapatan tekstur
+    // per sel grid cukup untuk menilai cakupan dan titik tengah kartu.
+    //
+    // Kemiringan sengaja tidak ditahan: OCR sudah memutar balik gambar
+    // (koreksi skew projection-variance di ktp-ocr.js), jadi kartu miring 10
+    // derajat tetap terbaca selama seluruh isinya masuk bingkai.
+    const GRID_COLS = 16, GRID_ROWS = 10;
+    const CELL_BUSY_STD = 10;   // simpangan piksel dalam satu sel: ambang 'ada struktur'
+    const MIN_CELL_CONTRAST = 45;
+
+    function cardGrid(gray, w, h) {
+        const cw = w / GRID_COLS, ch = h / GRID_ROWS;
+        let busy = 0, total = 0, lo = 255, hi = 0;
+        let c0 = GRID_COLS, c1 = -1, r0 = GRID_ROWS, r1 = -1;
+
+        for (let gy = 0; gy < GRID_ROWS; gy++) {
+            const y0 = Math.max(1, Math.floor(gy * ch));
+            const y1 = Math.min(h - 1, Math.floor((gy + 1) * ch));
+            for (let gx = 0; gx < GRID_COLS; gx++) {
+                const x0 = Math.max(1, Math.floor(gx * cw));
+                const x1 = Math.min(w - 1, Math.floor((gx + 1) * cw));
+                let n = 0, sum = 0, sq = 0;
+                for (let y = y0; y < y1; y++) {
+                    const base = y * w;
+                    for (let x = x0; x < x1; x++) {
+                        const v = gray[base + x];
+                        n++; sum += v; sq += v * v;
+                    }
+                }
+                if (n < 60) continue;
+                total++;
+                const mean = sum / n;
+                if (mean < lo) lo = mean;
+                if (mean > hi) hi = mean;
+                if (Math.sqrt(Math.max(0, sq / n - mean * mean)) < CELL_BUSY_STD) continue;
+                busy++;
+                if (gx < c0) c0 = gx;
+                if (gx > c1) c1 = gx;
+                if (gy < r0) r0 = gy;
+                if (gy > r1) r1 = gy;
+            }
+        }
+
+        const contrast = hi - lo;
+
+        // Serat saja belum cukup: meja bergaris, karpet, atau kain bermotif
+        // membuat SEMUA sel sibuk. Kartu selalu punya dua hal sekaligus, teks
+        // hitam dan badan plastik putih, jadi rentang terangnya besar. Latar
+        // bermotif biasanya cuma main di satu kisaran. Tanpa uji ini bingkai
+        // yang diarahkan ke meja polos-berpola dianggap kartu dan memotret diri
+        // sendiri.
+        //
+        // Kartu yang benar-benar polos (terlalu blur, terlalu jauh) tidak punya
+        // sel sibuk sama sekali; itu bukan kartu, itu meja kosong.
+        if (busy < AUTO_DETECT.minBusyCells || c1 - c0 < 3 || r1 - r0 < 2) {
+            return { found: false, flat: false, busy: busy / (total || 1) };
+        }
+        if (contrast < MIN_CELL_CONTRAST) {
+            return { found: false, flat: true, busy: busy / (total || 1), contrast: contrast };
+        }
+
+        // Catatan: kotak sel sibuk berasal dari teks+foto, dan KTP punya margin
+        // kosong 3-5% di tiap sisi, jadi kartu yang benar-benar rapat mengukur
+        // cakupan sekitar 0,75-1,00 -- bukan 1,00. Ambang minCoverage dipakai
+        // relative ke situ, bukan kotak diperluas, karena perluasan satu sel
+        // membuat kartu seukuran 80% bingkai lolos dan tidak ada lagi yang
+        // memberi tahu pengguna untuk memajankan kartu.
+        const wide = (c1 - c0 + 1) / GRID_COLS;
+        const tall = (r1 - r0 + 1) / GRID_ROWS;
+        return {
+            found: true,
+            coverage: wide * tall,
+            dx: ((c0 + c1 + 1) / 2 - GRID_COLS / 2) / GRID_COLS,
+            dy: ((r0 + r1 + 1) / 2 - GRID_ROWS / 2) / GRID_ROWS,
+            wide: wide,
+            tall: tall,
+            busy: busy / (total || 1),
+            contrast: contrast,
         };
     }
 
@@ -1101,6 +1266,9 @@
         stopAutoDetect();
         autoDetectFrame = null;
         autoDetectStable = 0;
+        autoDetectPeakSharp = 0;
+        autoDetectPosMs = 0;
+        autoDetectStarted = Date.now();
         autoDetectTimer = setInterval(autoDetectTick, AUTO_DETECT.interval);
     }
 
@@ -1111,74 +1279,119 @@
         }
         autoDetectFrame = null;
         autoDetectStable = 0;
+        autoDetectPosMs = 0;
     }
 
     function autoDetectTick() {
         const video = document.getElementById('cameraPreview');
+        const status = document.getElementById('cameraStatus');
         if (!cameraStream || !autoDetectTimer || video.videoWidth === 0 || autoCapturing) return;
 
         const frame = document.querySelector('.camera-frame');
         if (!frame) return;
 
         const rect = getHoleSourceRect(video, frame);
+        if (!rect.sw || !rect.sh) return;
+
         const sampleW = AUTO_DETECT.sampleWidth;
-        const sampleH = Math.max(1, Math.round(sampleW / KTP_RATIO));
+        const sampleH = Math.max(1, Math.round(sampleW * (rect.sh / rect.sw)));
 
         const canvas = document.getElementById('cameraCanvas');
         canvas.width = sampleW;
         canvas.height = sampleH;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         ctx.drawImage(video, rect.sx, rect.sy, rect.sw, rect.sh, 0, 0, sampleW, sampleH);
 
         const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
         const gray = new Uint8Array(sampleW * sampleH);
-        let sum = 0;
-        for (let y = 0; y < sampleH; y++) {
-            for (let x = 0; x < sampleW; x++) {
-                const i = (y * sampleW + x) * 4;
-                const g = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-                gray[y * sampleW + x] = g;
-                sum += g;
-            }
+        for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+            gray[p] = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
         }
-        const mean = sum / (sampleW * sampleH);
 
-        let edgeCount = 0;
-        for (let y = 0; y < sampleH; y++) {
-            for (let x = 0; x < sampleW; x++) {
-                const i = y * sampleW + x;
-                const right = x < sampleW - 1 ? gray[i + 1] : gray[i];
-                const down = y < sampleH - 1 ? gray[i + sampleW] : gray[i];
-                if (Math.max(Math.abs(right - gray[i]), Math.abs(down - gray[i])) > 35) edgeCount++;
-            }
-        }
-        const edgeRatio = edgeCount / (sampleW * sampleH);
+        const stats = analyzeFrame(gray, sampleW, sampleH);
+        const pos = cardGrid(gray, sampleW, sampleH);
 
         let diffSum = -1;
-        if (autoDetectFrame) {
+        if (autoDetectFrame && autoDetectFrame.length === gray.length) {
             let diff = 0;
             for (let i = 0; i < gray.length; i++) diff += Math.abs(gray[i] - autoDetectFrame[i]);
             diffSum = diff / gray.length;
         }
         autoDetectFrame = gray.slice();
 
-        const brightnessOk = mean >= AUTO_DETECT.minBrightness && mean <= AUTO_DETECT.maxBrightness;
-        const edgeOk = edgeRatio >= AUTO_DETECT.minEdge && edgeRatio <= AUTO_DETECT.maxEdge;
+        // Autofokus HP butuh waktu menutup. Ambang ketajaman ikut bergerak:
+        // puncak meluruh perlahan, jadi frame tertajam sejauh inilah patokannya.
+        autoDetectPeakSharp = Math.max(stats.sharpness, autoDetectPeakSharp * 0.985);
+
+        const brightnessOk = stats.mean >= AUTO_DETECT.minBrightness && stats.mean <= AUTO_DETECT.maxBrightness;
+        const edgeOk = stats.edgeRatio >= AUTO_DETECT.minEdge && stats.edgeRatio <= AUTO_DETECT.maxEdge;
+        const glareOk = stats.glare <= AUTO_DETECT.maxGlare;
+        const sharpOk = stats.sharpness >= AUTO_DETECT.minSharpness
+            && stats.sharpness >= autoDetectPeakSharp * AUTO_DETECT.sharpRatio;
         const stableOk = diffSum >= 0 && diffSum <= AUTO_DETECT.maxDiff;
 
-        const status = document.getElementById('cameraStatus');
-        if (brightnessOk && edgeOk && stableOk) {
+        const sizeOk = pos.found && pos.coverage >= AUTO_DETECT.minCoverage;
+        const centeredOk = pos.found && Math.abs(pos.dx) <= AUTO_DETECT.maxOffsetX && Math.abs(pos.dy) <= AUTO_DETECT.maxOffsetY;
+        const posOk = sizeOk && centeredOk;
+        // Cakupan sedikit di bawah ambang sering cuma efek lensa yang belum
+        // mengunci (huruf meleleh, kotak sel sibuk menyusut). Tidak boleh
+        // membuat foto otomatis mati total: selama kartu tertutup setengah
+        // bingkai dan posisinya tengah, timer tetap jalan dan forceAfter di
+        // bawah yang mengambil keputusannya.
+        const almostOk = pos.found && centeredOk && pos.coverage >= AUTO_DETECT.minCoverage * 0.8;
+        autoDetectPosMs = almostOk ? autoDetectPosMs + AUTO_DETECT.interval : 0;
+
+        if (posOk && brightnessOk && edgeOk && glareOk && sharpOk && stableOk) {
             autoDetectStable++;
             if (autoDetectStable >= AUTO_DETECT.stableFrames) {
-                status.textContent = 'Kartu identitas terdeteksi — mengambil foto…';
+                status.textContent = 'Posisi sudah pas — memotret…';
                 autoCapture();
-            } else if (autoDetectStable === 1) {
-                status.textContent = 'Kartu identitas terdeteksi…';
+            } else {
+                const sisa = (AUTO_DETECT.stableFrames - autoDetectStable) * AUTO_DETECT.interval / 1000;
+                status.textContent = 'Tahan posisi… ' + sisa.toFixed(1) + ' dtk';
             }
-        } else {
-            autoDetectStable = 0;
-            status.textContent = 'Arahkan kartu identitas ke bingkai, biarkan foto otomatis…';
+            return;
         }
+
+        autoDetectStable = 0;
+
+        // Posisi sudah benar lama-lama tapi autofokus tidak kunjung mengunci
+        // (kartu terlalu dekat, lensa makro mentok). Lebih baik memotret
+        // daripada menunggu tanpa ujung; tombol manual tetap ada.
+        if (almostOk && brightnessOk && glareOk && autoDetectPosMs >= AUTO_DETECT.forceAfter) {
+            status.textContent = 'Posisi sudah pas — memotret…';
+            autoCapture();
+            return;
+        }
+
+        let pesan;
+        if (!pos.found && pos.flat) {
+            pesan = 'Kartu tidak terbaca — cahaya kurang atau permukaannya memantul.';
+        } else if (!pos.found) {
+            pesan = 'Kartu belum terlihat di dalam bingkai.';
+        } else if (!centeredOk) {
+            // Ditentukan lebih dulu: kartu yang tergeser juga mengurangi
+            // cakupan, tapi yang harus dilakukan pengguna tetap menggeser,
+            // bukan memajukan.
+            const arah = Math.abs(pos.dx) > AUTO_DETECT.maxOffsetX ? (pos.dx > 0 ? 'kiri' : 'kanan') : (pos.dy > 0 ? 'atas' : 'bawah');
+            pesan = 'Geser kartu sedikit ke ' + arah + '.';
+        } else if (pos.coverage < AUTO_DETECT.minCoverage) {
+            pesan = 'Dekatkan kartu sampai memenuhi bingkai.';
+        } else if (!brightnessOk) {
+            pesan = 'Cahaya kurang atau terlalu terang. Cari tempat yang lebih terang.';
+        } else if (!glareOk) {
+            pesan = 'Ada pantulan cahaya — miringkan sedikit kartu atau jauhkan dari lampu.';
+        } else if (!sharpOk) {
+            pesan = 'Menunggu fokus — tahan HP diam sebentar.';
+        } else if (!edgeOk) {
+            pesan = 'Kartu belum terlihat jelas di dalam bingkai.';
+        } else {
+            pesan = 'Arahkan kartu identitas ke dalam bingkai, biarkan foto otomatis…';
+        }
+        if (Date.now() - autoDetectStarted > AUTO_DETECT.manualHintAfter) {
+            pesan += ' Bisa juga tekan "Ambil Foto".';
+        }
+        status.textContent = pesan;
     }
 
     function autoCapture() {
@@ -1251,7 +1464,7 @@
         document.getElementById('cameraModalTitle').textContent = isKtp ? 'Scan Identitas' : 'Scan Dokumen';
         document.getElementById('cameraModal').classList.add('active');
         btnCapture.disabled = true;
-        status.textContent = isKtp ? 'Aktifkan kamera, lalu letakkan kartu identitas di dalam bingkai…' : 'Mengaktifkan kamera…';
+        status.textContent = isKtp ? 'Aktifkan kamera, lalu letakkan kartu di dalam bingkai (foto diri di kotak kanan)…' : 'Mengaktifkan kamera…';
 
         if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             if (window.isSecureContext) {
@@ -1272,15 +1485,47 @@
         }
 
         try {
-            cameraStream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'environment', width: { ideal: 1280 } },
-                audio: false,
-            });
+            // Minta resolusi setinggi mungkin; banyak HP hanya memberi 640×480
+            // kalau constraint terlalu longgar. Coba bertingkat agar tetap
+            // berhasil di perangkat yang menolak opsi advanced.
+            const attempts = [
+                { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, advanced: [{ focusMode: 'continuous' }] }, audio: false },
+                { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } }, audio: false },
+                { video: { facingMode: 'environment', width: { ideal: 1280 } }, audio: false },
+                { video: true, audio: false },
+            ];
+            let lastError = null;
+            for (const constraints of attempts) {
+                try {
+                    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    break;
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+            if (!cameraStream) throw lastError || new Error('Kamera tidak tersedia');
+
             video.srcObject = cameraStream;
             await video.play();
+
+            cameraTrack = cameraStream.getVideoTracks()[0] || null;
+            imageCapture = null;
+            if (typeof window.ImageCapture === 'function' && cameraTrack) {
+                try {
+                    imageCapture = new ImageCapture(cameraTrack);
+                } catch (err) {
+                    imageCapture = null;
+                }
+            }
+
             setupTorch();
             btnCapture.disabled = false;
-            if (isKtp) {
+
+            const settings = cameraTrack && cameraTrack.getSettings ? cameraTrack.getSettings() : {};
+            if (isKtp && settings.width && settings.width < 1280) {
+                status.textContent = 'Resolusi kamera rendah (' + settings.width + 'px). Hasil deteksi bisa kurang akurat.';
+                setTimeout(startAutoDetect, 1800);
+            } else if (isKtp) {
                 startAutoDetect();
                 status.textContent = 'Arahkan kartu identitas ke bingkai, foto otomatis saat posisi pas.';
             } else {
@@ -1301,7 +1546,7 @@
         showError('Silakan isi data diri secara manual.');
     }
 
-    function capturePhoto() {
+    async function capturePhoto() {
         const video = document.getElementById('cameraPreview');
         const canvas = document.getElementById('cameraCanvas');
         const field = video.dataset.target;
@@ -1311,34 +1556,61 @@
         const frame = document.querySelector('.camera-frame');
         const isKtp = field === 'foto_ktp' && frame;
 
+        // Sumber terbaik untuk OCR kartu adalah frame video yang baru saja
+        // dinyatakan tajam oleh auto-detect. ImageCapture memang memberi lebih
+        // banyak piksel, tetapi merekam momen berikutnya, setelah autofokus dan
+        // tangan bergerak, sehingga hasilnya justru sering lebih lunak. Hanya
+        // dipakai bila aliran video beresolusi kecil.
+        let source = video;
+        let srcW = video.videoWidth;
+        let srcH = video.videoHeight;
+
+        if (isKtp && imageCapture && srcW < 1000) {
+            try {
+                const bitmap = await imageCapture.takePhoto();
+                if (bitmap && bitmap.width) {
+                    const bitmapRatio = bitmap.width / bitmap.height;
+                    const videoRatio = video.videoWidth / video.videoHeight;
+                    if (Math.abs(bitmapRatio - videoRatio) < 0.05) {
+                        source = bitmap;
+                        srcW = bitmap.width;
+                        srcH = bitmap.height;
+                    } else if (bitmap.close) {
+                        bitmap.close();
+                    }
+                }
+            } catch (err) {
+                source = video;
+            }
+        }
+
         if (isKtp) {
-            // Mode kartu identitas: crop tepat sesuai bingkai yang terlihat di viewfinder.
-            // Mapping "cover": video memenuhi frame penuh, hitung wilayah sumber.
-            const frameW = frame.offsetWidth;
-            const frameH = frame.offsetHeight;
-            const scale = Math.max(frameW / video.videoWidth, frameH / video.videoHeight);
-            const dw = video.videoWidth * scale;
-            const dh = video.videoHeight * scale;
-            const dx = (frameW - dw) / 2;
-            const dy = (frameH - dh) / 2;
-
-            const hw = frameW * 0.78;
-            const hh = hw / KTP_RATIO;
-            const hx = (frameW - hw) / 2;
-            const hy = (frameH - hh) / 2;
-
-            const sx = (hx - dx) / scale;
-            const sy = (hy - dy) / scale;
-            const sw = hw / scale;
-            const sh = hh / scale;
-
-            canvas.width = Math.round(sw * 2); // 2x untuk hasil lebih tajam
-            canvas.height = Math.round(sh * 2);
-            canvas.getContext('2d').drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+            // Crop sesuai bingkai panduan. Jangan di-upscale: resolusi asli
+            // kamera sudah memberi detail terbaik untuk OCR.
+            const rect = getHoleSourceRect(video, frame, srcW, srcH);
+            canvas.width = Math.max(1, Math.round(rect.sw));
+            canvas.height = Math.max(1, Math.round(rect.sh));
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(source, rect.sx, rect.sy, rect.sw, rect.sh, 0, 0, canvas.width, canvas.height);
         } else {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.width = srcW;
+            canvas.height = srcH;
+            canvas.getContext('2d').drawImage(source, 0, 0, srcW, srcH);
+        }
+
+        if (source !== video && source.close) source.close();
+
+        // Simpan salinan resolusi penuh untuk OCR sebelum dikompresi ke JPEG.
+        if (isKtp) {
+            const ocrCanvas = document.createElement('canvas');
+            ocrCanvas.width = canvas.width;
+            ocrCanvas.height = canvas.height;
+            ocrCanvas.getContext('2d').drawImage(canvas, 0, 0);
+            lastCaptureCanvas = ocrCanvas;
+        } else {
+            lastCaptureCanvas = null;
         }
 
         canvas.toBlob(function(blob) {
@@ -1349,6 +1621,7 @@
                     const dt = new DataTransfer();
                     dt.items.add(file);
                     input.files = dt.files;
+                    lastCaptureFile = file;
                     showScanPreview(field, URL.createObjectURL(file));
                     if (field === 'foto_ktp') {
                         setTimeout(runOcrKtp, 400);
@@ -1356,7 +1629,7 @@
                 }
             }
             closeCamera();
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 0.92);
     }
 
     function showScanPreview(field, url) {
@@ -1392,6 +1665,8 @@
         if (preview) preview.innerHTML = '';
         updateUploadLabel(field);
         if (field === 'foto_ktp') {
+            lastCaptureCanvas = null;
+            lastCaptureFile = null;
             setOcrStatus('', 'idle');
             updateOcrButton();
         }
@@ -1406,184 +1681,114 @@
             cameraStream.getTracks().forEach(function(t) { t.stop(); });
             cameraStream = null;
         }
+        cameraTrack = null;
+        imageCapture = null;
         document.getElementById('cameraPreview').srcObject = null;
         document.getElementById('ktpFrame').classList.add('hidden');
         document.getElementById('cameraModal').classList.remove('active');
     }
 
-    // ========== OCR KARTU IDENTITAS (TESSERACT.JS) ==========
+    // ========== OCR KARTU IDENTITAS ==========
+    // Mesin, pra-proses gambar dan parser ada di public/js/ktp-ocr.js
+    // (window.KtpOcr) supaya bisa diukur terpisah lewat halaman lab.
 
-    let ocrWorker = null;
     let ocrBusy = false;
-
-    // Tesseract dimuat saat pertama kali OCR dipakai, bukan saat halaman dibuka.
-    let ocrScriptPromise = null;
-
-    function ocrSupported() {
-        return true;
-    }
-
-    function loadTesseractScript() {
-        if (typeof Tesseract !== 'undefined' && Tesseract.createWorker) {
-            return Promise.resolve();
-        }
-        if (ocrScriptPromise) return ocrScriptPromise;
-
-        ocrScriptPromise = new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-            script.async = true;
-            script.onload = () => resolve();
-            script.onerror = () => {
-                ocrScriptPromise = null;
-                reject(new Error('Gagal memuat mesin OCR (butuh internet)'));
-            };
-            document.head.appendChild(script);
-        });
-
-        return ocrScriptPromise;
-    }
-
-    async function getOcrWorker() {
-        if (ocrWorker) return ocrWorker;
-        await loadTesseractScript();
-        const worker = await Tesseract.createWorker('ind');
-        await worker.setParameters({ preserve_interword_spaces: '1' });
-        ocrWorker = worker;
-        return ocrWorker;
-    }
+    const ocrFields = [
+        { name: 'nik', label: 'Nomor Identitas', key: 'nik', max: 20 },
+        { name: 'nama_peminjam', label: 'Nama', key: 'nama', max: 150 },
+        { name: 'tempat_tanggal_lahir', label: 'TTL', key: 'ttl', max: 120 },
+        { name: 'alamat', label: 'Alamat', key: 'alamatLengkap', max: 250 },
+        { name: 'jabatan', label: 'Pekerjaan', key: 'pekerjaan', max: 100 },
+    ];
+    // Kolom yang sudah diketik pemohon tidak boleh ditimpa hasil OCR.
+    const ocrTouched = new Set();
 
     function setOcrStatus(msg, type) {
         const el = document.getElementById('ocrStatus');
         el.textContent = msg;
-        el.className = 'ocr-status ocr-' + type;
+        el.className = 'ocr-status ocr-' + (type || 'idle');
     }
 
     function updateOcrButton() {
         const input = document.getElementById('fotoKtpInput');
         const btn = document.getElementById('btnOcrKtp');
-        const hasImg = input && input.files && input.files.length > 0 && input.files[0].type.startsWith('image/');
-        btn.disabled = !hasImg || ocrBusy;
+        const file = input && input.files && input.files[0];
+        btn.disabled = !file || !file.type.startsWith('image/') || ocrBusy;
     }
 
-    function preprocessForOcr(img) {
-        const maxDim = 1200;
-        let w = img.naturalWidth || img.width;
-        let h = img.naturalHeight || img.height;
-        const scale = Math.min(1, maxDim / Math.max(w, h));
-        w = Math.round(w * scale);
-        h = Math.round(h * scale);
-        const canvas = document.createElement('canvas');
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(0, 0, w, h);
-        ctx.drawImage(img, 0, 0, w, h);
-        const data = ctx.getImageData(0, 0, w, h);
-        const d = data.data;
-        for (let i = 0; i < d.length; i += 4) {
-            let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
-            gray = (gray - 128) * 1.4 + 128;
-            gray = Math.max(0, Math.min(255, gray));
-            d[i] = d[i + 1] = d[i + 2] = gray;
+    (function trackManualEdits() {
+        for (const f of ocrFields) {
+            const el = document.querySelector('[name="' + f.name + '"]');
+            if (!el) continue;
+            if (el.value.trim()) ocrTouched.add(f.name);
+            el.addEventListener('input', function () {
+                if (el.value.trim()) ocrTouched.add(f.name);
+                else ocrTouched.delete(f.name);
+            });
         }
-        ctx.putImageData(data, 0, 0);
-        return canvas;
-    }
+    })();
 
-    function cleanValue(s) {
-        return s.replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, ' ').trim();
-    }
+    // Sumber OCR terbaik: salinan resolusi penuh dari kamera, yang bebas dari
+    // kompresi JPEG tempat file input disimpan. Untuk unggahan manual, ya gambarnya.
+    function ocrSource() {
+        const input = document.getElementById('fotoKtpInput');
+        const file = input && input.files && input.files[0];
+        if (!file) return Promise.resolve(null);
+        if (lastCaptureCanvas && file === lastCaptureFile) return Promise.resolve(lastCaptureCanvas);
 
-    function grabValue(lines, labelRe) {
-        for (let i = 0; i < lines.length; i++) {
-            const m = lines[i].match(labelRe);
-            if (!m) continue;
-            const same = m[1] ? m[1].trim() : '';
-            if (same.replace(/[^a-z0-9]/gi, '').length >= 3) {
-                return cleanValue(same);
-            }
-            const val = [];
-            for (let j = i + 1; j < lines.length; j++) {
-                const nxt = lines[j];
-                if (/^(tempat|tgl|jenis|golongan|rt|kel|kecamatan|agama|status|pekerjaan|kewarganegaraan|berlaku|nik|provinsi|alamat|nama)/i.test(nxt.replace(/\s+/g, ''))) break;
-                val.push(nxt);
-                if (val.length >= 3) break;
-            }
-            if (val.length) {
-                const joined = cleanValue(val.join(' '));
-                if (joined.replace(/[^a-z0-9]/gi, '').length >= 3) return joined;
-            }
-        }
-        return '';
-    }
-
-    function parseKtpText(raw) {
-        const result = { nik: '', nama: '', alamat: '', tempatTglLahir: '' };
-        if (!raw) return result;
-        const text = raw.replace(/\r/g, '\n').replace(/[ \t]+/g, ' ');
-        const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-
-        const nikMatch = text.replace(/\s+/g, '').match(/[0-9]{16}/);
-        if (nikMatch) result.nik = nikMatch[0];
-
-        let nama = grabValue(lines, /^n\s*a\s*m\s*a\s*:?\s*(.*)/i);
-        if (!nama) {
-            const im = text.match(/nama\s*:?\s*([A-Z][A-Za-z .'-]{3,})/i);
-            if (im) nama = im[1];
-        }
-        if (nama) {
-            nama = nama.replace(/[^\w .'-]/g, '').replace(/\s+/g, ' ').trim();
-            if (nama.length >= 3 && nama.length <= 80) result.nama = nama;
-        }
-
-        result.tempatTglLahir = grabValue(lines, /^tempat\s*\/?\s*tgl\s*lahir\s*:?\s*(.*)/i);
-        result.alamat = grabValue(lines, /^alamat\s*:?\s*(.*)/i);
-        return result;
+        return new Promise(function (resolve, reject) {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = function () { URL.revokeObjectURL(url); resolve(img); };
+            img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('gambar tidak terbaca')); };
+            img.src = url;
+        });
     }
 
     async function runOcrKtp() {
+        if (ocrBusy) return;
         const input = document.getElementById('fotoKtpInput');
         const file = input && input.files && input.files[0];
-        if (ocrBusy || !file || !file.type.startsWith('image/')) return;
-        if (!ocrSupported()) {
-            setOcrStatus('Lib OCR tidak termuat (butuh internet saat pertama kali). Isi manual saja.', 'error');
+        if (!file || !file.type.startsWith('image/')) return;
+        if (!window.KtpOcr) {
+            setOcrStatus('Mesin OCR tidak termuat. Isi data diri manual saja.', 'error');
             return;
         }
 
         ocrBusy = true;
         updateOcrButton();
-        setOcrStatus('Mendeteksi data identitas…', 'busy');
+        setOcrStatus('Membaca kartu…', 'busy');
 
         try {
-            const url = URL.createObjectURL(file);
-            const img = new Image();
-            await new Promise((resolve, reject) => {
-                img.onload = resolve;
-                img.onerror = reject;
-                img.src = url;
+            const source = await ocrSource();
+            if (!source) { setOcrStatus('', 'idle'); return; }
+
+            const result = await KtpOcr.recognize(source, {
+                onStage: function (msg) { setOcrStatus(msg, 'busy'); },
             });
-            const canvas = preprocessForOcr(img);
-            URL.revokeObjectURL(url);
 
-            const worker = await getOcrWorker();
-            const { data } = await worker.recognize(canvas);
+            const filled = [];
+            const kept = [];
+            for (const f of ocrFields) {
+                const el = document.querySelector('[name="' + f.name + '"]');
+                const value = String(result.fields[f.key] || '').slice(0, f.max);
+                if (!el || !value) continue;
+                if (ocrTouched.has(f.name)) { kept.push(f.label); continue; }
+                el.value = value;
+                filled.push(f.label);
+            }
 
-            const parsed = parseKtpText(data.text);
-            let filled = 0;
-            if (parsed.nik) { document.querySelector('[name="nik"]').value = parsed.nik; filled++; }
-            if (parsed.nama) { document.querySelector('[name="nama_peminjam"]').value = parsed.nama; filled++; }
-            if (parsed.alamat) { document.querySelector('[name="alamat"]').value = parsed.alamat; filled++; }
-            if (parsed.tempatTglLahir) { document.querySelector('[name="tempat_tanggal_lahir"]').value = parsed.tempatTglLahir; filled++; }
-
-            if (filled === 0) {
-                setOcrStatus('Data identitas tidak terdeteksi. Perbaiki foto lalu coba lagi, atau isi manual.', 'error');
+            if (filled.length) {
+                let msg = 'Tertulis dari kartu: ' + filled.join(', ') + '. Mohon periksa sebelum lanjut.';
+                if (kept.length) msg += ' Kolom yang Anda ketik sendiri (' + kept.join(', ') + ') tidak diubah.';
+                setOcrStatus(msg, 'success');
+            } else if (kept.length) {
+                setOcrStatus('Kolom sudah Anda isi sendiri, jadi tidak ditimpa. Kosongkan kolom bila ingin diisi otomatis.', 'idle');
             } else {
-                setOcrStatus('Data terisi dari identitas (Nama, Nomor Identitas, Alamat, TTL). Mohon periksa kembali sebelum lanjut.', 'success');
+                setOcrStatus('Belum ada yang terbaca. Foto kurang tajam atau kartu terlalu jauh — foto ulang atau isi manual.', 'error');
             }
         } catch (e) {
-            setOcrStatus('OCR gagal: ' + (e && e.message ? e.message : e) + '. Isi manual saja.', 'error');
+            setOcrStatus('OCR gagal: ' + (e && e.message ? e.message : e) + '. Silakan isi manual.', 'error');
         } finally {
             ocrBusy = false;
             updateOcrButton();
@@ -1654,6 +1859,10 @@
     const fotoKtpInputEl = document.getElementById('fotoKtpInput');
     if (fotoKtpInputEl) {
         fotoKtpInputEl.addEventListener('change', function() {
+            // Perubahan selalu berarti pilihan/seretan manual: salinan kamera
+            // tidak lagi mewakili file yang sekarang terpasang.
+            lastCaptureCanvas = null;
+            lastCaptureFile = null;
             updateOcrButton();
             const file = this.files && this.files[0];
             if (file && file.type.startsWith('image/')) {
@@ -1663,6 +1872,8 @@
             }
         });
     }
+
+    updateOcrButton();
 
     // CSRF Token Refresh — refresh tiap 30 menit agar tidak expired
     setInterval(function() {

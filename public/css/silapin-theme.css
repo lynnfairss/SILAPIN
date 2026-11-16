@@ -86,6 +86,14 @@ section[id] { scroll-margin-top: 92px; }
     font-size: 1.05rem;
     flex-shrink: 0;
 }
+.sp-brand__img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
 .sp-brand__text { line-height: 1; }
 
 .sp-toggler {
@@ -173,10 +181,13 @@ section[id] { scroll-margin-top: 92px; }
     overflow: hidden;
     color: #fff;
     padding: 128px 0 72px;
+    /* Lapisan paling bawah = foto ruang PPID Diskominfo; gradien biru di atasnya
+       dibuat translucent supaya foto terlihat pudar, bukan tertutup total. */
     background:
-        radial-gradient(900px 420px at 78% 8%, rgba(59, 130, 246, .22), transparent 62%),
-        radial-gradient(700px 380px at 12% 92%, rgba(37, 99, 235, .18), transparent 65%),
-        linear-gradient(160deg, #0B2E6E 0%, #08224F 55%, #061A3F 100%);
+        radial-gradient(900px 420px at 78% 8%, rgba(59, 130, 246, .30), transparent 62%),
+        radial-gradient(700px 380px at 12% 92%, rgba(37, 99, 235, .26), transparent 65%),
+        linear-gradient(160deg, rgba(11, 46, 110, .70) 0%, rgba(8, 34, 79, .76) 55%, rgba(6, 26, 63, .82) 100%),
+        url('../images/kominfo-ppid.jpg') center 30% / cover no-repeat;
 }
 .sp-hero::before {
     content: '';
@@ -409,8 +420,10 @@ section[id] { scroll-margin-top: 92px; }
     color: #fff;
     padding: 116px 0 46px;
     background:
-        radial-gradient(760px 320px at 82% 0%, rgba(59, 130, 246, .22), transparent 62%),
-        linear-gradient(160deg, #0B2E6E 0%, #08224F 55%, #061A3F 100%);
+        radial-gradient(760px 320px at 82% 0%, rgba(59, 130, 246, .26), transparent 62%),
+        radial-gradient(600px 300px at 15% 90%, rgba(37, 99, 235, .22), transparent 65%),
+        linear-gradient(160deg, rgba(11, 46, 110, .78) 0%, rgba(8, 34, 79, .84) 55%, rgba(6, 26, 63, .88) 100%),
+        url('../images/kominfo-ppid.jpg') center 30% / cover no-repeat;
 }
 .sp-pagehead::after {
     content: '';
@@ -468,6 +481,7 @@ section[id] { scroll-margin-top: 92px; }
     margin-bottom: 12px;
 }
 .sp-footer__brand .sp-brand__mark { width: 36px; height: 36px; border-radius: 10px; font-size: .95rem; }
+.sp-footer__brand .sp-brand__img { width: 22px; height: 22px; }
 .sp-footer ul { padding: 0; margin: 0; list-style: none; }
 .sp-footer ul li { margin-bottom: .45rem; }
 .sp-footer hr { border-color: rgba(255, 255, 255, .12); opacity: 1; }
@@ -483,6 +497,41 @@ section[id] { scroll-margin-top: 92px; }
 }
 .sp-footer__social:hover { background: var(--sp-primary); color: #fff !important; }
 .sp-footer--compact { padding: 22px 0; }
+
+/* Footer ringkas (form & cek status): merek dan hak cipta di tengah, bukan
+   merapat ke kiri seperti layout desktop. */
+.sp-footer--compact .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    text-align: center;
+}
+.sp-footer--compact .sp-footer__brand {
+    margin-bottom: 0;
+    font-size: 1.15rem;
+}
+.sp-footer--compact .small {
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   FOKUS TOMBOL DAN TAUTAN
+   ============================================================ */
+/* Cincin hitam bawaan browser membuat tombol terlihat rusak setelah
+   disentuh; cincin biru hanya muncul untuk navigasi keyboard. */
+.btn:focus,
+button:focus,
+a:focus { outline: none; }
+
+.btn:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, .45);
+    outline-offset: 2px;
+}
 
 /* ============================================================
    KOMPONEN BOOTSTRAP DISELARASKAN

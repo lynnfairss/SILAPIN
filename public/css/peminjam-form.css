@@ -4,6 +4,17 @@
    peminjam.css tetap dipertahankan.
    ========================================================= */
 
+/* ---------- Hero Form ---------- */
+.pf-hero {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(900px 420px at 78% 8%, rgba(59, 130, 246, .28), transparent 62%),
+        radial-gradient(700px 380px at 12% 92%, rgba(37, 99, 235, .24), transparent 65%),
+        linear-gradient(160deg, rgba(11, 46, 110, .78) 0%, rgba(8, 34, 79, .84) 55%, rgba(6, 26, 63, .88) 100%),
+        url('../images/kominfo-ppid.jpg') center 30% / cover no-repeat !important;
+}
+
 /* ---------- Stepper ---------- */
 .step-item .step-number {
     background: #fff;
@@ -484,7 +495,7 @@
     }
 }
 
-/* ---------- Kartu barang 2 kolom ---------- */
+/* ---------- Kartu barang: 3 kolom & ringkas di HP ---------- */
 /* Jarak antar kartu diatur di sini, bukan lewat kelas .gap-*: Bootstrap 5
    mendefinisikan .gap-4 { gap: 1.5rem !important } yang selalu menang.
    Selektor pakai #barangContainer agar menang atas aturan dasar di
@@ -495,54 +506,85 @@
 
 @media (max-width: 639.98px) {
     #barangContainer {
-        gap: 0.75rem;
+        gap: 8px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    #barangContainer .barang-item .product-card {
+        border-radius: 10px;
     }
 
     #barangContainer .img-slider {
-        aspect-ratio: 1 / 1;
+        aspect-ratio: 4 / 3;
+        border-radius: 10px 10px 0 0;
+    }
+
+    #barangContainer .slider-btn {
+        width: 20px;
+        height: 20px;
+        font-size: .55rem;
+    }
+
+    #barangContainer .slider-dots .dot {
+        width: 5px;
+        height: 5px;
+        margin: 0 2px;
     }
 
     #barangContainer .product-info {
-        padding: 0.5rem 0.55rem 0.4rem;
+        padding: 6px 6px 5px;
     }
 
     #barangContainer .product-name {
-        font-size: 0.8rem;
+        font-size: .66rem;
+        line-height: 1.25;
+        min-height: 2.5em;
     }
 
     #barangContainer .product-meta {
-        font-size: 0.64rem;
-        gap: 0.25rem;
+        font-size: .5rem;
+        gap: 1px 3px;
+        min-height: 26px;
     }
 
     #barangContainer .product-meta code {
-        font-size: 0.63rem;
+        font-size: .5rem;
     }
 
     #barangContainer .product-kategori,
     #barangContainer .product-jenis {
-        font-size: 0.62rem;
-        padding: 1px 0.45rem;
+        font-size: .5rem;
+        padding: 0 3px;
+    }
+
+    #barangContainer .product-stok {
+        padding-top: 3px;
     }
 
     #barangContainer .product-stok .badge {
-        font-size: 0.64rem;
-        padding: 0.25em 0.5em;
+        font-size: .54rem;
+        padding: 0.15em 0.4em;
     }
 
     #barangContainer .product-action {
         flex-direction: column;
-        gap: 0.4rem;
-        padding: 0.45rem 0.5rem 0.55rem;
+        gap: 4px;
+        padding: 5px 5px 6px;
     }
 
     #barangContainer .product-action .form-check {
         width: 100%;
-        font-size: 0.7rem;
+        font-size: .58rem;
     }
 
     #barangContainer .product-action .form-check-label {
-        font-size: 0.7rem;
+        font-size: .58rem;
+    }
+
+    #barangContainer .product-action .form-check-input {
+        width: 14px;
+        height: 14px;
+        margin-right: 4px;
     }
 
     #barangContainer .qty-stepper {
@@ -551,12 +593,68 @@
     }
 
     #barangContainer .qty-btn {
-        width: 26px;
-        height: 26px;
-        font-size: 0.9rem;
+        width: 22px;
+        height: 22px;
+        font-size: .8rem;
     }
 
     #barangContainer .qty-input {
-        width: 42px;
+        width: 34px;
+        font-size: .68rem;
     }
+}
+
+/* ============================================================
+   HP (<= 575.98px): form pengajuan dibuat ringkas.
+   Catatan penting: halaman ini memuat Bootstrap 5.3.3 DAN Tailwind
+   sekaligus. Utility Bootstrap (p-4, p-5, py-4, ...) memakai
+   !important, jadi sebagian aturan di bawah harus !important juga;
+   sisanya memakai selektor bertingkat karena peminjam-tailwind.css
+   dimuat paling terakhir.
+   ============================================================ */
+@media (max-width: 575.98px) {
+    section.pf-hero { padding: 82px 0 26px !important; }
+    section.pf-hero nav { margin-bottom: 2px; }
+    section.pf-hero h1 { font-size: 1.4rem; line-height: 1.15; margin-bottom: 4px; }
+    section.pf-hero p { font-size: .78rem; line-height: 1.4; }
+
+    main.pf-main { margin-top: -26px; padding: 0 10px 40px !important; }
+
+    div.pf-stepper { padding: 8px 12px !important; margin-bottom: 12px !important; }
+    .pf-stepper .step-number { width: 36px; height: 36px; border-radius: 10px; }
+    .pf-stepper .step-number i { font-size: .95rem; }
+
+    /* Kepala kartu: keterangan kecil disembunyikan, ikon & catatan
+       "Wajib diisi" dikecilkan supaya tetap satu baris. */
+    .step-content .pf-card-head { padding: 8px 12px !important; gap: 8px; }
+    .step-content .pf-card-head .w-8 { width: 26px; height: 26px; border-radius: 8px; font-size: .78rem; }
+    .step-content .pf-card-head h2,
+    .step-content .pf-card-head h3 { font-size: .9rem; line-height: 1.2; }
+    .step-content .pf-card-head p { display: none; }
+    .step-content .pf-card-head > span { font-size: .66rem; white-space: nowrap; }
+
+    .step-content .pf-card-body { padding: 12px !important; }
+    .step-content .pf-card-body > * + * { margin-top: 12px; }
+    .step-content .pf-grid { gap: 10px; }
+    .step-content .pf-card-body > .border-t { padding-top: 12px !important; }
+    .step-content .pf-card-body .border-t > .flex:first-child { margin-bottom: 8px !important; }
+    .step-content .pf-card-body .border-t h3 { font-size: .88rem; }
+
+    .step-content .pf-card-body label.block { font-size: .68rem; margin-bottom: 5px; }
+    .step-content .pf-card-body .pf-input { min-height: 40px; padding: .4rem .7rem .4rem 2.2rem !important; }
+    .step-content .pf-card-body .pf-textarea { min-height: 58px; }
+    .step-content .pf-card-body p { font-size: .7rem; line-height: 1.35; }
+
+    /* Filter barang: label, chip, dan kolom cari dirapatkan. */
+    .step-content .filter-group { margin-bottom: 8px !important; gap: 4px; }
+    .step-content .filter-label { font-size: .62rem; min-width: 0; padding: 0; }
+    .step-content .filter-chip { font-size: .6rem; padding: 2px 7px; }
+    .step-content .relative.mb-4 { margin-bottom: 8px !important; }
+
+    /* Kotak unggah: sebelumnya 202px tinggi, cukup jadi satu baris pendek. */
+    .step-content .file-drop-zone { min-height: 88px; padding: 8px 10px !important; }
+    .step-content .file-drop-zone > div { width: 30px; height: 30px; margin-bottom: 5px; }
+    .step-content .file-drop-zone p { font-size: .7rem; line-height: 1.3; }
+    .step-content .upload-field > * + * { margin-top: 7px; }
+    .step-content .upload-field .file-drop-zone + div { margin-top: 7px; }
 }

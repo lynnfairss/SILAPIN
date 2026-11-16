@@ -8,9 +8,11 @@
 
 @if($spFooterCompact)
 <footer class="sp-footer sp-footer--compact">
-    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="container">
         <div class="sp-footer__brand mb-0">
-            <span class="sp-brand__mark"><i class="fas fa-cubes"></i></span>
+            <span class="sp-brand__mark">
+                <img src="{{ asset('images/logo-silapin.png') }}" alt="Logo SILAPIN" class="sp-brand__img">
+            </span>
             <span>SILAPIN</span>
         </div>
         <p class="mb-0 small">&copy; 2026 SILAPIN — Sistem Informasi Peminjaman Inventaris</p>
@@ -22,7 +24,9 @@
         <div class="row g-4">
             <div class="col-lg-5">
                 <div class="sp-footer__brand">
-                    <span class="sp-brand__mark"><i class="fas fa-cubes"></i></span>
+                    <span class="sp-brand__mark">
+                        <img src="{{ asset('images/logo-silapin.png') }}" alt="Logo SILAPIN" class="sp-brand__img">
+                    </span>
                     <span>SILAPIN</span>
                 </div>
                 <p class="mb-0 small" style="max-width: 380px;">
@@ -42,9 +46,9 @@
             <div class="col-6 col-lg-4">
                 <h6>Kontak</h6>
                 <ul class="small">
-                    <li><i class="fas fa-map-marker-alt me-2"></i>Jl. Contoh Alamat No. 123, Kota</li>
-                    <li><i class="fas fa-phone me-2"></i>(021) 1234-5678</li>
-                    <li><i class="fas fa-envelope me-2"></i>silapin@example.com</li>
+                    <li><i class="fas fa-map-marker-alt me-2"></i>Jl. Ir. H Juanda No.198, Tonatan, Kec. Ponorogo, Kabupaten Ponorogo, Jawa Timur 63418</li>
+                    <li><i class="fas fa-phone me-2"></i>Telp/Fax: 0352-3592999</li>
+                    <li><i class="fas fa-envelope me-2"></i>kominfo@ponorogo.go.id</li>
                 </ul>
             </div>
         </div>

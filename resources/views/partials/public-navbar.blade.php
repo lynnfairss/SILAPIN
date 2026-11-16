@@ -14,7 +14,9 @@
 <nav class="navbar navbar-expand-lg sp-navbar {{ $spTransparent ? 'sp-navbar--transparent' : 'sp-navbar--solid' }}" id="spNavbar">
     <div class="container">
         <a class="navbar-brand sp-brand" href="{{ route('website') }}">
-            <span class="sp-brand__mark"><i class="fas fa-cubes"></i></span>
+            <span class="sp-brand__mark">
+                <img src="{{ asset('images/logo-silapin.png') }}" alt="Logo SILAPIN" class="sp-brand__img">
+            </span>
             <span class="sp-brand__text">SILAPIN</span>
         </a>
 

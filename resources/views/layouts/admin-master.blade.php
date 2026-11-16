@@ -161,6 +161,11 @@
 
                 <div class="h-6 w-px bg-slate-200"></div>
 
+                <div class="text-right leading-tight">
+                    <span id="topbarTanggal" class="block text-[10px] font-medium text-slate-400 sm:text-[11px]"></span>
+                    <span id="topbarJam" class="block text-xs font-semibold tabular-nums text-slate-700 sm:text-sm"></span>
+                </div>
+
                 <div class="relative">
                     <button type="button" id="userMenuToggle" class="flex items-center gap-3 rounded-lg p-1 transition hover:bg-slate-100">
                         <span class="flex h-9 w-9 items-center justify-center rounded-full border-2 border-blue-500 bg-blue-100 text-sm font-bold text-blue-700">

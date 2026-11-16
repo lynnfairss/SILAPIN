@@ -301,7 +301,7 @@
                                 </div>
                                 <div>
                                     <h6 class="fw-bold mb-1">Alamat</h6>
-                                    <p class="text-muted mb-0">Jl. Contoh Alamat No. 123, Kota</p>
+                                    <p class="text-muted mb-0">Jl. Ir. H Juanda No.198, Tonatan, Kec. Ponorogo, Kabupaten Ponorogo, Jawa Timur 63418</p>
                                 </div>
                             </li>
                             <li class="d-flex align-items-start mb-3 contact-item">
@@ -309,8 +309,8 @@
                                     <i class="fas fa-phone"></i>
                                 </div>
                                 <div>
-                                    <h6 class="fw-bold mb-1">Telepon</h6>
-                                    <p class="text-muted mb-0">(021) 1234-5678</p>
+                                    <h6 class="fw-bold mb-1">Telp/Fax</h6>
+                                    <p class="text-muted mb-0">0352-3592999</p>
                                 </div>
                             </li>
                             <li class="d-flex align-items-start contact-item">
@@ -319,7 +319,7 @@
                                 </div>
                                 <div>
                                     <h6 class="fw-bold mb-1">Email</h6>
-                                    <p class="text-muted mb-0">silapin@example.com</p>
+                                    <p class="text-muted mb-0">kominfo@ponorogo.go.id</p>
                                 </div>
                             </li>
                         </ul>
