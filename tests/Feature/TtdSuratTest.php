@@ -40,7 +40,7 @@ it('puts the approving admin on the handing over side of the letter', function (
     $ttd = SuratController::resolveTtd($permohonan->fresh(), SuratController::getContent($permohonan));
 
     expect($ttd['kiri_nama'])->toBe('Siti Aminah');
-    // Admin tanpa NIK tetap dibiarkan kosong, jabatan juga tidak ada di tabel users.
+    // Admin tanpa NIP tetap dibiarkan kosong, jabatan juga tidak ada di tabel users.
     expect($ttd['kiri_nrp'])->toBe('')
         ->and($ttd['kiri_jabatan'])->toBe('');
 
@@ -50,10 +50,10 @@ it('puts the approving admin on the handing over side of the letter', function (
         ->and($ttd['kanan_jabatan'])->toBe('Staf Bagian Umum');
 });
 
-it('prints the approver NIK on the handing over side of the letter', function () {
+it('prints the approver NIP on the handing over side of the letter', function () {
     $admin = User::factory()->create([
         'name' => 'Siti Aminah',
-        'nik' => '3500000000000010',
+        'nip' => '3500000000000010',
         'role' => 'admin',
         'status' => 'approved',
     ]);
@@ -71,26 +71,28 @@ it('prints the approver NIK on the handing over side of the letter', function ()
 
     $html = view('peminjam.surat', ['permohonan' => $permohonan->fresh(), 'forPdf' => true])->render();
 
-    expect($html)->toContain('NIK. 3500000000000010');
+    expect($html)->toContain('NIP. 3500000000000010');
 });
 
-it('keeps the NIK stored in the letter content ahead of the account NIK', function () {
+it('keeps the NIP stored in the letter content ahead of the account NIP', function () {
     $admin = User::factory()->create([
         'name' => 'Siti Aminah',
-        'nik' => '3500000000000010',
+        'nip' => '3500000000000010',
         'role' => 'admin',
         'status' => 'approved',
     ]);
     $permohonan = suratPermohonan();
     disetujuiOleh($admin, $permohonan);
 
+    // Isian manual dari Word tetap menang, dan label lama "NIP." dibuang
+    // karena view sudah menambahkan labelnya sendiri.
     $permohonan->update([
-        'surat_content' => ['ttd_kiri_nrp' => 'NIK. Lama'],
+        'surat_content' => ['ttd_kiri_nrp' => 'NIP. 3500000000000099'],
     ]);
 
     $ttd = SuratController::resolveTtd($permohonan->fresh(), SuratController::getContent($permohonan));
 
-    expect($ttd['kiri_nrp'])->toBe('NIK. Lama');
+    expect($ttd['kiri_nrp'])->toBe('3500000000000099');
 });
 
 it('uses a super admin as the approver just as well', function () {
@@ -167,10 +169,10 @@ it('shows both signatures on the rendered letter', function () {
         ->and($html)->toContain('<strong>Rahma</strong>');
 });
 
-it('prints no NIK or position under the receiving name', function () {
+it('prints no NIP or position under the receiving name', function () {
     $admin = User::factory()->create([
         'name' => 'Siti Aminah',
-        'nik' => '3500000000000010',
+        'nip' => '3500000000000010',
         'role' => 'admin',
         'status' => 'approved',
     ]);
@@ -179,18 +181,18 @@ it('prints no NIK or position under the receiving name', function () {
 
     $html = view('peminjam.surat', ['permohonan' => $permohonan->fresh(), 'forPdf' => true])->render();
 
-    // Pihak yang menyerahkan tetap mencetak NIK admin.
-    expect($html)->toContain('NIK. 3500000000000010')
+    // Pihak yang menyerahkan tetap mencetak NIP admin.
+    expect($html)->toContain('NIP. 3500000000000010')
         // Kolom penerima hanya berisi nama: paragraf nama langsung ditutup
-        // sel, tanpa baris NIK maupun jabatan di bawahnya.
+        // sel, tanpa baris NIP maupun jabatan di bawahnya.
         ->and($html)->toMatch('/<strong>Rahma<\/strong><\/p>\s*<\/td>/')
-        ->and($html)->not->toContain('NIK. 3500000000000009');
+        ->and($html)->not->toContain('NIP. 3500000000000009');
 });
 
 it('writes the approver into the generated docx signature column', function () {
     $admin = User::factory()->create([
         'name' => 'Siti Aminah',
-        'nik' => '3500000000000010',
+        'nip' => '3500000000000010',
         'role' => 'admin',
         'status' => 'approved',
     ]);
@@ -222,20 +224,22 @@ it('writes the approver into the generated docx signature column', function () {
     expect($terbaca['ttd_kiri_label'])->toContain('Yang menyerahkan')
         ->and($terbaca['ttd_kanan_label'])->toContain('Yang menerima')
         ->and($terbaca['ttd_kiri_nama'])->toBe('Siti Aminah')
-        // Prefix "NIK." harus dilepas parser, jadi yang tersimpan NIK bersih.
+        // Prefix "NIP." harus dilepas parser, jadi yang tersimpan NIP bersih.
         ->and($terbaca['ttd_kiri_nrp'])->toBe('3500000000000010')
         ->and($terbaca['ttd_kanan_nama'])->toBe('Rahma')
-        // Sisi "Yang menerima" tidak lagi mencetak NIK maupun jabatan.
+        // Sisi "Yang menerima" tidak lagi mencetak NIP maupun jabatan.
         ->and($terbaca['ttd_kanan_nrp'] ?? '')->toBe('')
         ->and($terbaca['ttd_kanan_jabatan'] ?? '')->toBe('');
 });
 
-it('still reads a letter that was saved back with the old NRP label', function () {
-    // Regex parser sengaja menerima "NRP." supaya file Word lama yang sudah
-    // di-sync sebelum label diganti ke NIK tetap terbaca.
-    expect(preg_replace('/^(?:NRP|NIK)\.\s*/', '', 'NRP. 3500000000000009'))
+it('still reads a letter saved back with the old NRP or NIK label', function () {
+    // Regex parser sengaja menerima NRP./NIK./NIP. supaya file Word lama yang
+    // di-sync sebelum label diganti ke NIP tetap terbaca.
+    expect(preg_replace('/^(?:NRP|NIK|NIP)\.\s*/', '', 'NRP. 3500000000000009'))
         ->toBe('3500000000000009')
-        ->and(preg_replace('/^(?:NRP|NIK)\.\s*/', '', 'NIK. 3500000000000009'))
+        ->and(preg_replace('/^(?:NRP|NIK|NIP)\.\s*/', '', 'NIK. 3500000000000009'))
+        ->toBe('3500000000000009')
+        ->and(preg_replace('/^(?:NRP|NIK|NIP)\.\s*/', '', 'NIP. 3500000000000009'))
         ->toBe('3500000000000009');
 });
 

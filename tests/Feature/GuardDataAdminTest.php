@@ -172,7 +172,7 @@ it('lets a super admin create an admin account', function () {
         ->post(route('users.store'), [
             'name' => 'Petugas Baru',
             'email' => 'petugas@silapin.test',
-            'nik' => '3500000000000009',
+            'nip' => '3500000000000009',
             'role' => 'admin',
             'password' => 'RahasiaKuat123',
             'password_confirmation' => 'RahasiaKuat123',
@@ -184,11 +184,11 @@ it('lets a super admin create an admin account', function () {
 
     expect($user->role)->toBe('admin')
         ->and($user->status)->toBe('approved')
-        ->and($user->nik)->toBe('3500000000000009')
+        ->and($user->nip)->toBe('3500000000000009')
         ->and($user->isAdmin())->toBeTrue();
 });
 
-it('refuses a missing NIK when creating an account', function () {
+it('refuses a missing NIP when creating an account', function () {
     $this->actingAs(superAdmin())
         ->post(route('users.store'), [
             'name' => 'Tanpa Nik',
@@ -197,84 +197,84 @@ it('refuses a missing NIK when creating an account', function () {
             'password' => 'RahasiaKuat123',
             'password_confirmation' => 'RahasiaKuat123',
         ])
-        ->assertSessionHasErrors('nik');
+        ->assertSessionHasErrors('nip');
 
     expect(User::where('email', 'tanpanik@silapin.test')->exists())->toBeFalse();
 });
 
-it('refuses a NIK that is not exactly 16 digits', function () {
+it('refuses a NIP that is not between 16 and 18 digits', function () {
     $this->actingAs(superAdmin())
         ->post(route('users.store'), [
             'name' => 'Nik Pendek',
             'email' => 'nikpendek@silapin.test',
-            'nik' => '12345',
+            'nip' => '12345',
             'role' => 'admin',
             'password' => 'RahasiaKuat123',
             'password_confirmation' => 'RahasiaKuat123',
         ])
-        ->assertSessionHasErrors('nik');
+        ->assertSessionHasErrors('nip');
 
     expect(User::where('email', 'nikpendek@silapin.test')->exists())->toBeFalse();
 });
 
-it('refuses a NIK that is already used by another account', function () {
-    User::factory()->create(['nik' => '3500000000000009']);
+it('refuses a NIP that is already used by another account', function () {
+    User::factory()->create(['nip' => '3500000000000009']);
 
     $this->actingAs(superAdmin())
         ->post(route('users.store'), [
             'name' => 'Nik Kembar',
             'email' => 'nikkembar@silapin.test',
-            'nik' => '3500000000000009',
+            'nip' => '3500000000000009',
             'role' => 'admin',
             'password' => 'RahasiaKuat123',
             'password_confirmation' => 'RahasiaKuat123',
         ])
-        ->assertSessionHasErrors('nik');
+        ->assertSessionHasErrors('nip');
 
     expect(User::where('email', 'nikkembar@silapin.test')->exists())->toBeFalse();
 });
 
-it('lets a super admin fill in the NIK of an existing account', function () {
-    $lama = User::factory()->superAdmin()->create(['name' => 'Super Admin', 'nik' => null]);
+it('lets a super admin fill in the NIP of an existing account', function () {
+    $lama = User::factory()->superAdmin()->create(['name' => 'Super Admin', 'nip' => null]);
 
     $this->actingAs(superAdmin())
         ->put(route('users.update', $lama->id), [
             'name' => 'Super Admin',
             'email' => $lama->email,
-            'nik' => '3500000000000010',
+            'nip' => '3500000000000010',
         ])
         ->assertRedirect(route('users.index'))
         ->assertSessionHas('success');
 
-    expect($lama->fresh()->nik)->toBe('3500000000000010');
+    expect($lama->fresh()->nip)->toBe('3500000000000010');
 });
 
-it('lets an account keep its own NIK when edited', function () {
-    $lama = User::factory()->create(['nik' => '3500000000000011']);
+it('lets an account keep its own NIP when edited', function () {
+    $lama = User::factory()->create(['nip' => '3500000000000011']);
 
     $this->actingAs(superAdmin())
         ->put(route('users.update', $lama->id), [
             'name' => $lama->name,
             'email' => $lama->email,
-            'nik' => '3500000000000011',
+            'nip' => '3500000000000011',
         ])
         ->assertSessionHas('success');
 
-    expect($lama->fresh()->nik)->toBe('3500000000000011');
+    expect($lama->fresh()->nip)->toBe('3500000000000011');
 });
 
-it('refuses a blank NIK when editing an account', function () {
+it('refuses a blank NIP when editing an account', function () {
     $lama = admin();
 
     $this->actingAs(superAdmin())
         ->put(route('users.update', $lama->id), [
             'name' => $lama->name,
             'email' => $lama->email,
-            'nik' => '',
+            'nip' => '',
         ])
-        ->assertSessionHasErrors('nik');
+        ->assertSessionHasErrors('nip');
 
-    expect($lama->fresh()->nik)->toBeNull();
+    expect($lama->fresh()->nip)->toBeNull();
 });
 
 it('keeps a normal admin out of account editing', function () {
@@ -288,20 +288,20 @@ it('keeps a normal admin out of account editing', function () {
         ->put(route('users.update', $petugas->id), [
             'name' => 'Penyusup',
             'email' => 'penyusup3@silapin.test',
-            'nik' => '3500000000000012',
+            'nip' => '3500000000000012',
         ])
         ->assertForbidden();
 
     expect($petugas->fresh()->name)->not->toBe('Penyusup');
 });
 
-it('shows the NIK field on the account forms', function () {
+it('shows the NIP field on the account forms', function () {
     $super = superAdmin();
-    $petugas = User::factory()->create(['nik' => '3500000000000031']);
+    $petugas = User::factory()->create(['nip' => '3500000000000031']);
 
     $this->actingAs($super)->get(route('users.create'))
         ->assertOk()
-        ->assertSee('name="nik"', false);
+        ->assertSee('name="nip"', false);
 
     $this->actingAs($super)->get(route('users.edit', $petugas->id))
         ->assertOk()
@@ -317,7 +317,7 @@ it('refuses a weak password when creating an account', function () {
         ->post(route('users.store'), [
             'name' => 'Petugas Lemah',
             'email' => 'lemah@silapin.test',
-            'nik' => '3500000000000021',
+            'nip' => '3500000000000021',
             'role' => 'admin',
             'password' => 'pendek',
             'password_confirmation' => 'pendek',
@@ -332,7 +332,7 @@ it('refuses an unknown role when creating an account', function () {
         ->post(route('users.store'), [
             'name' => 'Penyusup',
             'email' => 'penyusup@silapin.test',
-            'nik' => '3500000000000022',
+            'nip' => '3500000000000022',
             'role' => 'super_admin_kedua',
             'password' => 'RahasiaKuat123',
             'password_confirmation' => 'RahasiaKuat123',
